@@ -1,0 +1,642 @@
+openapi: 3.0.0
+info:
+  title: WACAST Core API
+  description: WhatsApp Multi-Session Gateway API - Enterprise WhatsApp messaging platform
+  version: 1.0.0
+  contact:
+    name: WACAST Support
+    email: support@wacast.io
+  license:
+    name: Apache 2.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local Development Server
+  - url: https://api.wacast.io
+    description: Production Server
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Sessions
+    description: WhatsApp session managementx
+  - name: Messages
+    description: Message operations and queue management
+  - name: Server Info
+    description: Server status and statistics
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns overall health status of the service
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: UP
+                timestamp: 1775787218
+                uptime_seconds: 180
+                details:
+                  database: healthy
+                  sessions: true
+                  messages: true
+
+  /health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness probe
+      description: Kubernetes readiness probe - checks if service is ready for traffic
+      operationId: readinessCheck
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /health/live:
+    get:
+      tags:
+        - Health
+      summary: Liveness probe
+      description: Kubernetes liveness probe - checks if service is alive
+      operationId: livenessCheck
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v1/sessions:
+    get:
+      tags:
+        - Sessions
+      summary: List all active sessions
+      description: Returns list of all currently active WhatsApp sessions
+      operationId: listSessions
+      responses:
+        "200":
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionListResponse"
+              example:
+                count: 2
+                sessions:
+                  - device_id: device001
+                    status: 1
+                    is_active: true
+                    last_activity: 1775787200
+
+  /api/v1/sessions/{device_id}:
+    get:
+      tags:
+        - Sessions
+      summary: Get session status
+      description: Returns current status of a specific WhatsApp session
+      operationId: getSessionStatus
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Device/Session identifier
+          example: device001
+      responses:
+        "200":
+          description: Session status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStatusResponse"
+        "404":
+          description: Session not found
+
+  /api/v1/sessions/initiate:
+    post:
+      tags:
+        - Sessions
+      summary: Initiate new WhatsApp session
+      description: |
+        Start a new WhatsApp session for a device. Returns QR code for scanning.
+        QR code is delivered via websocket or webhook.
+      operationId: initiateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiateSessionRequest"
+            example:
+              device_id: device001
+              user_id: user123
+              phone: "62812345678"
+      responses:
+        "200":
+          description: Session initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InitiateSessionResponse"
+        "400":
+          description: Invalid request body
+        "409":
+          description: Session already exists for device
+
+  /api/v1/sessions/{device_id}/stop:
+    post:
+      tags:
+        - Sessions
+      summary: Stop WhatsApp session
+      description: Disconnect and remove an active WhatsApp session
+      operationId: stopSession
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Device/Session identifier
+      responses:
+        "200":
+          description: Session stopped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session stopped
+                  device_id:
+                    type: string
+        "404":
+          description: Session not found
+
+  /api/v1/devices/{device_id}/messages:
+    post:
+      tags:
+        - Messages
+      summary: Send text message
+      description: Send a text message via an active WhatsApp session
+      operationId: sendMessage
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Device/Session identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+            example:
+              target_jid: "62812345678"
+              content: "Hello, this is a test message"
+              group_id: null
+      responses:
+        "202":
+          description: Message accepted and queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid request body
+        "404":
+          description: Session not found
+
+  /api/v1/devices/{device_id}/messages/media:
+    post:
+      tags:
+        - Messages
+      summary: Send media message
+      description: Send an image, document, audio, or video message
+      operationId: sendMediaMessage
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMediaMessageRequest"
+            example:
+              target_jid: "62812345678"
+              media_url: "https://example.com/image.jpg"
+              content_type: "image"
+              caption: "Check this out!"
+      responses:
+        "202":
+          description: Message accepted and queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /api/v1/devices/{device_id}/messages/scheduled:
+    post:
+      tags:
+        - Messages
+      summary: Schedule message
+      description: Schedule a message to be sent at a specific time
+      operationId: sendScheduledMessage
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendScheduledMessageRequest"
+            example:
+              target_jid: "62812345678"
+              content: "Good morning!"
+              scheduled_for: "2026-04-10T08:00:00Z"
+      responses:
+        "202":
+          description: Message scheduled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /api/v1/messages/{message_id}/status:
+    get:
+      tags:
+        - Messages
+      summary: Get message status
+      description: Check delivery and read status of a sent message
+      operationId: getMessageStatus
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Message identifier
+      responses:
+        "200":
+          description: Message status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageStatusResponse"
+        "404":
+          description: Message not found
+
+  /api/v1/messages/stats:
+    get:
+      tags:
+        - Messages
+      summary: Get message queue statistics
+      description: Returns statistics about message queue and delivery
+      operationId: getMessageStats
+      responses:
+        "200":
+          description: Queue statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageStatsResponse"
+
+  /api/v1/messages/failed:
+    get:
+      tags:
+        - Messages
+      summary: List failed messages
+      description: Returns list of messages that failed to deliver
+      operationId: getFailedMessages
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+          description: Maximum number of results
+      responses:
+        "200":
+          description: List of failed messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailedMessagesResponse"
+
+  /api/v1/messages/process:
+    post:
+      tags:
+        - Messages
+      summary: Manual queue processing
+      description: Manually trigger message queue processing (usually automatic)
+      operationId: processQueue
+      responses:
+        "200":
+          description: Queue processing triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Queue processing triggered
+
+  /api/v1/info/status:
+    get:
+      tags:
+        - Server Info
+      summary: Server status
+      description: Returns current server status and active sessions
+      operationId: serverStatus
+      responses:
+        "200":
+          description: Server status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatusResponse"
+
+  /api/v1/info/stats:
+    get:
+      tags:
+        - Server Info
+      summary: Server statistics
+      description: Returns detailed server statistics including sessions and messages
+      operationId: serverStats
+      responses:
+        "200":
+          description: Server statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatsResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, NOT_READY, ALIVE]
+        timestamp:
+          type: integer
+          description: Unix timestamp
+        uptime_seconds:
+          type: integer
+          description: Service uptime in seconds
+        details:
+          type: object
+          description: Additional health details
+
+    SessionListResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        sessions:
+          type: array
+          items:
+            type: object
+            properties:
+              device_id:
+                type: string
+              status:
+                type: integer
+                enum: [0, 1, 2]
+                description: "0=inactive, 1=active, 2=pending"
+              is_active:
+                type: boolean
+              last_activity:
+                type: integer
+
+    SessionStatusResponse:
+      type: object
+      properties:
+        device_id:
+          type: string
+        status:
+          type: integer
+        is_active:
+          type: boolean
+        last_activity:
+          type: integer
+
+    InitiateSessionRequest:
+      type: object
+      required:
+        - device_id
+        - user_id
+        - phone
+      properties:
+        device_id:
+          type: string
+          description: Unique device identifier
+        user_id:
+          type: string
+          description: User identifier
+        phone:
+          type: string
+          description: Phone number (with country code, e.g., 62812345678)
+
+    InitiateSessionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Session initiated
+        device_id:
+          type: string
+        status:
+          type: integer
+          example: 2
+
+    SendMessageRequest:
+      type: object
+      required:
+        - target_jid
+        - content
+      properties:
+        target_jid:
+          type: string
+          description: Recipient phone number or JID
+        content:
+          type: string
+          description: Message content
+        group_id:
+          type: string
+          nullable: true
+          description: Group ID if sending to group
+
+    SendMediaMessageRequest:
+      type: object
+      required:
+        - target_jid
+        - media_url
+        - content_type
+      properties:
+        target_jid:
+          type: string
+        media_url:
+          type: string
+          description: URL to media file
+        content_type:
+          type: string
+          enum: [image, document, audio, video, contact, location]
+        caption:
+          type: string
+          nullable: true
+          description: Optional caption for media
+
+    SendScheduledMessageRequest:
+      type: object
+      required:
+        - target_jid
+        - content
+        - scheduled_for
+      properties:
+        target_jid:
+          type: string
+        content:
+          type: string
+        scheduled_for:
+          type: string
+          format: date-time
+          description: ISO 8601 datetime when to send
+
+    MessageResponse:
+      type: object
+      properties:
+        message_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, delivered, read, failed]
+        timestamp:
+          type: integer
+
+    MessageStatusResponse:
+      type: object
+      properties:
+        message_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, delivered, read, failed]
+        timestamp:
+          type: integer
+
+    MessageStatsResponse:
+      type: object
+      properties:
+        total_sent:
+          type: integer
+        total_received:
+          type: integer
+        total_failed:
+          type: integer
+        pending:
+          type: integer
+        avg_latency_ms:
+          type: integer
+
+    FailedMessagesResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              message_id:
+                type: string
+              device_id:
+                type: string
+              target_jid:
+                type: string
+              content:
+                type: string
+              retry_count:
+                type: integer
+              max_retries:
+                type: integer
+              error:
+                type: string
+
+    ServerStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: running
+        uptime_seconds:
+          type: integer
+        active_sessions:
+          type: integer
+        server_address:
+          type: string
+        environment:
+          type: string
+        timestamp:
+          type: integer
+
+    ServerStatsResponse:
+      type: object
+      properties:
+        sessions:
+          type: object
+          properties:
+            active:
+              type: integer
+            max:
+              type: integer
+        messages:
+          type: object
+          properties:
+            total_sent:
+              type: integer
+            total_received:
+              type: integer
+            total_failed:
+              type: integer
+            pending:
+              type: integer
+            avg_latency_ms:
+              type: integer
+        uptime_seconds:
+          type: integer
+        timestamp:
+          type: integer
