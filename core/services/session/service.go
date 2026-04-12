@@ -87,13 +87,17 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 	go func() {
 		deviceID := cfg.DeviceID
 		var err error
-		
+
+		// Use a background context so the goroutine is NOT tied to the HTTP
+		// request context (which is cancelled as soon as the handler returns).
+		bgCtx := context.Background()
+
 		// ✅ Create sqlstore container for device management
 		// Use existing database connection with postgres dialect
 		storeContainer := sqlstore.NewWithDB(s.db.GetConnection(), "postgres", waLog.Noop)
 		
 		// ✅ Ensure database schema is up to date
-		if err := storeContainer.Upgrade(ctx); err != nil {
+		if err := storeContainer.Upgrade(bgCtx); err != nil {
 			utils.Error("Failed to upgrade sqlstore schema",
 				zap.String("device_id", deviceID),
 				zap.Error(err),

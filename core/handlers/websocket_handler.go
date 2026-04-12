@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -59,7 +60,6 @@ func NewWebSocketHandler(svc *session.Service) *WebSocketHandler {
 func (h *WebSocketHandler) ConnectQR(c *gin.Context) {
 	deviceID := c.Param("device_id")
 
-	// Upgrade connection to WebSocket
 	conn, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		utils.Error("Failed to upgrade WebSocket connection",
@@ -68,9 +68,28 @@ func (h *WebSocketHandler) ConnectQR(c *gin.Context) {
 		)
 		return
 	}
-	defer conn.Close()
 
-	// Register client
+	// Send initial state BEFORE registering as broadcast target
+	// to avoid concurrent write race with broadcastLoop.
+	qrString := h.sessionService.GetQRCode(deviceID)
+	status := h.sessionService.GetSessionStatus(deviceID)
+	if qrString != "" {
+		conn.WriteJSON(&QRCodeUpdate{
+			DeviceID:  deviceID,
+			QRCode:    qrString,
+			Status:    int(status),
+			Timestamp: time.Now().UnixMilli(),
+			ImageURL:  fmt.Sprintf("/api/v1/sessions/%s/qr?format=png", deviceID),
+		})
+	} else {
+		conn.WriteJSON(map[string]interface{}{
+			"device_id": deviceID,
+			"message":   "Waiting for QR code from WhatsApp...",
+			"status":    int(status),
+		})
+	}
+
+	// Register for broadcast updates
 	h.mu.Lock()
 	if h.clients[deviceID] == nil {
 		h.clients[deviceID] = make(map[*websocket.Conn]bool)
@@ -78,86 +97,30 @@ func (h *WebSocketHandler) ConnectQR(c *gin.Context) {
 	h.clients[deviceID][conn] = true
 	h.mu.Unlock()
 
-	utils.Info("WebSocket client connected",
-		zap.String("device_id", deviceID),
-		zap.Int("total_clients", len(h.clients[deviceID])),
-	)
+	utils.Info("WebSocket client connected", zap.String("device_id", deviceID))
 
-	// Send initial QR code if it exists
-	qrString := h.sessionService.GetQRCode(deviceID)
-	status := h.sessionService.GetSessionStatus(deviceID)
-
-	if qrString != "" {
-		// QR code exists, send it immediately
-		qrPreview := qrString
-		if len(qrString) > 50 {
-			qrPreview = qrString[:50] + "..."
-		}
-
-		update := &QRCodeUpdate{
-			DeviceID:  deviceID,
-			QRCode:    qrString,
-			Status:    int(status),
-			Timestamp: 0,
-			ImageURL:  fmt.Sprintf("/api/v1/sessions/%s/qr?format=png", deviceID),
-		}
-		err := conn.WriteJSON(update)
-		if err != nil {
-			utils.Error("Failed to send initial QR update",
-				zap.String("device_id", deviceID),
-				zap.Error(err),
-			)
-		} else {
-			utils.Info("Initial QR update sent",
-				zap.String("device_id", deviceID),
-				zap.String("qr_preview", qrPreview),
-			)
-		}
-	} else {
-		// No QR yet, inform client to wait
-		conn.WriteJSON(map[string]interface{}{
-			"device_id": deviceID,
-			"message":   "Waiting for QR code from WhatsApp...",
-			"status":    int(status),
-		})
-		utils.Info("No QR code yet, client waiting",
-			zap.String("device_id", deviceID),
-		)
-	}
-
-	// Read messages from client (keep connection alive)
-	go func() {
-		defer func() {
-			// Deregister client
-			h.mu.Lock()
+	// Deregister and close when the read loop exits
+	defer func() {
+		h.mu.Lock()
+		if h.clients[deviceID] != nil {
 			delete(h.clients[deviceID], conn)
-			h.mu.Unlock()
-
-			utils.Info("WebSocket client disconnected",
-				zap.String("device_id", deviceID),
-				zap.Int("total_clients", len(h.clients[deviceID])),
-			)
-		}()
-
-		for {
-			var msg map[string]interface{}
-			err := conn.ReadJSON(&msg)
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					utils.Warn("WebSocket error",
-						zap.String("device_id", deviceID),
-						zap.Error(err),
-					)
-				}
-				return
-			}
-
-			// Handle ping/pong for keep-alive
-			if msgType, ok := msg["type"].(string); ok && msgType == "ping" {
-				conn.WriteJSON(map[string]string{"type": "pong"})
-			}
 		}
+		h.mu.Unlock()
+		conn.Close()
+		utils.Info("WebSocket client disconnected", zap.String("device_id", deviceID))
 	}()
+
+	// Read loop — blocks the goroutine, keeping the connection alive.
+	// All writes happen exclusively in broadcastLoop to avoid concurrent write panics.
+	for {
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				utils.Warn("WebSocket error", zap.String("device_id", deviceID), zap.Error(err))
+			}
+			return
+		}
+	}
 }
 
 // NotifyQRUpdate sends QR code update to all connected clients for a device
@@ -166,7 +129,7 @@ func (h *WebSocketHandler) NotifyQRUpdate(deviceID, qrCode string, status int) {
 		DeviceID:  deviceID,
 		QRCode:    qrCode,
 		Status:    status,
-		Timestamp: 0,
+		Timestamp: time.Now().UnixMilli(),
 		ImageURL:  fmt.Sprintf("/api/v1/sessions/%s/qr?format=png", deviceID),
 	}
 
@@ -207,389 +170,259 @@ func (h *WebSocketHandler) broadcastLoop() {
 	}
 }
 
-// ServeQRPage serves an HTML page with real-time QR code display
+// ServeQRPage serves an HTML page with real-time QR code display and auto-refresh countdown.
 // GET /qr/:device_id
 func (h *WebSocketHandler) ServeQRPage(c *gin.Context) {
 	deviceID := c.Param("device_id")
 
-	html := fmt.Sprintf(`
-<!DOCTYPE html>
-<html>
+	html := fmt.Sprintf(`<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp QR Code - %s</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        .header {
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status.pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status.active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .qr-container {
-            position: relative;
-            margin: 30px 0;
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            border: 2px dashed #ddd;
-        }
-
-        #qrImage {
-            max-width: 100%%;
-            height: auto;
-            border-radius: 10px;
-            transition: opacity 0.3s ease;
-        }
-
-        .instructions {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            text-align: left;
-            font-size: 13px;
-            color: #1565c0;
-            line-height: 1.6;
-        }
-
-        .instructions ol {
-            margin-left: 20px;
-        }
-
-        .instructions li {
-            margin-bottom: 8px;
-        }
-
-        .info {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .connection-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            margin-top: 20px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 20px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%%;
-            background: #ccc;
-            transition: background 0.3s ease;
-        }
-
-        .status-dot.connected {
-            background: #4caf50;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%% { opacity: 1; }
-            50%% { opacity: 0.5; }
-            100%% { opacity: 1; }
-        }
-
-        .loading {
-            text-align: center;
-            color: #999;
-            margin: 20px 0;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            0%% { transform: rotate(0deg); }
-            100%% { transform: rotate(360deg); }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#128C7E 0%%,#075E54 100%%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .card{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:36px 32px;max-width:420px;width:100%%;text-align:center}
+        h1{color:#075E54;font-size:22px;margin-bottom:4px}
+        .sub{color:#888;font-size:13px;margin-bottom:20px}
+        .badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:18px}
+        .badge.pending{background:#fff8e1;color:#f57f17}
+        .badge.active{background:#e8f5e9;color:#2e7d32}
+        .badge.waiting{background:#f3f3f3;color:#888}
+        .qr-wrap{position:relative;background:#fafafa;border-radius:14px;padding:20px;border:2px dashed #ddd;margin-bottom:16px;min-height:200px;display:flex;align-items:center;justify-content:center}
+        #qrImage{max-width:100%%;border-radius:8px;display:none;transition:opacity .3s}
+        #qrImage.expired{opacity:.25;filter:blur(2px)}
+        .overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,.85)}
+        .overlay.show{display:flex}
+        .spinner{width:28px;height:28px;border:3px solid #eee;border-top:3px solid #128C7E;border-radius:50%%;animation:spin 1s linear infinite;margin-bottom:8px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .overlay p{color:#555;font-size:13px;font-weight:600}
+        #loading{color:#aaa;font-size:13px}
+        .countdown-bar{height:4px;background:#eee;border-radius:2px;margin-bottom:16px;overflow:hidden}
+        .countdown-fill{height:100%%;background:#128C7E;border-radius:2px;transition:width 1s linear}
+        .countdown-fill.urgent{background:#e53935}
+        .countdown-text{font-size:12px;color:#999;margin-bottom:16px}
+        .countdown-text span{font-weight:700}
+        .steps{background:#e7f8f5;border-left:3px solid #128C7E;padding:12px 14px;border-radius:6px;text-align:left;font-size:12px;color:#1a5c52;line-height:1.8;margin-bottom:16px}
+        .steps b{display:block;margin-bottom:4px;font-size:13px}
+        .ws-dot{display:inline-block;width:8px;height:8px;border-radius:50%%;background:#ccc;margin-right:6px;transition:background .3s}
+        .ws-dot.ok{background:#4caf50;animation:pulse 2s infinite}
+        @keyframes pulse{0%%,100%%{opacity:1}50%%{opacity:.4}}
+        .ws-label{font-size:11px;color:#aaa}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📱 WhatsApp QR Code</h1>
-            <p id="deviceId">Device: %s</p>
-        </div>
+<div class="card">
+    <h1>📱 WhatsApp Link</h1>
+    <p class="sub">Device: <code>%s</code></p>
 
-        <div class="status pending" id="status">Connecting...</div>
+    <div class="badge waiting" id="badge">Menghubungkan...</div>
 
-        <div class="qr-container">
-            <div class="loading" id="loading">
-                <span class="spinner"></span>
-                Waiting for QR code... (Initialize session first via API)
-            </div>
-            <img id="qrImage" style="display: none;" alt="WhatsApp QR Code">
-        </div>
-
-        <div class="instructions">
-            <strong>How to use:</strong>
-            <ol>
-                <li><strong>Step 1:</strong> Initialize session via API: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">POST /api/v1/sessions/initiate</code></li>
-                <li><strong>Step 2:</strong> Open this page with the <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">device_id</code></li>
-                <li><strong>Step 3:</strong> QR code will appear below once WhatsApp generates it</li>
-                <li><strong>Step 4:</strong> Open WhatsApp on your phone → Settings > Linked Devices → Link a Device</li>
-                <li><strong>Step 5:</strong> Point your camera at the QR code below</li>
-                <li><strong>Step 6:</strong> Wait for confirmation on your phone</li>
-            </ol>
-        </div>
-
-        <div class="info">
-            ℹ️ This page connects to real-time updates. Once a session is initialized, the QR code will appear automatically when WhatsApp generates it.
-        </div>
-
-        <div class="connection-status">
-            <span class="status-dot" id="connectionDot"></span>
-            <span id="connectionText">Connecting...</span>
+    <div class="qr-wrap">
+        <p id="loading">Menunggu QR code...</p>
+        <img id="qrImage" alt="QR Code WhatsApp">
+        <div class="overlay" id="overlay">
+            <div class="spinner"></div>
+            <p id="overlayMsg">Memperbarui QR...</p>
         </div>
     </div>
 
-    <script>
-        const deviceId = '%s';
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = protocol + '//' + window.location.host + '/ws/sessions/' + deviceId + '/qr';
+    <!-- countdown bar only shown when QR is visible -->
+    <div id="countdownSection" style="display:none">
+        <div class="countdown-bar"><div class="countdown-fill" id="countdownFill" style="width:100%%"></div></div>
+        <p class="countdown-text">QR kedaluwarsa dalam <span id="countdownNum">20</span> detik</p>
+    </div>
 
-        console.log('WebSocket URL:', wsUrl);
-        console.log('Device ID:', deviceId);
+    <div class="steps">
+        <b>Cara menghubungkan:</b>
+        1. Buka WhatsApp di HP &rarr; <b>Perangkat Tertaut</b><br>
+        2. Ketuk <b>"Tautkan Perangkat"</b><br>
+        3. Arahkan kamera ke QR code di atas<br>
+        4. Tunggu konfirmasi otomatis ✅
+    </div>
 
-        let ws = null;
-        let reconnectAttempts = 0;
-        const maxReconnectAttempts = 5;
-        const reconnectDelay = 3000;
+    <div>
+        <span class="ws-dot" id="wsDot"></span>
+        <span class="ws-label" id="wsLabel">Menghubungkan WebSocket...</span>
+    </div>
+</div>
 
-        function connectWebSocket() {
-            try {
-                ws = new WebSocket(wsUrl);
+<script>
+const deviceId = '%s';
+const QR_TTL = 20; // WhatsApp QR expires ~20 seconds
 
-                ws.onopen = function() {
-                    console.log('WebSocket connected');
-                    document.getElementById('connectionDot').classList.add('connected');
-                    document.getElementById('connectionText').textContent = 'Real-time connected';
-                    reconnectAttempts = 0;
+const badge        = document.getElementById('badge');
+const loadingEl    = document.getElementById('loading');
+const qrImage      = document.getElementById('qrImage');
+const overlay      = document.getElementById('overlay');
+const overlayMsg   = document.getElementById('overlayMsg');
+const countdownSec = document.getElementById('countdownSection');
+const countdownFill= document.getElementById('countdownFill');
+const countdownNum = document.getElementById('countdownNum');
+const wsDot        = document.getElementById('wsDot');
+const wsLabel      = document.getElementById('wsLabel');
 
-                    // Send ping every 30 seconds to keep connection alive
-                    setInterval(function() {
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            ws.send(JSON.stringify({ type: 'ping' }));
-                        }
-                    }, 30000);
-                };
+let ws = null;
+let countdownTimer = null;
+let countdownVal = QR_TTL;
+let reconnectAttempts = 0;
+let fallbackTimer = null;
 
-                ws.onmessage = function(event) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        updateQRCode(data);
-                    } catch (e) {
-                        console.error('Failed to parse WebSocket message:', e);
-                    }
-                };
+// ─── QR display ──────────────────────────────────────────────────
+function showQR(imageUrl) {
+    clearCountdown();
+    const url = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+    qrImage.src = url;
+    qrImage.classList.remove('expired');
+    qrImage.style.display = 'block';
+    loadingEl.style.display = 'none';
+    overlay.classList.remove('show');
+    countdownSec.style.display = 'block';
+    setBadge('pending', '⏳ Scan QR Code');
+    startCountdown();
+}
 
-                ws.onerror = function(error) {
-                    console.error('WebSocket error:', error);
-                    document.getElementById('connectionDot').classList.remove('connected');
-                    document.getElementById('connectionText').textContent = 'Connection error';
-                };
+function showConnected() {
+    clearCountdown();
+    qrImage.style.display = 'none';
+    loadingEl.style.display = 'none';
+    countdownSec.style.display = 'none';
+    overlay.classList.remove('show');
+    setBadge('active', '✅ Terhubung!');
+    loadingEl.style.display = 'block';
+    loadingEl.textContent = '✅ WhatsApp berhasil terhubung!';
+}
 
-                ws.onclose = function() {
-                    console.log('WebSocket disconnected');
-                    document.getElementById('connectionDot').classList.remove('connected');
-                    document.getElementById('connectionText').textContent = 'Disconnected';
+function showRefreshing() {
+    qrImage.classList.add('expired');
+    overlay.classList.add('show');
+    overlayMsg.textContent = 'Memperbarui QR code...';
+    countdownSec.style.display = 'none';
+}
 
-                    // Attempt to reconnect
-                    if (reconnectAttempts < maxReconnectAttempts) {
-                        reconnectAttempts++;
-                        console.log('Reconnecting in ' + (reconnectDelay / 1000) + 's...');
-                        setTimeout(connectWebSocket, reconnectDelay);
-                    }
-                };
-            } catch (e) {
-                console.error('Failed to connect WebSocket:', e);
-            }
+function setBadge(cls, text) {
+    badge.className = 'badge ' + cls;
+    badge.textContent = text;
+}
+
+// ─── Countdown ───────────────────────────────────────────────────
+function startCountdown() {
+    countdownVal = QR_TTL;
+    updateCountdownUI();
+    countdownTimer = setInterval(() => {
+        countdownVal--;
+        updateCountdownUI();
+        if (countdownVal <= 0) {
+            clearInterval(countdownTimer);
+            // QR expired — show refreshing state and fallback-poll
+            showRefreshing();
+            fetchQRFallback();
         }
+    }, 1000);
+}
 
-        function updateQRCode(data) {
-            console.log('Received update:', JSON.stringify(data));
+function clearCountdown() {
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+}
 
-            if (!data) {
-                console.warn('No data received');
-                return;
-            }
+function updateCountdownUI() {
+    const pct = (countdownVal / QR_TTL) * 100;
+    countdownFill.style.width = pct + '%%';
+    countdownNum.textContent = countdownVal;
+    if (countdownVal <= 5) {
+        countdownFill.classList.add('urgent');
+        countdownNum.style.color = '#e53935';
+    } else {
+        countdownFill.classList.remove('urgent');
+        countdownNum.style.color = '';
+    }
+}
 
-            // Check if this is a QR code update
-            if (!data.image_url && !data.qr_code) {
-                console.log('Waiting message received:', data.message);
-                document.getElementById('loading').textContent = data.message || 'Waiting for QR code...';
-                return;
-            }
+// ─── WebSocket ────────────────────────────────────────────────────
+function connectWS() {
+    if (ws && ws.readyState === WebSocket.OPEN) return;
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(proto + '//' + location.host + '/ws/sessions/' + deviceId + '/qr');
 
-            const loading = document.getElementById('loading');
-            const qrImage = document.getElementById('qrImage');
-            const status = document.getElementById('status');
+    ws.onopen = () => {
+        wsDot.className = 'ws-dot ok';
+        wsLabel.textContent = 'Real-time terhubung';
+        reconnectAttempts = 0;
+        clearFallbackPoll();
+    };
 
-            if (!loading || !qrImage || !status) {
-                console.error('Required DOM elements not found');
-                return;
-            }
+    ws.onmessage = (evt) => {
+        try {
+            const d = JSON.parse(evt.data);
+            handleUpdate(d);
+        } catch(e) { console.error('WS parse error', e); }
+    };
 
-            // Hide loading spinner
-            loading.style.display = 'none';
+    ws.onerror = () => {
+        wsDot.className = 'ws-dot';
+        wsLabel.textContent = 'WebSocket error';
+    };
 
-            // Use image_url if provided, otherwise construct it
-            const imageUrl = data.image_url || '/api/v1/sessions/' + deviceId + '/qr?format=png';
-            const cacheBustingUrl = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-            
-            console.log('Loading QR image from:', cacheBustingUrl);
-            
-            qrImage.src = cacheBustingUrl;
-            qrImage.style.display = 'block';
-            
-            qrImage.onload = function() {
-                console.log('✅ QR image loaded successfully');
-            };
-            
-            qrImage.onerror = function() {
-                console.error('❌ Failed to load QR image from:', cacheBustingUrl);
-                loading.style.display = 'block';
-                loading.innerHTML = '<span class="spinner"></span> Failed to load QR image';
-            };
-
-            // Update status badge
-            if (data.status === 1) {
-                status.className = 'status active';
-                status.textContent = '✅ Connected';
-            } else if (data.status === 2) {
-                status.className = 'status pending';
-                status.textContent = '⏳ Pending - Scan QR Code';
-            } else {
-                status.className = 'status pending';
-                status.textContent = 'Status: ' + data.status;
-            }
-            
-            console.log('QR code updated successfully');
+    ws.onclose = () => {
+        wsDot.className = 'ws-dot';
+        wsLabel.textContent = 'Terputus, mencoba ulang...';
+        startFallbackPoll(); // poll REST while WS is down
+        if (reconnectAttempts < 10) {
+            reconnectAttempts++;
+            setTimeout(connectWS, Math.min(3000 * reconnectAttempts, 15000));
         }
+    };
+}
 
-        // Fetch QR from API as fallback
-        function fetchQRFromAPI() {
-            console.log('Fetching QR from API...');
-            fetch('/api/v1/sessions/' + deviceId + '/qr')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.qr_code_string) {
-                        console.log('✅ Got QR from API');
-                        updateQRCode({
-                            device_id: deviceId,
-                            qr_code: data.qr_code_string,
-                            status: data.status,
-                            image_url: '/api/v1/sessions/' + deviceId + '/qr?format=png'
-                        });
-                    } else {
-                        console.log('No QR available yet from API');
-                    }
-                })
-                .catch(err => console.error('Failed to fetch QR from API:', err));
-        }
+function handleUpdate(d) {
+    if (!d) return;
+    // Connected success
+    if (d.status === 1) { showConnected(); return; }
+    // Has QR image URL
+    if (d.image_url) {
+        clearFallbackPoll();
+        showQR(d.image_url);
+        return;
+    }
+    // No QR yet
+    if (d.message) {
+        loadingEl.textContent = d.message;
+    }
+}
 
-        // Connect to WebSocket on page load
-        window.addEventListener('load', function() {
-            console.log('Page loaded, connecting to real-time QR updates...');
-            
-            // Try to fetch QR from API first (in case session already initialized)
-            fetchQRFromAPI();
-            
-            // Connect to WebSocket for real-time updates
-            connectWebSocket();
-        });
-
-        // Reconnect on page focus
-        window.addEventListener('focus', function() {
-            if (ws === null || ws.readyState === WebSocket.CLOSED) {
-                console.log('Reconnecting WebSocket on focus...');
-                connectWebSocket();
+// ─── Fallback REST poll (when WS down or QR expired) ─────────────
+function fetchQRFallback() {
+    fetch('/api/v1/sessions/' + deviceId + '/qr')
+        .then(r => r.json())
+        .then(d => {
+            if (d.qr_code_image && d.qr_code_image.direct_url) {
+                showQR(d.qr_code_image.direct_url);
             }
-        });
-        
-        // Also try to refresh QR every 5 seconds as fallback
-        setInterval(function() {
-            if (!document.getElementById('qrImage') || document.getElementById('qrImage').style.display === 'none') {
-                fetchQRFromAPI();
-            }
-        }, 5000);
-    </script>
+        })
+        .catch(() => {});
+}
+
+function startFallbackPoll() {
+    clearFallbackPoll();
+    fallbackTimer = setInterval(fetchQRFallback, 5000);
+}
+
+function clearFallbackPoll() {
+    if (fallbackTimer) { clearInterval(fallbackTimer); fallbackTimer = null; }
+}
+
+// ─── Init ────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+    fetchQRFallback(); // immediate check
+    connectWS();
+});
+
+window.addEventListener('focus', () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) connectWS();
+});
+</script>
 </body>
 </html>
 `, deviceID, deviceID, deviceID)

@@ -16,12 +16,16 @@ import (
 // SessionHandler handles WhatsApp session endpoints
 type SessionHandler struct {
 	sessionService *session.Service
+	encryptionKey  string
+	sessionTimeout int
 }
 
 // NewSessionHandler creates a new session handler
-func NewSessionHandler(svc *session.Service) *SessionHandler {
+func NewSessionHandler(svc *session.Service, encryptionKey string, sessionTimeout int) *SessionHandler {
 	return &SessionHandler{
 		sessionService: svc,
+		encryptionKey:  encryptionKey,
+		sessionTimeout: sessionTimeout,
 	}
 }
 
@@ -200,8 +204,8 @@ func (h *SessionHandler) InitiateSession(c *gin.Context) {
 		DeviceID:       req.DeviceID,
 		UserID:         req.UserID,
 		Phone:          req.Phone,
-		EncryptionKey:  "your-encryption-key-from-config", // TODO: Get from config
-		SessionTimeout: 300,
+		EncryptionKey:  h.encryptionKey,
+		SessionTimeout: h.sessionTimeout,
 		ReconnectLimit: 5,
 	}
 
@@ -247,11 +251,11 @@ func (h *SessionHandler) StopSession(c *gin.Context) {
 // Message sending is handled through message handlers at /api/v1/devices/:device_id/messages
 // This maintains separation of concerns and allows proper queuing
 
-// RegisterRoutes registers all session routes
+// RegisterSessionRoutes registers all session routes
 func RegisterSessionRoutes(router interface {
 	Group(string, ...gin.HandlerFunc) *gin.RouterGroup
-}, sessionService *session.Service) {
-	handler := NewSessionHandler(sessionService)
+}, sessionService *session.Service, encryptionKey string, sessionTimeout int) {
+	handler := NewSessionHandler(sessionService, encryptionKey, sessionTimeout)
 
 	// Session endpoints
 	sessions := router.Group("/sessions")

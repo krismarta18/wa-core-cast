@@ -95,7 +95,7 @@ func (s *Server) registerRoutes() {
 	v1 := s.engine.Group("/api/v1")
 	{
 		// Register session routes (from handlers package)
-		handlers.RegisterSessionRoutes(v1, s.sessionService)
+		handlers.RegisterSessionRoutes(v1, s.sessionService, s.config.EncryptionKey, s.config.SessionTimeout)
 
 		// Register message routes (from handlers package)
 		handlers.RegisterMessageRoutes(v1, s.messageService)
