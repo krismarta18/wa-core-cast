@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"time"
 
 	"wacast/core/models"
@@ -10,36 +11,39 @@ import (
 	"go.uber.org/zap"
 )
 
-// CreateAutoResponse creates an auto response rule
-func (d *Database) CreateAutoResponse(autoResp *models.AutoResponse) error {
+// CreateAutoResponseKeyword creates an auto response keyword rule
+func (d *Database) CreateAutoResponseKeyword(autoResp *models.AutoResponseKeyword) error {
 	query := `
-		INSERT INTO auto_response (id, device_id, keyword, response_text, is_active)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO auto_response_keywords (id, user_id, device_id, keyword, match_type, response_text, is_active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		autoResp.ID, autoResp.DeviceID, autoResp.Keyword, autoResp.ResponseText, autoResp.IsActive,
+		autoResp.ID, autoResp.UserID, autoResp.DeviceID, autoResp.Keyword,
+		autoResp.MatchType, autoResp.ResponseText, autoResp.IsActive, now, now,
 	)
 
 	if err != nil {
-		utils.Error("Failed to create auto response", zap.Error(err))
+		utils.Error("Failed to create auto response keyword", zap.Error(err))
 		return err
 	}
 
 	return nil
 }
 
-// GetAutoResponseByID retrieves an auto response by ID
-func (d *Database) GetAutoResponseByID(respID uuid.UUID) (*models.AutoResponse, error) {
+// GetAutoResponseKeywordByID retrieves an auto response keyword by ID
+func (d *Database) GetAutoResponseKeywordByID(respID uuid.UUID) (*models.AutoResponseKeyword, error) {
 	query := `
-		SELECT id, device_id, keyword, response_text, is_active
-		FROM auto_response
+		SELECT id, user_id, device_id, keyword, match_type, response_text, is_active, created_at, updated_at
+		FROM auto_response_keywords
 		WHERE id = $1
 	`
 
-	resp := &models.AutoResponse{}
+	resp := &models.AutoResponseKeyword{}
 	err := d.QueryRow(query, respID).Scan(
-		&resp.ID, &resp.DeviceID, &resp.Keyword, &resp.ResponseText, &resp.IsActive,
+		&resp.ID, &resp.UserID, &resp.DeviceID, &resp.Keyword,
+		&resp.MatchType, &resp.ResponseText, &resp.IsActive, &resp.CreatedAt, &resp.UpdatedAt,
 	)
 
 	if err != nil {
@@ -49,26 +53,27 @@ func (d *Database) GetAutoResponseByID(respID uuid.UUID) (*models.AutoResponse, 
 	return resp, nil
 }
 
-// GetAutoResponsesByDeviceID retrieves auto responses for a device
-func (d *Database) GetAutoResponsesByDeviceID(deviceID uuid.UUID) ([]models.AutoResponse, error) {
+// GetAutoResponseKeywordsByDeviceID retrieves active auto response keywords for a device
+func (d *Database) GetAutoResponseKeywordsByDeviceID(deviceID uuid.UUID) ([]models.AutoResponseKeyword, error) {
 	query := `
-		SELECT id, device_id, keyword, response_text, is_active
-		FROM auto_response
+		SELECT id, user_id, device_id, keyword, match_type, response_text, is_active, created_at, updated_at
+		FROM auto_response_keywords
 		WHERE device_id = $1 AND is_active = true
 	`
 
 	rows, err := d.Query(query, deviceID)
 	if err != nil {
-		utils.Error("Failed to get auto responses", zap.Error(err))
+		utils.Error("Failed to get auto response keywords", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()
 
-	responses := []models.AutoResponse{}
+	responses := []models.AutoResponseKeyword{}
 	for rows.Next() {
-		resp := models.AutoResponse{}
+		resp := models.AutoResponseKeyword{}
 		err := rows.Scan(
-			&resp.ID, &resp.DeviceID, &resp.Keyword, &resp.ResponseText, &resp.IsActive,
+			&resp.ID, &resp.UserID, &resp.DeviceID, &resp.Keyword,
+			&resp.MatchType, &resp.ResponseText, &resp.IsActive, &resp.CreatedAt, &resp.UpdatedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan response", zap.Error(err))
@@ -80,15 +85,24 @@ func (d *Database) GetAutoResponsesByDeviceID(deviceID uuid.UUID) ([]models.Auto
 	return responses, nil
 }
 
-// UpdateAutoResponse updates an auto response
-func (d *Database) UpdateAutoResponse(respID uuid.UUID, update *models.UpdateAutoResponseRequest) error {
-	query := `UPDATE auto_response SET `
+// UpdateAutoResponseKeyword updates an auto response keyword
+func (d *Database) UpdateAutoResponseKeyword(respID uuid.UUID, update *models.UpdateAutoResponseKeywordRequest) error {
+	query := `UPDATE auto_response_keywords SET `
 	args := []interface{}{}
 	argCount := 1
 
 	if update.Keyword != nil {
-		query += `keyword = $1`
+		query += fmt.Sprintf("keyword = $%d", argCount)
 		args = append(args, *update.Keyword)
+		argCount++
+	}
+
+	if update.MatchType != nil {
+		if argCount > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("match_type = $%d", argCount)
+		args = append(args, *update.MatchType)
 		argCount++
 	}
 
@@ -96,7 +110,7 @@ func (d *Database) UpdateAutoResponse(respID uuid.UUID, update *models.UpdateAut
 		if argCount > 1 {
 			query += ", "
 		}
-		query += `response_text = $` + string(rune(argCount))
+		query += fmt.Sprintf("response_text = $%d", argCount)
 		args = append(args, *update.ResponseText)
 		argCount++
 	}
@@ -105,30 +119,33 @@ func (d *Database) UpdateAutoResponse(respID uuid.UUID, update *models.UpdateAut
 		if argCount > 1 {
 			query += ", "
 		}
-		query += `is_active = $` + string(rune(argCount))
+		query += fmt.Sprintf("is_active = $%d", argCount)
 		args = append(args, *update.IsActive)
 		argCount++
 	}
 
-	query += ` WHERE id = $` + string(rune(argCount))
-	args = append(args, respID)
+	if argCount > 1 {
+		query += ", "
+	}
+	query += fmt.Sprintf("updated_at = $%d WHERE id = $%d", argCount, argCount+1)
+	args = append(args, time.Now(), respID)
 
 	_, err := d.Exec(query, args...)
 	if err != nil {
-		utils.Error("Failed to update auto response", zap.Error(err))
+		utils.Error("Failed to update auto response keyword", zap.Error(err))
 		return err
 	}
 
 	return nil
 }
 
-// DeleteAutoResponse deletes an auto response
-func (d *Database) DeleteAutoResponse(respID uuid.UUID) error {
-	query := `DELETE FROM auto_response WHERE id = $1`
+// DeleteAutoResponseKeyword deletes an auto response keyword
+func (d *Database) DeleteAutoResponseKeyword(respID uuid.UUID) error {
+	query := `DELETE FROM auto_response_keywords WHERE id = $1`
 
 	_, err := d.Exec(query, respID)
 	if err != nil {
-		utils.Error("Failed to delete auto response", zap.Error(err))
+		utils.Error("Failed to delete auto response keyword", zap.Error(err))
 		return err
 	}
 
@@ -138,12 +155,14 @@ func (d *Database) DeleteAutoResponse(respID uuid.UUID) error {
 // CreateWebhook creates a webhook configuration
 func (d *Database) CreateWebhook(webhook *models.Webhook) error {
 	query := `
-		INSERT INTO webhooks (id, device_id, webhook_url, secret_key)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO webhooks (id, user_id, device_id, webhook_url, secret_key_hash, is_active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		webhook.ID, webhook.DeviceID, webhook.WebhookUrl, webhook.SecretKey,
+		webhook.ID, webhook.UserID, webhook.DeviceID, webhook.WebhookUrl,
+		webhook.SecretKeyHash, webhook.IsActive, now, now,
 	)
 
 	if err != nil {
@@ -157,14 +176,15 @@ func (d *Database) CreateWebhook(webhook *models.Webhook) error {
 // GetWebhookByID retrieves a webhook by ID
 func (d *Database) GetWebhookByID(webhookID uuid.UUID) (*models.Webhook, error) {
 	query := `
-		SELECT id, device_id, webhook_url, secret_key
+		SELECT id, user_id, device_id, webhook_url, secret_key_hash, is_active, created_at, updated_at
 		FROM webhooks
 		WHERE id = $1
 	`
 
 	webhook := &models.Webhook{}
 	err := d.QueryRow(query, webhookID).Scan(
-		&webhook.ID, &webhook.DeviceID, &webhook.WebhookUrl, &webhook.SecretKey,
+		&webhook.ID, &webhook.UserID, &webhook.DeviceID, &webhook.WebhookUrl,
+		&webhook.SecretKeyHash, &webhook.IsActive, &webhook.CreatedAt, &webhook.UpdatedAt,
 	)
 
 	if err != nil {
@@ -177,7 +197,7 @@ func (d *Database) GetWebhookByID(webhookID uuid.UUID) (*models.Webhook, error) 
 // GetWebhooksByDeviceID retrieves webhooks for a device
 func (d *Database) GetWebhooksByDeviceID(deviceID uuid.UUID) ([]models.Webhook, error) {
 	query := `
-		SELECT id, device_id, webhook_url, secret_key
+		SELECT id, user_id, device_id, webhook_url, secret_key_hash, is_active, created_at, updated_at
 		FROM webhooks
 		WHERE device_id = $1
 	`
@@ -193,7 +213,8 @@ func (d *Database) GetWebhooksByDeviceID(deviceID uuid.UUID) ([]models.Webhook, 
 	for rows.Next() {
 		webhook := models.Webhook{}
 		err := rows.Scan(
-			&webhook.ID, &webhook.DeviceID, &webhook.WebhookUrl, &webhook.SecretKey,
+			&webhook.ID, &webhook.UserID, &webhook.DeviceID, &webhook.WebhookUrl,
+			&webhook.SecretKeyHash, &webhook.IsActive, &webhook.CreatedAt, &webhook.UpdatedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan webhook", zap.Error(err))
@@ -206,10 +227,10 @@ func (d *Database) GetWebhooksByDeviceID(deviceID uuid.UUID) ([]models.Webhook, 
 }
 
 // UpdateWebhook updates a webhook
-func (d *Database) UpdateWebhook(webhookID uuid.UUID, webhookURL, secretKey string) error {
-	query := `UPDATE webhooks SET webhook_url = $1, secret_key = $2 WHERE id = $3`
+func (d *Database) UpdateWebhook(webhookID uuid.UUID, webhookURL, secretKeyHash string) error {
+	query := `UPDATE webhooks SET webhook_url = $1, secret_key_hash = $2, updated_at = $3 WHERE id = $4`
 
-	_, err := d.Exec(query, webhookURL, secretKey, webhookID)
+	_, err := d.Exec(query, webhookURL, secretKeyHash, time.Now(), webhookID)
 	if err != nil {
 		utils.Error("Failed to update webhook", zap.Error(err))
 		return err
@@ -234,12 +255,13 @@ func (d *Database) DeleteWebhook(webhookID uuid.UUID) error {
 // CreateAPILog logs an API call
 func (d *Database) CreateAPILog(log *models.APILog) error {
 	query := `
-		INSERT INTO api_logs (id, user_id, endpoint, req_body, response_body, created_at, ip_address, device_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO api_logs (id, user_id, device_id, endpoint, method, status_code, req_body, response_body, ip_address, user_agent, duration_ms, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	_, err := d.Exec(query,
-		log.ID, log.UserID, log.Endpoint, log.ReqBody, log.ResponseBody, time.Now(), log.IPAddress, log.DeviceID,
+		log.ID, log.UserID, log.DeviceID, log.Endpoint, log.Method, log.StatusCode,
+		log.ReqBody, log.ResponseBody, log.IPAddress, log.UserAgent, log.DurationMs, time.Now(),
 	)
 
 	if err != nil {
@@ -253,7 +275,8 @@ func (d *Database) CreateAPILog(log *models.APILog) error {
 // GetAPILogsByUserID retrieves API logs for a user
 func (d *Database) GetAPILogsByUserID(userID uuid.UUID, limit, offset int) ([]models.APILog, error) {
 	query := `
-		SELECT id, user_id, endpoint, req_body, response_body, created_at, ip_address, device_id
+		SELECT id, user_id, device_id, endpoint, method, status_code, req_body, response_body,
+		       ip_address, user_agent, duration_ms, created_at
 		FROM api_logs
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -271,7 +294,8 @@ func (d *Database) GetAPILogsByUserID(userID uuid.UUID, limit, offset int) ([]mo
 	for rows.Next() {
 		log := models.APILog{}
 		err := rows.Scan(
-			&log.ID, &log.UserID, &log.Endpoint, &log.ReqBody, &log.ResponseBody, &log.CreatedAt, &log.IPAddress, &log.DeviceID,
+			&log.ID, &log.UserID, &log.DeviceID, &log.Endpoint, &log.Method, &log.StatusCode,
+			&log.ReqBody, &log.ResponseBody, &log.IPAddress, &log.UserAgent, &log.DurationMs, &log.CreatedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan log", zap.Error(err))
@@ -285,11 +309,11 @@ func (d *Database) GetAPILogsByUserID(userID uuid.UUID, limit, offset int) ([]mo
 
 // GetSystemSetting retrieves a system setting
 func (d *Database) GetSystemSetting(key string) (*models.SystemSetting, error) {
-	query := `SELECT id, keys, value, description, created_at FROM system_settings WHERE keys = $1`
+	query := `SELECT id, key, value, description, created_at FROM system_settings WHERE key = $1`
 
 	setting := &models.SystemSetting{}
 	err := d.QueryRow(query, key).Scan(
-		&setting.ID, &setting.Keys, &setting.Value, &setting.Description, &setting.CreatedAt,
+		&setting.ID, &setting.Key, &setting.Value, &setting.Description, &setting.CreatedAt,
 	)
 
 	if err != nil {
@@ -301,9 +325,9 @@ func (d *Database) GetSystemSetting(key string) (*models.SystemSetting, error) {
 
 // UpdateSystemSetting updates a system setting
 func (d *Database) UpdateSystemSetting(key, value string) error {
-	query := `UPDATE system_settings SET value = $1 WHERE keys = $2`
+	query := `UPDATE system_settings SET value = $1, updated_at = $2 WHERE key = $3`
 
-	_, err := d.Exec(query, value, key)
+	_, err := d.Exec(query, value, time.Now(), key)
 	if err != nil {
 		utils.Error("Failed to update system setting", zap.Error(err))
 		return err
@@ -311,3 +335,5 @@ func (d *Database) UpdateSystemSetting(key, value string) error {
 
 	return nil
 }
+
+

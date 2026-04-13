@@ -11,6 +11,7 @@ import (
 	"wacast/core/config"
 	"wacast/core/database"
 	"wacast/core/handlers"
+	"wacast/core/services/auth"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
 	"wacast/core/utils"
@@ -19,6 +20,7 @@ import (
 // Server wraps the HTTP server and its dependencies
 type Server struct {
 	engine           *gin.Engine
+	authService      *auth.Service
 	sessionService   *session.Service
 	messageService   *message.Service
 	db               *database.Database
@@ -31,6 +33,7 @@ type Server struct {
 
 // NewServer creates a new HTTP server
 func NewServer(
+	authService *auth.Service,
 	sessionService *session.Service,
 	messageService *message.Service,
 	db *database.Database,
@@ -54,6 +57,7 @@ func NewServer(
 
 	server := &Server{
 		engine:           engine,
+		authService:      authService,
 		sessionService:   sessionService,
 		messageService:   messageService,
 		db:               db,
@@ -94,6 +98,9 @@ func (s *Server) registerRoutes() {
 	// API versioning group
 	v1 := s.engine.Group("/api/v1")
 	{
+		// Register auth routes (login, register, OTP, /me)
+		handlers.RegisterAuthRoutes(v1, s.authService, s.config.JWTSecret)
+
 		// Register session routes (from handlers package)
 		handlers.RegisterSessionRoutes(v1, s.sessionService, s.config.EncryptionKey, s.config.SessionTimeout)
 

@@ -18,6 +18,8 @@ servers:
 tags:
   - name: Health
     description: Health check endpoints
+  - name: Auth
+    description: OTP-based authentication and current user endpoints
   - name: Sessions
     description: WhatsApp session managementx
   - name: Messages
@@ -48,6 +50,138 @@ paths:
                   database: healthy
                   sessions: true
                   messages: true
+
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register user
+      description: Create a new user account and send an OTP via WhatsApp.
+      operationId: registerAuthUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRegisterRequest"
+            example:
+              phone_number: "62812345678"
+              full_name: "John Doe"
+      responses:
+        "200":
+          description: OTP sent for registration verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthGenericSuccessResponse"
+
+  /api/v1/auth/request-otp:
+    post:
+      tags:
+        - Auth
+      summary: Request login OTP
+      description: Request a login OTP for an existing user.
+      operationId: requestAuthOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthOTPRequest"
+            example:
+              phone_number: "62812345678"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthGenericSuccessResponse"
+
+  /api/v1/auth/verify-otp:
+    post:
+      tags:
+        - Auth
+      summary: Verify OTP and login
+      description: Verify OTP code and return access and refresh tokens.
+      operationId: verifyAuthOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthVerifyOTPRequest"
+            example:
+              phone_number: "62812345678"
+              otp_code: "123456"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthVerifyOTPResponse"
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh auth tokens
+      description: Rotate the current refresh token and issue a new access token pair.
+      operationId: refreshAuthToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRefreshTokenRequest"
+            example:
+              refresh_token: "somerandomrefreshtoken"
+      responses:
+        "200":
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthVerifyOTPResponse"
+        "401":
+          description: Invalid or expired refresh token
+
+  /api/v1/auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current user
+      description: Return the currently authenticated user profile.
+      operationId: getCurrentAuthUser
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthMeResponse"
+        "401":
+          description: Unauthorized
+
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      description: Revoke the active persisted session for the current bearer token.
+      operationId: logoutAuthUser
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthGenericSuccessResponse"
 
   /health/ready:
     get:
@@ -132,6 +266,42 @@ paths:
         "404":
           description: Session not found
 
+  /api/v1/sessions/{device_id}/qr:
+    get:
+      tags:
+        - Sessions
+      summary: Get QR code for pending session
+      description: |
+        Returns the QR code for a pending WhatsApp session.
+        Use `format=json` for metadata and base64 PNG, or `format=png` for the image directly.
+      operationId: getSessionQRCode
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, png]
+            default: json
+      responses:
+        "200":
+          description: QR code retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionQRCodeResponse"
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: QR code not available for this device
+
   /api/v1/sessions/initiate:
     post:
       tags:
@@ -152,7 +322,7 @@ paths:
               user_id: user123
               phone: "62812345678"
       responses:
-        "200":
+        "202":
           description: Session initiated successfully
           content:
             application/json:
@@ -218,7 +388,7 @@ paths:
               content: "Hello, this is a test message"
               group_id: null
       responses:
-        "202":
+        "200":
           description: Message accepted and queued
           content:
             application/json:
@@ -254,7 +424,7 @@ paths:
               content_type: "image"
               caption: "Check this out!"
       responses:
-        "202":
+        "200":
           description: Message accepted and queued
           content:
             application/json:
@@ -285,12 +455,12 @@ paths:
               content: "Good morning!"
               scheduled_for: "2026-04-10T08:00:00Z"
       responses:
-        "202":
+        "200":
           description: Message scheduled
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
+                $ref: "#/components/schemas/ScheduledMessageResponse"
 
   /api/v1/messages/{message_id}/status:
     get:
@@ -403,6 +573,11 @@ paths:
                 $ref: "#/components/schemas/ServerStatsResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     HealthResponse:
       type: object
@@ -419,6 +594,126 @@ components:
         details:
           type: object
           description: Additional health details
+
+    AuthRegisterRequest:
+      type: object
+      required:
+        - phone_number
+        - full_name
+      properties:
+        phone_number:
+          type: string
+          example: "62812345678"
+        full_name:
+          type: string
+          example: "John Doe"
+
+    AuthOTPRequest:
+      type: object
+      required:
+        - phone_number
+      properties:
+        phone_number:
+          type: string
+          example: "62812345678"
+
+    AuthVerifyOTPRequest:
+      type: object
+      required:
+        - phone_number
+        - otp_code
+      properties:
+        phone_number:
+          type: string
+          example: "62812345678"
+        otp_code:
+          type: string
+          example: "123456"
+
+    AuthUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone_number:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        company_name:
+          type: string
+          nullable: true
+        timezone:
+          type: string
+        is_verified:
+          type: boolean
+        is_banned:
+          type: boolean
+        is_api_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    AuthGenericSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OTP sent
+        phone_number:
+          type: string
+          nullable: true
+
+    AuthVerifyOTPResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login successful
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+        refresh_expires_in:
+          type: integer
+        user:
+          $ref: "#/components/schemas/AuthUserResponse"
+
+    AuthRefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+
+    AuthMeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        user:
+          $ref: "#/components/schemas/AuthUserResponse"
 
     SessionListResponse:
       type: object
@@ -438,8 +733,6 @@ components:
                 description: "0=inactive, 1=active, 2=pending"
               is_active:
                 type: boolean
-              last_activity:
-                type: integer
 
     SessionStatusResponse:
       type: object
@@ -448,10 +741,44 @@ components:
           type: string
         status:
           type: integer
+          enum: [0, 1, 2]
         is_active:
           type: boolean
-        last_activity:
+
+    SessionQRCodeImageResponse:
+      type: object
+      properties:
+        base64_png:
+          type: string
+        png_bytes:
           type: integer
+        url_format:
+          type: string
+        direct_url:
+          type: string
+
+    SessionQRCodeResponse:
+      type: object
+      properties:
+        device_id:
+          type: string
+        qr_code_string:
+          type: string
+        qr_code_image:
+          $ref: "#/components/schemas/SessionQRCodeImageResponse"
+        status:
+          type: integer
+          enum: [0, 1, 2]
+        message:
+          type: string
+        instructions:
+          type: object
+          additionalProperties:
+            type: string
+        frontend_usage:
+          type: object
+          additionalProperties:
+            type: string
 
     InitiateSessionRequest:
       type: object
@@ -481,6 +808,10 @@ components:
         status:
           type: integer
           example: 2
+        next_step:
+          type: string
+        poll_status:
+          type: string
 
     SendMessageRequest:
       type: object
@@ -498,6 +829,9 @@ components:
           type: string
           nullable: true
           description: Group ID if sending to group
+        priority:
+          type: integer
+          description: Optional queue priority
 
     SendMediaMessageRequest:
       type: object
@@ -518,6 +852,9 @@ components:
           type: string
           nullable: true
           description: Optional caption for media
+        group_id:
+          type: string
+          nullable: true
 
     SendScheduledMessageRequest:
       type: object
@@ -534,6 +871,9 @@ components:
           type: string
           format: date-time
           description: ISO 8601 datetime when to send
+        group_id:
+          type: string
+          nullable: true
 
     MessageResponse:
       type: object
@@ -545,6 +885,18 @@ components:
           enum: [pending, sent, delivered, read, failed]
         timestamp:
           type: integer
+
+    ScheduledMessageResponse:
+      type: object
+      properties:
+        message_id:
+          type: string
+        status:
+          type: string
+          example: scheduled
+        scheduled_for:
+          type: string
+          format: date-time
 
     MessageStatusResponse:
       type: object
@@ -569,7 +921,7 @@ components:
         pending:
           type: integer
         avg_latency_ms:
-          type: integer
+          type: number
 
     FailedMessagesResponse:
       type: object
@@ -595,6 +947,7 @@ components:
                 type: integer
               error:
                 type: string
+                nullable: true
 
     ServerStatusResponse:
       type: object
@@ -635,7 +988,7 @@ components:
             pending:
               type: integer
             avg_latency_ms:
-              type: integer
+              type: number
         uptime_seconds:
           type: integer
         timestamp:

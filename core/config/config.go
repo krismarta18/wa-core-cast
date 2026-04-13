@@ -26,7 +26,12 @@ type Config struct {
 	
 	// Encryption
 	EncryptionKey string
-	
+
+	// JWT
+	JWTSecret             string
+	JWTExpiryHours        int
+	JWTRefreshExpiryHours int
+
 	// Environment
 	Environment string
 }
@@ -38,6 +43,8 @@ func LoadConfig() (*Config, error) {
 
 	serverPort, _ := strconv.Atoi(getEnv("SERVER_PORT", "8080"))
 	sessionTimeout, _ := strconv.Atoi(getEnv("WHATSAPP_SESSION_TIMEOUT", "300"))
+	jwtExpiry, _ := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "24"))
+	jwtRefreshExpiry, _ := strconv.Atoi(getEnv("JWT_REFRESH_EXPIRY_HOURS", "168"))
 
 	config := &Config{
 		ServiceName:    ServiceName,
@@ -48,6 +55,9 @@ func LoadConfig() (*Config, error) {
 		LogLevel:       getEnv("LOG_LEVEL", "debug"),
 		SessionTimeout: sessionTimeout,
 		EncryptionKey:  getEnv("ENCRYPTION_KEY", ""),
+		JWTSecret:             getEnv("JWT_SECRET", ""),
+		JWTExpiryHours:        jwtExpiry,
+		JWTRefreshExpiryHours: jwtRefreshExpiry,
 		Environment:    getEnv("ENVIRONMENT", "development"),
 	}
 

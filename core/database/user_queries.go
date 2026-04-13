@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 
 	"wacast/core/models"
 	"wacast/core/utils"
@@ -13,38 +14,40 @@ import (
 // CreateUser creates a new user
 func (d *Database) CreateUser(user *models.User) error {
 	query := `
-		INSERT INTO users (id, phone, nama_lengkap, is_verify, otp_code, otp_expired, 
-			id_subscribed, max_device, is_ban, is_api)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO users (id, phone_number, full_name, email, company_name, timezone,
+			is_verified, is_banned, is_api_enabled, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		user.ID, user.Phone, user.NamaLengkap, user.IsVerify, user.OTPCode,
-		user.OTPExpired, user.IDSubscribed, user.MaxDevice, user.IsBan, user.IsAPI,
+		user.ID, user.PhoneNumber, user.FullName, user.Email, user.CompanyName, user.Timezone,
+		user.IsVerified, user.IsBanned, user.IsAPIEnabled, now, now,
 	)
 
 	if err != nil {
-		utils.Error("Failed to create user", zap.Error(err), zap.String("phone", user.Phone))
+		utils.Error("Failed to create user", zap.Error(err), zap.String("phone", user.PhoneNumber))
 		return err
 	}
 
-	utils.Debug("User created", zap.String("user_id", user.ID.String()), zap.String("phone", user.Phone))
+	utils.Debug("User created", zap.String("user_id", user.ID.String()), zap.String("phone", user.PhoneNumber))
 	return nil
 }
 
 // GetUserByID retrieves a user by ID
 func (d *Database) GetUserByID(userID uuid.UUID) (*models.User, error) {
 	query := `
-		SELECT id, phone, nama_lengkap, is_verify, otp_code, otp_expired, 
-			id_subscribed, max_device, is_ban, is_api
+		SELECT id, phone_number, full_name, email, company_name, timezone,
+			is_verified, is_banned, is_api_enabled, created_at, updated_at, last_login_at
 		FROM users
 		WHERE id = $1
 	`
 
 	user := &models.User{}
 	err := d.QueryRow(query, userID).Scan(
-		&user.ID, &user.Phone, &user.NamaLengkap, &user.IsVerify, &user.OTPCode,
-		&user.OTPExpired, &user.IDSubscribed, &user.MaxDevice, &user.IsBan, &user.IsAPI,
+		&user.ID, &user.PhoneNumber, &user.FullName, &user.Email, &user.CompanyName, &user.Timezone,
+		&user.IsVerified, &user.IsBanned, &user.IsAPIEnabled,
+		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
 	)
 
 	if err != nil {
@@ -58,16 +61,17 @@ func (d *Database) GetUserByID(userID uuid.UUID) (*models.User, error) {
 // GetUserByPhone retrieves a user by phone number
 func (d *Database) GetUserByPhone(phone string) (*models.User, error) {
 	query := `
-		SELECT id, phone, nama_lengkap, is_verify, otp_code, otp_expired, 
-			id_subscribed, max_device, is_ban, is_api
+		SELECT id, phone_number, full_name, email, company_name, timezone,
+			is_verified, is_banned, is_api_enabled, created_at, updated_at, last_login_at
 		FROM users
-		WHERE phone = $1
+		WHERE phone_number = $1
 	`
 
 	user := &models.User{}
 	err := d.QueryRow(query, phone).Scan(
-		&user.ID, &user.Phone, &user.NamaLengkap, &user.IsVerify, &user.OTPCode,
-		&user.OTPExpired, &user.IDSubscribed, &user.MaxDevice, &user.IsBan, &user.IsAPI,
+		&user.ID, &user.PhoneNumber, &user.FullName, &user.Email, &user.CompanyName, &user.Timezone,
+		&user.IsVerified, &user.IsBanned, &user.IsAPIEnabled,
+		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
 	)
 
 	if err != nil {
@@ -83,53 +87,71 @@ func (d *Database) UpdateUser(userID uuid.UUID, update *models.UpdateUserRequest
 	args := []interface{}{}
 	argCount := 1
 
-	if update.NamaLengkap != nil {
-		if argCount > 1 {
-			query += ", "
-		}
-		query += fmt.Sprintf("nama_lengkap = $%d", argCount)
-		args = append(args, *update.NamaLengkap)
+	if update.FullName != nil {
+		query += fmt.Sprintf("full_name = $%d", argCount)
+		args = append(args, *update.FullName)
 		argCount++
 	}
 
-	if update.OTPCode != nil {
+	if update.Email != nil {
 		if argCount > 1 {
 			query += ", "
 		}
-		query += fmt.Sprintf("otp_code = $%d", argCount)
-		args = append(args, *update.OTPCode)
+		query += fmt.Sprintf("email = $%d", argCount)
+		args = append(args, *update.Email)
 		argCount++
 	}
 
-	if update.OTPExpired != nil {
+	if update.CompanyName != nil {
 		if argCount > 1 {
 			query += ", "
 		}
-		query += fmt.Sprintf("otp_expired = $%d", argCount)
-		args = append(args, *update.OTPExpired)
+		query += fmt.Sprintf("company_name = $%d", argCount)
+		args = append(args, *update.CompanyName)
 		argCount++
 	}
 
-	if update.IsVerify != nil {
+	if update.Timezone != nil {
 		if argCount > 1 {
 			query += ", "
 		}
-		query += fmt.Sprintf("is_verify = $%d", argCount)
-		args = append(args, *update.IsVerify)
+		query += fmt.Sprintf("timezone = $%d", argCount)
+		args = append(args, *update.Timezone)
 		argCount++
 	}
 
-	if update.IsBan != nil {
+	if update.IsVerified != nil {
 		if argCount > 1 {
 			query += ", "
 		}
-		query += fmt.Sprintf("is_ban = $%d", argCount)
-		args = append(args, *update.IsBan)
+		query += fmt.Sprintf("is_verified = $%d", argCount)
+		args = append(args, *update.IsVerified)
 		argCount++
 	}
 
-	query += fmt.Sprintf(" WHERE id = $%d", argCount)
-	args = append(args, userID)
+	if update.IsBanned != nil {
+		if argCount > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("is_banned = $%d", argCount)
+		args = append(args, *update.IsBanned)
+		argCount++
+	}
+
+	if update.IsAPIEnabled != nil {
+		if argCount > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("is_api_enabled = $%d", argCount)
+		args = append(args, *update.IsAPIEnabled)
+		argCount++
+	}
+
+	if argCount > 1 {
+		query += ", "
+	}
+	query += fmt.Sprintf("updated_at = $%d WHERE id = $%d", argCount, argCount+1)
+	args = append(args, time.Now(), userID)
 
 	_, err := d.Exec(query, args...)
 	if err != nil {
@@ -140,11 +162,25 @@ func (d *Database) UpdateUser(userID uuid.UUID, update *models.UpdateUserRequest
 	return nil
 }
 
-// DeleteUser soft deletes a user (sets is_ban = true)
-func (d *Database) DeleteUser(userID uuid.UUID) error {
-	query := `UPDATE users SET is_ban = true WHERE id = $1`
+// UpdateUserLastLogin updates the last login timestamp
+func (d *Database) UpdateUserLastLogin(userID uuid.UUID) error {
+	now := time.Now()
+	query := `UPDATE users SET last_login_at = $1, updated_at = $1 WHERE id = $2`
 
-	_, err := d.Exec(query, userID)
+	_, err := d.Exec(query, now, userID)
+	if err != nil {
+		utils.Error("Failed to update user last login", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+// DeleteUser soft deletes a user (sets is_banned = true)
+func (d *Database) DeleteUser(userID uuid.UUID) error {
+	query := `UPDATE users SET is_banned = true, updated_at = $1 WHERE id = $2`
+
+	_, err := d.Exec(query, time.Now(), userID)
 	if err != nil {
 		utils.Error("Failed to delete user", zap.Error(err), zap.String("user_id", userID.String()))
 		return err
@@ -153,9 +189,9 @@ func (d *Database) DeleteUser(userID uuid.UUID) error {
 	return nil
 }
 
-// GetUserCount returns total user count
+// GetUserCount returns total non-banned user count
 func (d *Database) GetUserCount() (int64, error) {
-	query := `SELECT COUNT(*) FROM users WHERE is_ban = false`
+	query := `SELECT COUNT(*) FROM users WHERE is_banned = false`
 
 	var count int64
 	err := d.QueryRow(query).Scan(&count)
@@ -170,11 +206,11 @@ func (d *Database) GetUserCount() (int64, error) {
 // GetAllUsers retrieves all active users with pagination
 func (d *Database) GetAllUsers(limit, offset int) ([]models.User, error) {
 	query := `
-		SELECT id, phone, nama_lengkap, is_verify, otp_code, otp_expired, 
-			id_subscribed, max_device, is_ban, is_api
+		SELECT id, phone_number, full_name, email, company_name, timezone,
+			is_verified, is_banned, is_api_enabled, created_at, updated_at, last_login_at
 		FROM users
-		WHERE is_ban = false
-		ORDER BY id DESC
+		WHERE is_banned = false
+		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
 
@@ -189,8 +225,9 @@ func (d *Database) GetAllUsers(limit, offset int) ([]models.User, error) {
 	for rows.Next() {
 		user := models.User{}
 		err := rows.Scan(
-			&user.ID, &user.Phone, &user.NamaLengkap, &user.IsVerify, &user.OTPCode,
-			&user.OTPExpired, &user.IDSubscribed, &user.MaxDevice, &user.IsBan, &user.IsAPI,
+			&user.ID, &user.PhoneNumber, &user.FullName, &user.Email, &user.CompanyName, &user.Timezone,
+			&user.IsVerified, &user.IsBanned, &user.IsAPIEnabled,
+			&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan user", zap.Error(err))
@@ -204,9 +241,9 @@ func (d *Database) GetAllUsers(limit, offset int) ([]models.User, error) {
 
 // VerifyUser marks user as verified
 func (d *Database) VerifyUser(userID uuid.UUID) error {
-	query := `UPDATE users SET is_verify = true, otp_code = NULL WHERE id = $1`
+	query := `UPDATE users SET is_verified = true, updated_at = $1 WHERE id = $2`
 
-	_, err := d.Exec(query, userID)
+	_, err := d.Exec(query, time.Now(), userID)
 	if err != nil {
 		utils.Error("Failed to verify user", zap.Error(err))
 		return err
@@ -215,11 +252,11 @@ func (d *Database) VerifyUser(userID uuid.UUID) error {
 	return nil
 }
 
-// BanUser marks user as banned
-func (d *Database) BanUser(userID uuid.UUID, isBan bool) error {
-	query := `UPDATE users SET is_ban = $1 WHERE id = $2`
+// BanUser bans or unbans a user
+func (d *Database) BanUser(userID uuid.UUID, isBanned bool) error {
+	query := `UPDATE users SET is_banned = $1, updated_at = $2 WHERE id = $3`
 
-	_, err := d.Exec(query, isBan, userID)
+	_, err := d.Exec(query, isBanned, time.Now(), userID)
 	if err != nil {
 		utils.Error("Failed to ban/unban user", zap.Error(err))
 		return err
@@ -228,15 +265,3 @@ func (d *Database) BanUser(userID uuid.UUID, isBan bool) error {
 	return nil
 }
 
-// UpdateUserMaxDevice updates the max device count for a user
-func (d *Database) UpdateUserMaxDevice(userID uuid.UUID, maxDevice int32) error {
-	query := `UPDATE users SET max_device = $1 WHERE id = $2`
-
-	_, err := d.Exec(query, maxDevice, userID)
-	if err != nil {
-		utils.Error("Failed to update user max device", zap.Error(err))
-		return err
-	}
-
-	return nil
-}

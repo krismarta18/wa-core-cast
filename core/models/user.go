@@ -8,18 +8,18 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID           uuid.UUID  `json:"id"`
-	Phone        string     `json:"phone"`
-	NamaLengkap  string     `json:"nama_lengkap"`
-	IsVerify     bool       `json:"is_verify"`
-	OTPCode      string     `json:"otp_code"`
-	OTPExpired   time.Time  `json:"otp_expired"`
-	IDSubscribed uuid.UUID  `json:"id_subscribed"`
-	MaxDevice    int32      `json:"max_device"`
-	IsBan        bool       `json:"is_ban"`
-	IsAPI        bool       `json:"is_api"`
-	CreatedAt    *time.Time `json:"created_at,omitempty"`
-	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
+	ID            uuid.UUID  `json:"id"`
+	PhoneNumber   string     `json:"phone_number"`
+	FullName      string     `json:"full_name"`
+	Email         *string    `json:"email,omitempty"`
+	CompanyName   *string    `json:"company_name,omitempty"`
+	Timezone      string     `json:"timezone"`
+	IsVerified    bool       `json:"is_verified"`
+	IsBanned      bool       `json:"is_banned"`
+	IsAPIEnabled  bool       `json:"is_api_enabled"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	LastLoginAt   *time.Time `json:"last_login_at,omitempty"`
 }
 
 // TableName returns the table name
@@ -29,41 +29,52 @@ func (User) TableName() string {
 
 // CreateUserRequest is the request struct for creating a user
 type CreateUserRequest struct {
-	Phone       string     `json:"phone" binding:"required"`
-	NamaLengkap string     `json:"nama_lengkap" binding:"required"`
-	IsAPI       bool       `json:"is_api"`
-	IDSubscribed uuid.UUID `json:"id_subscribed"`
+	PhoneNumber string  `json:"phone_number" binding:"required"`
+	FullName    string  `json:"full_name" binding:"required"`
+	Email       *string `json:"email"`
+	CompanyName *string `json:"company_name"`
+	Timezone    string  `json:"timezone"`
 }
 
 // UpdateUserRequest is the request struct for updating a user
 type UpdateUserRequest struct {
-	NamaLengkap *string `json:"nama_lengkap"`
-	OTPCode     *string `json:"otp_code"`
-	OTPExpired  *time.Time `json:"otp_expired"`
-	IsVerify    *bool   `json:"is_verify"`
-	IsBan       *bool   `json:"is_ban"`
+	FullName     *string `json:"full_name"`
+	Email        *string `json:"email"`
+	CompanyName  *string `json:"company_name"`
+	Timezone     *string `json:"timezone"`
+	IsVerified   *bool   `json:"is_verified"`
+	IsBanned     *bool   `json:"is_banned"`
+	IsAPIEnabled *bool   `json:"is_api_enabled"`
 }
 
 // UserResponse is the response struct for user endpoints
 type UserResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Phone        string    `json:"phone"`
-	NamaLengkap  string    `json:"nama_lengkap"`
-	IsVerify     bool      `json:"is_verify"`
-	MaxDevice    int32     `json:"max_device"`
-	IsBan        bool      `json:"is_ban"`
-	IsAPI        bool      `json:"is_api"`
+	ID           uuid.UUID  `json:"id"`
+	PhoneNumber  string     `json:"phone_number"`
+	FullName     string     `json:"full_name"`
+	Email        *string    `json:"email,omitempty"`
+	CompanyName  *string    `json:"company_name,omitempty"`
+	Timezone     string     `json:"timezone"`
+	IsVerified   bool       `json:"is_verified"`
+	IsBanned     bool       `json:"is_banned"`
+	IsAPIEnabled bool       `json:"is_api_enabled"`
+	CreatedAt    time.Time  `json:"created_at"`
+	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
 }
 
 // ToResponse converts User to UserResponse
 func (u *User) ToResponse() *UserResponse {
 	return &UserResponse{
-		ID:          u.ID,
-		Phone:       u.Phone,
-		NamaLengkap: u.NamaLengkap,
-		IsVerify:    u.IsVerify,
-		MaxDevice:   u.MaxDevice,
-		IsBan:       u.IsBan,
-		IsAPI:       u.IsAPI,
+		ID:           u.ID,
+		PhoneNumber:  u.PhoneNumber,
+		FullName:     u.FullName,
+		Email:        u.Email,
+		CompanyName:  u.CompanyName,
+		Timezone:     u.Timezone,
+		IsVerified:   u.IsVerified,
+		IsBanned:     u.IsBanned,
+		IsAPIEnabled: u.IsAPIEnabled,
+		CreatedAt:    u.CreatedAt,
+		LastLoginAt:  u.LastLoginAt,
 	}
 }

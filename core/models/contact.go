@@ -9,85 +9,101 @@ import (
 
 // Contact represents a contact
 type Contact struct {
-	ID               uuid.UUID       `json:"id"`
-	GroupID          uuid.UUID       `json:"group_id"`
-	Name             string          `json:"name"`
-	Phone            string          `json:"phone"`
-	AdditionalData   json.RawMessage `json:"additional_data"`
-	CreatedAt        time.Time       `json:"created_at"`
-	UpdatedAt        *time.Time      `json:"updated_at,omitempty"`
-	DeletedAt        *time.Time      `json:"deleted_at,omitempty"`
+	ID             uuid.UUID       `json:"id"`
+	UserID         uuid.UUID       `json:"user_id"`
+	LabelID        *uuid.UUID      `json:"label_id,omitempty"`
+	Name           string          `json:"name"`
+	PhoneNumber    string          `json:"phone_number"`
+	Note           *string         `json:"note,omitempty"`
+	AdditionalData json.RawMessage `json:"additional_data"`
+	CreatedAt      time.Time       `json:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at"`
+	DeletedAt      *time.Time      `json:"deleted_at,omitempty"`
 }
 
 // TableName returns the table name
 func (Contact) TableName() string {
-	return "contact"
+	return "contacts"
 }
 
-// Group represents a contact group
-type Group struct {
-	ID        uuid.UUID  `json:"id"`
-	UserID    uuid.UUID  `json:"user_id"`
-	GroupName string     `json:"group_name"`
-	CreatedAt time.Time  `json:"created_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+// ContactGroup represents a contact group
+type ContactGroup struct {
+	ID          uuid.UUID  `json:"id"`
+	UserID      uuid.UUID  `json:"user_id"`
+	Name        string     `json:"name"`
+	Description *string    `json:"description,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
 // TableName returns the table name
-func (Group) TableName() string {
-	return "groups"
+func (ContactGroup) TableName() string {
+	return "contact_groups"
 }
 
 // CreateContactRequest is the request struct for creating a contact
 type CreateContactRequest struct {
-	GroupID          uuid.UUID              `json:"group_id" binding:"required"`
-	Name             string                 `json:"name" binding:"required"`
-	Phone            string                 `json:"phone" binding:"required"`
-	AdditionalData   map[string]interface{} `json:"additional_data"`
+	LabelID        *uuid.UUID             `json:"label_id"`
+	Name           string                 `json:"name" binding:"required"`
+	PhoneNumber    string                 `json:"phone_number" binding:"required"`
+	Note           *string                `json:"note"`
+	AdditionalData map[string]interface{} `json:"additional_data"`
 }
 
 // UpdateContactRequest is the request struct for updating a contact
 type UpdateContactRequest struct {
-	Name           *string                 `json:"name"`
-	Phone          *string                 `json:"phone"`
-	AdditionalData map[string]interface{}  `json:"additional_data"`
+	LabelID        *uuid.UUID             `json:"label_id"`
+	Name           *string                `json:"name"`
+	PhoneNumber    *string                `json:"phone_number"`
+	Note           *string                `json:"note"`
+	AdditionalData map[string]interface{} `json:"additional_data"`
 }
 
-// CreateGroupRequest is the request struct for creating a group
-type CreateGroupRequest struct {
-	GroupName string `json:"group_name" binding:"required"`
+// CreateContactGroupRequest is the request struct for creating a group
+type CreateContactGroupRequest struct {
+	Name        string  `json:"name" binding:"required"`
+	Description *string `json:"description"`
 }
 
 // ContactResponse is the response struct
 type ContactResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Phone     string    `json:"phone"`
-	CreatedAt time.Time `json:"created_at"`
+	ID          uuid.UUID  `json:"id"`
+	UserID      uuid.UUID  `json:"user_id"`
+	LabelID     *uuid.UUID `json:"label_id,omitempty"`
+	Name        string     `json:"name"`
+	PhoneNumber string     `json:"phone_number"`
+	Note        *string    `json:"note,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
 // ToResponse converts Contact to response
 func (c *Contact) ToResponse() *ContactResponse {
 	return &ContactResponse{
-		ID:        c.ID,
-		Name:      c.Name,
-		Phone:     c.Phone,
-		CreatedAt: c.CreatedAt,
+		ID:          c.ID,
+		UserID:      c.UserID,
+		LabelID:     c.LabelID,
+		Name:        c.Name,
+		PhoneNumber: c.PhoneNumber,
+		Note:        c.Note,
+		CreatedAt:   c.CreatedAt,
 	}
 }
 
-// GroupResponse is the response struct
-type GroupResponse struct {
-	ID        uuid.UUID `json:"id"`
-	GroupName string    `json:"group_name"`
-	CreatedAt time.Time `json:"created_at"`
+// ContactGroupResponse is the response struct
+type ContactGroupResponse struct {
+	ID          uuid.UUID  `json:"id"`
+	Name        string     `json:"name"`
+	Description *string    `json:"description,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
-// ToResponse converts Group to response
-func (g *Group) ToResponse() *GroupResponse {
-	return &GroupResponse{
-		ID:        g.ID,
-		GroupName: g.GroupName,
-		CreatedAt: g.CreatedAt,
+// ToResponse converts ContactGroup to response
+func (g *ContactGroup) ToResponse() *ContactGroupResponse {
+	return &ContactGroupResponse{
+		ID:          g.ID,
+		Name:        g.Name,
+		Description: g.Description,
+		CreatedAt:   g.CreatedAt,
 	}
 }

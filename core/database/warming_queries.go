@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"time"
 
 	"wacast/core/models"
@@ -59,7 +60,7 @@ func (d *Database) UpdateWarmingPool(poolID uuid.UUID, update *models.UpdateWarm
 	argCount := 1
 
 	if update.Intensity != nil {
-		query += `intensity = $1`
+		query += fmt.Sprintf(`intensity = $%d`, argCount)
 		args = append(args, *update.Intensity)
 		argCount++
 	}
@@ -68,7 +69,7 @@ func (d *Database) UpdateWarmingPool(poolID uuid.UUID, update *models.UpdateWarm
 		if argCount > 1 {
 			query += ", "
 		}
-		query += `daily_limit = $` + string(rune(argCount))
+		query += fmt.Sprintf(`daily_limit = $%d`, argCount)
 		args = append(args, *update.DailyLimit)
 		argCount++
 	}
@@ -77,12 +78,12 @@ func (d *Database) UpdateWarmingPool(poolID uuid.UUID, update *models.UpdateWarm
 		if argCount > 1 {
 			query += ", "
 		}
-		query += `is_active = $` + string(rune(argCount))
+		query += fmt.Sprintf(`is_active = $%d`, argCount)
 		args = append(args, *update.IsActive)
 		argCount++
 	}
 
-	query += ` WHERE id = $` + string(rune(argCount))
+	query += fmt.Sprintf(` WHERE id = $%d`, argCount)
 	args = append(args, poolID)
 
 	_, err := d.Exec(query, args...)

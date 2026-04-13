@@ -13,15 +13,17 @@ import (
 // CreateBroadcastCampaign creates a new broadcast campaign
 func (d *Database) CreateBroadcastCampaign(campaign *models.BroadcastCampaign) error {
 	query := `
-		INSERT INTO broadcast_campaigns (id, user_id, device_id, name_broadcast, 
-			total_recipients, processed_count, scheduled_at, status, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO broadcast_campaigns (id, user_id, device_id, template_id, name,
+			message_content, total_recipients, success_count, failed_count, delay_seconds,
+			scheduled_at, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		campaign.ID, campaign.UserID, campaign.DeviceID, campaign.NameBroadcast,
-		campaign.TotalRecipients, campaign.ProcessedCount, campaign.ScheduledAt,
-		campaign.Status, time.Now(),
+		campaign.ID, campaign.UserID, campaign.DeviceID, campaign.TemplateID, campaign.Name,
+		campaign.MessageContent, campaign.TotalRecipients, campaign.SuccessCount, campaign.FailedCount,
+		campaign.DelaySeconds, campaign.ScheduledAt, campaign.Status, now, now,
 	)
 
 	if err != nil {
@@ -35,17 +37,19 @@ func (d *Database) CreateBroadcastCampaign(campaign *models.BroadcastCampaign) e
 // GetBroadcastCampaignByID retrieves a broadcast campaign
 func (d *Database) GetBroadcastCampaignByID(campaignID uuid.UUID) (*models.BroadcastCampaign, error) {
 	query := `
-		SELECT id, user_id, device_id, name_broadcast, total_recipients, processed_count,
-			scheduled_at, status, created_at, deleted_at
+		SELECT id, user_id, device_id, template_id, name, message_content,
+			total_recipients, success_count, failed_count, delay_seconds,
+			scheduled_at, started_at, completed_at, status, created_at, updated_at, deleted_at
 		FROM broadcast_campaigns
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	campaign := &models.BroadcastCampaign{}
 	err := d.QueryRow(query, campaignID).Scan(
-		&campaign.ID, &campaign.UserID, &campaign.DeviceID, &campaign.NameBroadcast,
-		&campaign.TotalRecipients, &campaign.ProcessedCount, &campaign.ScheduledAt,
-		&campaign.Status, &campaign.CreatedAt, &campaign.DeletedAt,
+		&campaign.ID, &campaign.UserID, &campaign.DeviceID, &campaign.TemplateID, &campaign.Name,
+		&campaign.MessageContent, &campaign.TotalRecipients, &campaign.SuccessCount, &campaign.FailedCount,
+		&campaign.DelaySeconds, &campaign.ScheduledAt, &campaign.StartedAt, &campaign.CompletedAt,
+		&campaign.Status, &campaign.CreatedAt, &campaign.UpdatedAt, &campaign.DeletedAt,
 	)
 
 	if err != nil {
@@ -58,8 +62,9 @@ func (d *Database) GetBroadcastCampaignByID(campaignID uuid.UUID) (*models.Broad
 // GetBroadcastCampaignsByUserID retrieves campaigns for a user
 func (d *Database) GetBroadcastCampaignsByUserID(userID uuid.UUID, limit, offset int) ([]models.BroadcastCampaign, error) {
 	query := `
-		SELECT id, user_id, device_id, name_broadcast, total_recipients, processed_count,
-			scheduled_at, status, created_at, deleted_at
+		SELECT id, user_id, device_id, template_id, name, message_content,
+			total_recipients, success_count, failed_count, delay_seconds,
+			scheduled_at, started_at, completed_at, status, created_at, updated_at, deleted_at
 		FROM broadcast_campaigns
 		WHERE user_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
@@ -77,9 +82,10 @@ func (d *Database) GetBroadcastCampaignsByUserID(userID uuid.UUID, limit, offset
 	for rows.Next() {
 		campaign := models.BroadcastCampaign{}
 		err := rows.Scan(
-			&campaign.ID, &campaign.UserID, &campaign.DeviceID, &campaign.NameBroadcast,
-			&campaign.TotalRecipients, &campaign.ProcessedCount, &campaign.ScheduledAt,
-			&campaign.Status, &campaign.CreatedAt, &campaign.DeletedAt,
+			&campaign.ID, &campaign.UserID, &campaign.DeviceID, &campaign.TemplateID, &campaign.Name,
+			&campaign.MessageContent, &campaign.TotalRecipients, &campaign.SuccessCount, &campaign.FailedCount,
+			&campaign.DelaySeconds, &campaign.ScheduledAt, &campaign.StartedAt, &campaign.CompletedAt,
+			&campaign.Status, &campaign.CreatedAt, &campaign.UpdatedAt, &campaign.DeletedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan campaign", zap.Error(err))
@@ -92,10 +98,10 @@ func (d *Database) GetBroadcastCampaignsByUserID(userID uuid.UUID, limit, offset
 }
 
 // UpdateBroadcastCampaignStatus updates campaign status
-func (d *Database) UpdateBroadcastCampaignStatus(campaignID uuid.UUID, status int32) error {
-	query := `UPDATE broadcast_campaigns SET status = $1 WHERE id = $2`
+func (d *Database) UpdateBroadcastCampaignStatus(campaignID uuid.UUID, status string) error {
+	query := `UPDATE broadcast_campaigns SET status = $1, updated_at = $2 WHERE id = $3`
 
-	_, err := d.Exec(query, status, campaignID)
+	_, err := d.Exec(query, status, time.Now(), campaignID)
 	if err != nil {
 		utils.Error("Failed to update campaign status", zap.Error(err))
 		return err
@@ -104,11 +110,11 @@ func (d *Database) UpdateBroadcastCampaignStatus(campaignID uuid.UUID, status in
 	return nil
 }
 
-// UpdateBroadcastCampaignProgress updates processed count
-func (d *Database) UpdateBroadcastCampaignProgress(campaignID uuid.UUID, processedCount int32) error {
-	query := `UPDATE broadcast_campaigns SET processed_count = $1 WHERE id = $2`
+// UpdateBroadcastCampaignProgress updates success/failed counts
+func (d *Database) UpdateBroadcastCampaignProgress(campaignID uuid.UUID, successCount, failedCount int) error {
+	query := `UPDATE broadcast_campaigns SET success_count = $1, failed_count = $2, updated_at = $3 WHERE id = $4`
 
-	_, err := d.Exec(query, processedCount, campaignID)
+	_, err := d.Exec(query, successCount, failedCount, time.Now(), campaignID)
 	if err != nil {
 		utils.Error("Failed to update campaign progress", zap.Error(err))
 		return err
@@ -117,70 +123,17 @@ func (d *Database) UpdateBroadcastCampaignProgress(campaignID uuid.UUID, process
 	return nil
 }
 
-// CreateBroadcastMessage creates a broadcast message
-func (d *Database) CreateBroadcastMessage(message *models.BroadcastMessage) error {
-	query := `
-		INSERT INTO broadcast_messages (id, campaign_id, message_type, message_text, 
-			media_url, button_data)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`
-
-	_, err := d.Exec(query,
-		message.ID, message.CampaignID, message.MessageType, message.MessageText,
-		message.MediaUrl, message.ButtonData,
-	)
-
-	if err != nil {
-		utils.Error("Failed to create broadcast message", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-// GetBroadcastMessagesByCampaignID retrieves messages for a campaign
-func (d *Database) GetBroadcastMessagesByCampaignID(campaignID uuid.UUID) ([]models.BroadcastMessage, error) {
-	query := `
-		SELECT id, campaign_id, message_type, message_text, media_url, button_data
-		FROM broadcast_messages
-		WHERE campaign_id = $1
-	`
-
-	rows, err := d.Query(query, campaignID)
-	if err != nil {
-		utils.Error("Failed to get broadcast messages", zap.Error(err))
-		return nil, err
-	}
-	defer rows.Close()
-
-	messages := []models.BroadcastMessage{}
-	for rows.Next() {
-		message := models.BroadcastMessage{}
-		err := rows.Scan(
-			&message.ID, &message.CampaignID, &message.MessageType, &message.MessageText,
-			&message.MediaUrl, &message.ButtonData,
-		)
-		if err != nil {
-			utils.Error("Failed to scan message", zap.Error(err))
-			continue
-		}
-		messages = append(messages, message)
-	}
-
-	return messages, nil
-}
-
 // CreateBroadcastRecipient creates a broadcast recipient
 func (d *Database) CreateBroadcastRecipient(recipient *models.BroadcastRecipient) error {
 	query := `
-		INSERT INTO broadcast_recipients (id, campaign_id, groups_id, contact_id, 
-			status, retry_count)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO broadcast_recipients (id, campaign_id, group_id, contact_id,
+			phone_number, status, retry_count, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
 	_, err := d.Exec(query,
-		recipient.ID, recipient.CampaignID, recipient.GroupsID, recipient.ContactID,
-		recipient.Status, recipient.RetryCount,
+		recipient.ID, recipient.CampaignID, recipient.GroupID, recipient.ContactID,
+		recipient.PhoneNumber, recipient.Status, recipient.RetryCount, time.Now(),
 	)
 
 	if err != nil {
@@ -194,7 +147,8 @@ func (d *Database) CreateBroadcastRecipient(recipient *models.BroadcastRecipient
 // GetBroadcastRecipientsByCampaignID retrieves recipients for a campaign
 func (d *Database) GetBroadcastRecipientsByCampaignID(campaignID uuid.UUID, limit, offset int) ([]models.BroadcastRecipient, error) {
 	query := `
-		SELECT id, campaign_id, groups_id, contact_id, status, sent_at, error_messages, retry_count
+		SELECT id, campaign_id, group_id, contact_id, phone_number, status,
+			sent_at, failed_at, error_message, retry_count, created_at
 		FROM broadcast_recipients
 		WHERE campaign_id = $1
 		ORDER BY created_at DESC
@@ -212,8 +166,9 @@ func (d *Database) GetBroadcastRecipientsByCampaignID(campaignID uuid.UUID, limi
 	for rows.Next() {
 		recipient := models.BroadcastRecipient{}
 		err := rows.Scan(
-			&recipient.ID, &recipient.CampaignID, &recipient.GroupsID, &recipient.ContactID,
-			&recipient.Status, &recipient.SentAt, &recipient.ErrorMessages, &recipient.RetryCount,
+			&recipient.ID, &recipient.CampaignID, &recipient.GroupID, &recipient.ContactID,
+			&recipient.PhoneNumber, &recipient.Status, &recipient.SentAt, &recipient.FailedAt,
+			&recipient.ErrorMessage, &recipient.RetryCount, &recipient.CreatedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan recipient", zap.Error(err))
@@ -226,10 +181,24 @@ func (d *Database) GetBroadcastRecipientsByCampaignID(campaignID uuid.UUID, limi
 }
 
 // UpdateBroadcastRecipientStatus updates recipient status
-func (d *Database) UpdateBroadcastRecipientStatus(recipientID uuid.UUID, status int32, errorMsg string) error {
-	query := `UPDATE broadcast_recipients SET status = $1, error_messages = $2, sent_at = $3 WHERE id = $4`
+func (d *Database) UpdateBroadcastRecipientStatus(recipientID uuid.UUID, status string, errMsg *string) error {
+	var sentAt *time.Time
+	var failedAt *time.Time
+	now := time.Now()
 
-	_, err := d.Exec(query, status, errorMsg, time.Now(), recipientID)
+	if status == models.BroadcastStatusCompleted {
+		sentAt = &now
+	} else if status == models.BroadcastStatusFailed {
+		failedAt = &now
+	}
+
+	query := `
+		UPDATE broadcast_recipients
+		SET status = $1, sent_at = $2, failed_at = $3, error_message = $4
+		WHERE id = $5
+	`
+
+	_, err := d.Exec(query, status, sentAt, failedAt, errMsg, recipientID)
 	if err != nil {
 		utils.Error("Failed to update recipient status", zap.Error(err))
 		return err
@@ -241,9 +210,10 @@ func (d *Database) UpdateBroadcastRecipientStatus(recipientID uuid.UUID, status 
 // GetPendingBroadcastRecipients retrieves pending recipients
 func (d *Database) GetPendingBroadcastRecipients(campaignID uuid.UUID, limit int) ([]models.BroadcastRecipient, error) {
 	query := `
-		SELECT id, campaign_id, groups_id, contact_id, status, sent_at, error_messages, retry_count
+		SELECT id, campaign_id, group_id, contact_id, phone_number, status,
+			sent_at, failed_at, error_message, retry_count, created_at
 		FROM broadcast_recipients
-		WHERE campaign_id = $1 AND status = 0
+		WHERE campaign_id = $1 AND status = 'pending'
 		ORDER BY created_at ASC
 		LIMIT $2
 	`
@@ -259,8 +229,9 @@ func (d *Database) GetPendingBroadcastRecipients(campaignID uuid.UUID, limit int
 	for rows.Next() {
 		recipient := models.BroadcastRecipient{}
 		err := rows.Scan(
-			&recipient.ID, &recipient.CampaignID, &recipient.GroupsID, &recipient.ContactID,
-			&recipient.Status, &recipient.SentAt, &recipient.ErrorMessages, &recipient.RetryCount,
+			&recipient.ID, &recipient.CampaignID, &recipient.GroupID, &recipient.ContactID,
+			&recipient.PhoneNumber, &recipient.Status, &recipient.SentAt, &recipient.FailedAt,
+			&recipient.ErrorMessage, &recipient.RetryCount, &recipient.CreatedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan recipient", zap.Error(err))
@@ -286,7 +257,7 @@ func (d *Database) DeleteBroadcastCampaign(campaignID uuid.UUID) error {
 }
 
 // CountBroadcastRecipientsByStatus counts recipients by status
-func (d *Database) CountBroadcastRecipientsByStatus(campaignID uuid.UUID, status int32) (int64, error) {
+func (d *Database) CountBroadcastRecipientsByStatus(campaignID uuid.UUID, status string) (int64, error) {
 	query := `SELECT COUNT(*) FROM broadcast_recipients WHERE campaign_id = $1 AND status = $2`
 
 	var count int64

@@ -6,16 +6,24 @@ import (
 	"github.com/google/uuid"
 )
 
+// WarmingSession status constants
+const (
+	WarmingStatusPending  = "pending"
+	WarmingStatusSent     = "sent"
+	WarmingStatusReplied  = "replied"
+	WarmingStatusFailed   = "failed"
+)
+
 // WarmingPool represents account warming pool settings
 type WarmingPool struct {
-	ID                uuid.UUID  `json:"id"`
-	DeviceID          uuid.UUID  `json:"device_id"`
-	Intensity         int32      `json:"intensity"`
-	DailyLimit        int32      `json:"daily_limit"`
-	MessageSendToday  int32      `json:"message_send_today"`
-	IsActive          bool       `json:"is_active"`
-	NextActionAt      *time.Time `json:"next_action_at"`
-	CreatedAt         *time.Time `json:"created_at,omitempty"`
+	ID               uuid.UUID  `json:"id"`
+	DeviceID         uuid.UUID  `json:"device_id"`
+	Intensity        int        `json:"intensity"`
+	DailyLimit       int        `json:"daily_limit"`
+	MessageSendToday int        `json:"message_send_today"`
+	IsActive         bool       `json:"is_active"`
+	NextActionAt     *time.Time `json:"next_action_at,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
 }
 
 // TableName returns the table name
@@ -25,13 +33,13 @@ func (WarmingPool) TableName() string {
 
 // WarmingSession represents a warming session
 type WarmingSession struct {
-	ID              uuid.UUID `json:"id"`
-	DeviceID        uuid.UUID `json:"device_id"`
-	TargetPhone     string    `json:"target_phone"`
-	MessageSent     string    `json:"message_sent"`
-	ResponseReceived string   `json:"response_received"`
-	Status          int32     `json:"status"` // 0: pending, 1: sent, 2: response_received, 3: failed
-	CreatedAt       *time.Time `json:"created_at,omitempty"`
+	ID               uuid.UUID  `json:"id"`
+	DeviceID         uuid.UUID  `json:"device_id"`
+	TargetPhone      string     `json:"target_phone"`
+	MessageSent      string     `json:"message_sent"`
+	ResponseReceived *string    `json:"response_received,omitempty"`
+	Status           string     `json:"status"` // pending/sent/replied/failed
+	CreatedAt        time.Time  `json:"created_at"`
 }
 
 // TableName returns the table name
@@ -42,24 +50,24 @@ func (WarmingSession) TableName() string {
 // CreateWarmingPoolRequest is the request struct
 type CreateWarmingPoolRequest struct {
 	DeviceID   uuid.UUID `json:"device_id" binding:"required"`
-	Intensity  int32     `json:"intensity" binding:"required"`
-	DailyLimit int32     `json:"daily_limit" binding:"required"`
+	Intensity  int       `json:"intensity" binding:"required"`
+	DailyLimit int       `json:"daily_limit" binding:"required"`
 }
 
 // UpdateWarmingPoolRequest is the request struct
 type UpdateWarmingPoolRequest struct {
-	Intensity  *int32 `json:"intensity"`
-	DailyLimit *int32 `json:"daily_limit"`
-	IsActive   *bool  `json:"is_active"`
+	Intensity  *int  `json:"intensity"`
+	DailyLimit *int  `json:"daily_limit"`
+	IsActive   *bool `json:"is_active"`
 }
 
 // WarmingPoolResponse is the response struct
 type WarmingPoolResponse struct {
 	ID               uuid.UUID `json:"id"`
 	DeviceID         uuid.UUID `json:"device_id"`
-	Intensity        int32     `json:"intensity"`
-	DailyLimit       int32     `json:"daily_limit"`
-	MessageSendToday int32     `json:"message_send_today"`
+	Intensity        int       `json:"intensity"`
+	DailyLimit       int       `json:"daily_limit"`
+	MessageSendToday int       `json:"message_send_today"`
 	IsActive         bool      `json:"is_active"`
 }
 

@@ -8,8 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"wacast/core/appserver"
 	"wacast/core/config"
 	"wacast/core/database"
+	"wacast/core/services/auth"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
 	"wacast/core/utils"
@@ -136,9 +138,15 @@ func main() {
 
 	utils.Info("Message service initialized successfully")
 
+	// Initialize auth service
+	utils.Info("Initializing auth service...")
+	authService := auth.NewService(db, cfg.JWTSecret, cfg.JWTExpiryHours, cfg.JWTRefreshExpiryHours)
+	utils.Info("Auth service initialized successfully")
+
 	// 6. Initialize and start HTTP server
 	utils.Info("Initializing HTTP server...")
-	httpServer := NewServer(
+	httpServer := appserver.NewServer(
+		authService,
 		sessionService,
 		messageService,
 		db,
@@ -148,7 +156,7 @@ func main() {
 	)
 
 	// ✅ Register WebSocket callback for real-time QR updates
-	sessionService.RegisterQRUpdateCallback(httpServer.websocketHandler.NotifyQRUpdate)
+	sessionService.RegisterQRUpdateCallback(httpServer.QRUpdateNotifier())
 
 	// Start server in a goroutine so it doesn't block
 	serverErrors := make(chan error, 1)

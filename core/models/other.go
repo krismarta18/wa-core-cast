@@ -10,13 +10,17 @@ import (
 // APILog represents an API request log
 type APILog struct {
 	ID           uuid.UUID       `json:"id"`
-	UserID       *uuid.UUID      `json:"user_id"`
+	UserID       *uuid.UUID      `json:"user_id,omitempty"`
+	DeviceID     *uuid.UUID      `json:"device_id,omitempty"`
 	Endpoint     string          `json:"endpoint"`
+	Method       string          `json:"method"`
+	StatusCode   int             `json:"status_code"`
 	ReqBody      json.RawMessage `json:"req_body"`
 	ResponseBody json.RawMessage `json:"response_body"`
-	CreatedAt    string          `json:"created_at"`
 	IPAddress    string          `json:"ip_address"`
-	DeviceID     *uuid.UUID      `json:"device_id"`
+	UserAgent    *string         `json:"user_agent,omitempty"`
+	DurationMs   *int            `json:"duration_ms,omitempty"`
+	CreatedAt    time.Time       `json:"created_at"`
 }
 
 // TableName returns the table name
@@ -24,28 +28,34 @@ func (APILog) TableName() string {
 	return "api_logs"
 }
 
-// AutoResponse represents an auto response rule
-type AutoResponse struct {
-	ID           uuid.UUID `json:"id"`
-	DeviceID     uuid.UUID `json:"device_id"`
-	Keyword      string    `json:"keyword"`
-	ResponseText string    `json:"response_text"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    *time.Time `json:"created_at,omitempty"`
+// AutoResponseKeyword represents an auto-response keyword rule
+type AutoResponseKeyword struct {
+	ID           uuid.UUID  `json:"id"`
+	UserID       uuid.UUID  `json:"user_id"`
+	DeviceID     *uuid.UUID `json:"device_id,omitempty"`
+	Keyword      string     `json:"keyword"`
+	MatchType    string     `json:"match_type"` // exact/contains/starts_with/ends_with/regex
+	ResponseText string     `json:"response_text"`
+	IsActive     bool       `json:"is_active"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
 // TableName returns the table name
-func (AutoResponse) TableName() string {
-	return "auto_response"
+func (AutoResponseKeyword) TableName() string {
+	return "auto_response_keywords"
 }
 
 // Webhook represents a webhook configuration
 type Webhook struct {
-	ID        uuid.UUID `json:"id"`
-	DeviceID  uuid.UUID `json:"device_id"`
-	WebhookUrl string   `json:"webhook_url"`
-	SecretKey string   `json:"secret_key"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	ID             uuid.UUID  `json:"id"`
+	UserID         uuid.UUID  `json:"user_id"`
+	DeviceID       *uuid.UUID `json:"device_id,omitempty"`
+	WebhookUrl     string     `json:"webhook_url"`
+	SecretKeyHash  string     `json:"-"` // never expose in JSON
+	IsActive       bool       `json:"is_active"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 // TableName returns the table name
@@ -55,9 +65,9 @@ func (Webhook) TableName() string {
 
 // Lookup represents a lookup value
 type Lookup struct {
-	ID     int32  `json:"id"`
-	Keys   string `json:"keys"`
-	Values string `json:"values"`
+	ID    int    `json:"id"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 // TableName returns the table name
@@ -67,11 +77,12 @@ func (Lookup) TableName() string {
 
 // SystemSetting represents a system setting
 type SystemSetting struct {
-	ID          int32      `json:"id"`
-	Keys        string     `json:"keys"`
-	Value       string     `json:"value"`
-	Description string     `json:"description"`
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
+	ID          int       `json:"id"`
+	Key         string    `json:"key"`
+	Value       string    `json:"value"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // TableName returns the table name
@@ -79,40 +90,46 @@ func (SystemSetting) TableName() string {
 	return "system_settings"
 }
 
-// CreateAutoResponseRequest is the request struct
-type CreateAutoResponseRequest struct {
-	DeviceID     uuid.UUID `json:"device_id" binding:"required"`
-	Keyword      string    `json:"keyword" binding:"required"`
-	ResponseText string    `json:"response_text" binding:"required"`
+// CreateAutoResponseKeywordRequest is the request struct
+type CreateAutoResponseKeywordRequest struct {
+	DeviceID     *uuid.UUID `json:"device_id"`
+	Keyword      string     `json:"keyword" binding:"required"`
+	MatchType    string     `json:"match_type" binding:"required,oneof=exact contains starts_with ends_with regex"`
+	ResponseText string     `json:"response_text" binding:"required"`
 }
 
-// UpdateAutoResponseRequest is the request struct
-type UpdateAutoResponseRequest struct {
+// UpdateAutoResponseKeywordRequest is the request struct
+type UpdateAutoResponseKeywordRequest struct {
 	Keyword      *string `json:"keyword"`
+	MatchType    *string `json:"match_type"`
 	ResponseText *string `json:"response_text"`
 	IsActive     *bool   `json:"is_active"`
 }
 
 // CreateWebhookRequest is the request struct
 type CreateWebhookRequest struct {
-	DeviceID   uuid.UUID `json:"device_id" binding:"required"`
-	WebhookUrl string    `json:"webhook_url" binding:"required"`
-	SecretKey  string    `json:"secret_key" binding:"required"`
+	DeviceID   *uuid.UUID `json:"device_id"`
+	WebhookUrl string     `json:"webhook_url" binding:"required,url"`
+	SecretKey  string     `json:"secret_key" binding:"required"`
 }
 
-// AutoResponseResponse is the response struct
-type AutoResponseResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Keyword      string    `json:"keyword"`
-	ResponseText string    `json:"response_text"`
-	IsActive     bool      `json:"is_active"`
+// AutoResponseKeywordResponse is the response struct
+type AutoResponseKeywordResponse struct {
+	ID           uuid.UUID  `json:"id"`
+	DeviceID     *uuid.UUID `json:"device_id,omitempty"`
+	Keyword      string     `json:"keyword"`
+	MatchType    string     `json:"match_type"`
+	ResponseText string     `json:"response_text"`
+	IsActive     bool       `json:"is_active"`
 }
 
-// ToResponse converts AutoResponse to response
-func (a *AutoResponse) ToResponse() *AutoResponseResponse {
-	return &AutoResponseResponse{
+// ToResponse converts AutoResponseKeyword to response
+func (a *AutoResponseKeyword) ToResponse() *AutoResponseKeywordResponse {
+	return &AutoResponseKeywordResponse{
 		ID:           a.ID,
+		DeviceID:     a.DeviceID,
 		Keyword:      a.Keyword,
+		MatchType:    a.MatchType,
 		ResponseText: a.ResponseText,
 		IsActive:     a.IsActive,
 	}
@@ -120,16 +137,22 @@ func (a *AutoResponse) ToResponse() *AutoResponseResponse {
 
 // WebhookResponse is the response struct
 type WebhookResponse struct {
-	ID        uuid.UUID `json:"id"`
-	DeviceID  uuid.UUID `json:"device_id"`
-	WebhookUrl string   `json:"webhook_url"`
+	ID         uuid.UUID  `json:"id"`
+	UserID     uuid.UUID  `json:"user_id"`
+	DeviceID   *uuid.UUID `json:"device_id,omitempty"`
+	WebhookUrl string     `json:"webhook_url"`
+	IsActive   bool       `json:"is_active"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 // ToResponse converts Webhook to response
 func (w *Webhook) ToResponse() *WebhookResponse {
 	return &WebhookResponse{
-		ID:        w.ID,
-		DeviceID:  w.DeviceID,
+		ID:         w.ID,
+		UserID:     w.UserID,
+		DeviceID:   w.DeviceID,
 		WebhookUrl: w.WebhookUrl,
+		IsActive:   w.IsActive,
+		CreatedAt:  w.CreatedAt,
 	}
 }

@@ -14,13 +14,14 @@ import (
 // CreateContact creates a new contact
 func (d *Database) CreateContact(contact *models.Contact) error {
 	query := `
-		INSERT INTO contact (id, group_id, name, phone, additional_data, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO contacts (id, user_id, label_id, name, phone_number, note, additional_data, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		contact.ID, contact.GroupID, contact.Name, contact.Phone,
-		contact.AdditionalData, time.Now(), time.Now(),
+		contact.ID, contact.UserID, contact.LabelID, contact.Name, contact.PhoneNumber,
+		contact.Note, contact.AdditionalData, now, now,
 	)
 
 	if err != nil {
@@ -34,15 +35,15 @@ func (d *Database) CreateContact(contact *models.Contact) error {
 // GetContactByID retrieves a contact by ID
 func (d *Database) GetContactByID(contactID uuid.UUID) (*models.Contact, error) {
 	query := `
-		SELECT id, group_id, name, phone, additional_data, created_at, updated_at, deleted_at
-		FROM contact
+		SELECT id, user_id, label_id, name, phone_number, note, additional_data, created_at, updated_at, deleted_at
+		FROM contacts
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	contact := &models.Contact{}
 	err := d.QueryRow(query, contactID).Scan(
-		&contact.ID, &contact.GroupID, &contact.Name, &contact.Phone,
-		&contact.AdditionalData, &contact.CreatedAt, &contact.UpdatedAt, &contact.DeletedAt,
+		&contact.ID, &contact.UserID, &contact.LabelID, &contact.Name, &contact.PhoneNumber,
+		&contact.Note, &contact.AdditionalData, &contact.CreatedAt, &contact.UpdatedAt, &contact.DeletedAt,
 	)
 
 	if err != nil {
@@ -52,17 +53,17 @@ func (d *Database) GetContactByID(contactID uuid.UUID) (*models.Contact, error) 
 	return contact, nil
 }
 
-// GetContactsByGroupID retrieves contacts by group
-func (d *Database) GetContactsByGroupID(groupID uuid.UUID, limit, offset int) ([]models.Contact, error) {
+// GetContactsByUserID retrieves all contacts for a user
+func (d *Database) GetContactsByUserID(userID uuid.UUID, limit, offset int) ([]models.Contact, error) {
 	query := `
-		SELECT id, group_id, name, phone, additional_data, created_at, updated_at, deleted_at
-		FROM contact
-		WHERE group_id = $1 AND deleted_at IS NULL
+		SELECT id, user_id, label_id, name, phone_number, note, additional_data, created_at, updated_at, deleted_at
+		FROM contacts
+		WHERE user_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
 	`
 
-	rows, err := d.Query(query, groupID, limit, offset)
+	rows, err := d.Query(query, userID, limit, offset)
 	if err != nil {
 		utils.Error("Failed to get contacts", zap.Error(err))
 		return nil, err
@@ -73,8 +74,44 @@ func (d *Database) GetContactsByGroupID(groupID uuid.UUID, limit, offset int) ([
 	for rows.Next() {
 		contact := models.Contact{}
 		err := rows.Scan(
-			&contact.ID, &contact.GroupID, &contact.Name, &contact.Phone,
-			&contact.AdditionalData, &contact.CreatedAt, &contact.UpdatedAt, &contact.DeletedAt,
+			&contact.ID, &contact.UserID, &contact.LabelID, &contact.Name, &contact.PhoneNumber,
+			&contact.Note, &contact.AdditionalData, &contact.CreatedAt, &contact.UpdatedAt, &contact.DeletedAt,
+		)
+		if err != nil {
+			utils.Error("Failed to scan contact", zap.Error(err))
+			continue
+		}
+		contacts = append(contacts, contact)
+	}
+
+	return contacts, nil
+}
+
+// GetContactsByGroupID retrieves contacts belonging to a group via the join table
+func (d *Database) GetContactsByGroupID(groupID uuid.UUID, limit, offset int) ([]models.Contact, error) {
+	query := `
+		SELECT c.id, c.user_id, c.label_id, c.name, c.phone_number, c.note,
+		       c.additional_data, c.created_at, c.updated_at, c.deleted_at
+		FROM contacts c
+		INNER JOIN contact_group_members cgm ON cgm.contact_id = c.id
+		WHERE cgm.group_id = $1 AND c.deleted_at IS NULL
+		ORDER BY c.created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := d.Query(query, groupID, limit, offset)
+	if err != nil {
+		utils.Error("Failed to get contacts by group", zap.Error(err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	contacts := []models.Contact{}
+	for rows.Next() {
+		contact := models.Contact{}
+		err := rows.Scan(
+			&contact.ID, &contact.UserID, &contact.LabelID, &contact.Name, &contact.PhoneNumber,
+			&contact.Note, &contact.AdditionalData, &contact.CreatedAt, &contact.UpdatedAt, &contact.DeletedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan contact", zap.Error(err))
@@ -88,7 +125,7 @@ func (d *Database) GetContactsByGroupID(groupID uuid.UUID, limit, offset int) ([
 
 // UpdateContact updates a contact
 func (d *Database) UpdateContact(contactID uuid.UUID, update *models.UpdateContactRequest) error {
-	query := `UPDATE contact SET `
+	query := `UPDATE contacts SET `
 	args := []interface{}{}
 	argCount := 1
 
@@ -98,12 +135,30 @@ func (d *Database) UpdateContact(contactID uuid.UUID, update *models.UpdateConta
 		argCount++
 	}
 
-	if update.Phone != nil {
+	if update.PhoneNumber != nil {
 		if argCount > 1 {
 			query += ", "
 		}
-		query += fmt.Sprintf("phone = $%d", argCount)
-		args = append(args, *update.Phone)
+		query += fmt.Sprintf("phone_number = $%d", argCount)
+		args = append(args, *update.PhoneNumber)
+		argCount++
+	}
+
+	if update.LabelID != nil {
+		if argCount > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("label_id = $%d", argCount)
+		args = append(args, *update.LabelID)
+		argCount++
+	}
+
+	if update.Note != nil {
+		if argCount > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("note = $%d", argCount)
+		args = append(args, *update.Note)
 		argCount++
 	}
 
@@ -133,7 +188,7 @@ func (d *Database) UpdateContact(contactID uuid.UUID, update *models.UpdateConta
 
 // DeleteContact soft deletes a contact
 func (d *Database) DeleteContact(contactID uuid.UUID) error {
-	query := `UPDATE contact SET deleted_at = $1 WHERE id = $2`
+	query := `UPDATE contacts SET deleted_at = $1 WHERE id = $2`
 
 	_, err := d.Exec(query, time.Now(), contactID)
 	if err != nil {
@@ -144,36 +199,38 @@ func (d *Database) DeleteContact(contactID uuid.UUID) error {
 	return nil
 }
 
-// CreateGroup creates a new group
-func (d *Database) CreateGroup(group *models.Group) error {
+// CreateContactGroup creates a new contact group
+func (d *Database) CreateContactGroup(group *models.ContactGroup) error {
 	query := `
-		INSERT INTO groups (id, user_id, group_name, created_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO contact_groups (id, user_id, name, description, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		group.ID, group.UserID, group.GroupName, time.Now(),
+		group.ID, group.UserID, group.Name, group.Description, now, now,
 	)
 
 	if err != nil {
-		utils.Error("Failed to create group", zap.Error(err))
+		utils.Error("Failed to create contact group", zap.Error(err))
 		return err
 	}
 
 	return nil
 }
 
-// GetGroupByID retrieves a group by ID
-func (d *Database) GetGroupByID(groupID uuid.UUID) (*models.Group, error) {
+// GetContactGroupByID retrieves a contact group by ID
+func (d *Database) GetContactGroupByID(groupID uuid.UUID) (*models.ContactGroup, error) {
 	query := `
-		SELECT id, user_id, group_name, created_at, deleted_at
-		FROM groups
+		SELECT id, user_id, name, description, created_at, updated_at, deleted_at
+		FROM contact_groups
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 
-	group := &models.Group{}
+	group := &models.ContactGroup{}
 	err := d.QueryRow(query, groupID).Scan(
-		&group.ID, &group.UserID, &group.GroupName, &group.CreatedAt, &group.DeletedAt,
+		&group.ID, &group.UserID, &group.Name, &group.Description,
+		&group.CreatedAt, &group.UpdatedAt, &group.DeletedAt,
 	)
 
 	if err != nil {
@@ -183,27 +240,28 @@ func (d *Database) GetGroupByID(groupID uuid.UUID) (*models.Group, error) {
 	return group, nil
 }
 
-// GetGroupsByUserID retrieves all groups for a user
-func (d *Database) GetGroupsByUserID(userID uuid.UUID) ([]models.Group, error) {
+// GetContactGroupsByUserID retrieves all contact groups for a user
+func (d *Database) GetContactGroupsByUserID(userID uuid.UUID) ([]models.ContactGroup, error) {
 	query := `
-		SELECT id, user_id, group_name, created_at, deleted_at
-		FROM groups
+		SELECT id, user_id, name, description, created_at, updated_at, deleted_at
+		FROM contact_groups
 		WHERE user_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
 	`
 
 	rows, err := d.Query(query, userID)
 	if err != nil {
-		utils.Error("Failed to get groups", zap.Error(err))
+		utils.Error("Failed to get contact groups", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()
 
-	groups := []models.Group{}
+	groups := []models.ContactGroup{}
 	for rows.Next() {
-		group := models.Group{}
+		group := models.ContactGroup{}
 		err := rows.Scan(
-			&group.ID, &group.UserID, &group.GroupName, &group.CreatedAt, &group.DeletedAt,
+			&group.ID, &group.UserID, &group.Name, &group.Description,
+			&group.CreatedAt, &group.UpdatedAt, &group.DeletedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan group", zap.Error(err))
@@ -215,63 +273,4 @@ func (d *Database) GetGroupsByUserID(userID uuid.UUID) ([]models.Group, error) {
 	return groups, nil
 }
 
-// UpdateGroup updates a group
-func (d *Database) UpdateGroup(groupID uuid.UUID, groupName string) error {
-	query := `UPDATE groups SET group_name = $1 WHERE id = $2`
 
-	_, err := d.Exec(query, groupName, groupID)
-	if err != nil {
-		utils.Error("Failed to update group", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-// DeleteGroup soft deletes a group
-func (d *Database) DeleteGroup(groupID uuid.UUID) error {
-	query := `UPDATE groups SET deleted_at = $1 WHERE id = $2`
-
-	_, err := d.Exec(query, time.Now(), groupID)
-	if err != nil {
-		utils.Error("Failed to delete group", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-// CountGroupContacts counts contacts in a group
-func (d *Database) CountGroupContacts(groupID uuid.UUID) (int64, error) {
-	query := `SELECT COUNT(*) FROM contact WHERE group_id = $1 AND deleted_at IS NULL`
-
-	var count int64
-	err := d.QueryRow(query, groupID).Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
-}
-
-// GetContactByPhone retrieves a contact by phone number
-func (d *Database) GetContactByPhone(phone string) (*models.Contact, error) {
-	query := `
-		SELECT id, group_id, name, phone, additional_data, created_at, updated_at, deleted_at
-		FROM contact
-		WHERE phone = $1 AND deleted_at IS NULL
-		LIMIT 1
-	`
-
-	contact := &models.Contact{}
-	err := d.QueryRow(query, phone).Scan(
-		&contact.ID, &contact.GroupID, &contact.Name, &contact.Phone,
-		&contact.AdditionalData, &contact.CreatedAt, &contact.UpdatedAt, &contact.DeletedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return contact, nil
-}
