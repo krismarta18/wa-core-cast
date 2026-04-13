@@ -20,6 +20,8 @@ tags:
     description: Health check endpoints
   - name: Auth
     description: OTP-based authentication and current user endpoints
+  - name: Billing
+    description: Billing plan, quota usage, and invoice overview endpoints
   - name: Sessions
     description: WhatsApp session managementx
   - name: Messages
@@ -182,6 +184,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthGenericSuccessResponse"
+
+  /api/v1/billing/overview:
+    get:
+      tags:
+        - Billing
+      summary: Get billing overview
+      description: Return the current subscription, quota usage, available plans, and invoice history for the authenticated user.
+      operationId: getBillingOverview
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Billing overview retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingOverviewResponse"
+        "401":
+          description: Unauthorized
+
+  /api/v1/billing/checkout:
+    post:
+      tags:
+        - Billing
+      summary: Checkout billing plan
+      description: Select a billing plan, perform a dummy payment, and activate the subscription for the authenticated user.
+      operationId: checkoutBillingPlan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingCheckoutRequest"
+            example:
+              plan_id: "514a692f-7758-46f8-b831-e070db204404"
+      responses:
+        "200":
+          description: Dummy payment completed and subscription activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingCheckoutApiResponse"
+        "404":
+          description: Billing plan not found
+        "422":
+          description: Billing plan is inactive
+        "401":
+          description: Unauthorized
 
   /health/ready:
     get:
@@ -714,6 +766,157 @@ components:
           example: true
         user:
           $ref: "#/components/schemas/AuthUserResponse"
+
+    BillingCheckoutRequest:
+      type: object
+      required:
+        - plan_id
+      properties:
+        plan_id:
+          type: string
+          format: uuid
+
+    BillingCheckoutData:
+      type: object
+      properties:
+        subscription:
+          $ref: "#/components/schemas/BillingCurrentPlanResponse"
+        invoice:
+          $ref: "#/components/schemas/BillingInvoiceSummary"
+        payment_status:
+          type: string
+          example: paid
+        payment_method:
+          type: string
+          example: dummy
+
+    BillingCheckoutApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Dummy payment completed and subscription activated
+        checkout:
+          $ref: "#/components/schemas/BillingCheckoutData"
+
+    BillingCurrentPlanResponse:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+        plan_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        billing_cycle:
+          type: string
+          example: monthly
+        renewal_date:
+          type: string
+          format: date-time
+          nullable: true
+        quota_used:
+          type: integer
+        quota_limit:
+          type: integer
+        device_used:
+          type: integer
+        device_max:
+          type: integer
+        auto_renew:
+          type: boolean
+        status:
+          type: string
+          example: active
+        features:
+          nullable: true
+
+    BillingUsagePoint:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 13 Apr
+        sent:
+          type: integer
+        failed:
+          type: integer
+
+    BillingPlanSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        quota_limit:
+          type: integer
+        device_max:
+          type: integer
+        current:
+          type: boolean
+        is_active:
+          type: boolean
+
+    BillingInvoiceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        subscription_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        plan_name:
+          type: string
+        amount:
+          type: number
+          format: double
+        status:
+          type: string
+
+    BillingOverviewData:
+      type: object
+      properties:
+        current_plan:
+          allOf:
+            - $ref: "#/components/schemas/BillingCurrentPlanResponse"
+          nullable: true
+        usage_history:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingUsagePoint"
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingPlanSummary"
+        invoices:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingInvoiceSummary"
+
+    BillingOverviewResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        billing:
+          $ref: "#/components/schemas/BillingOverviewData"
 
     SessionListResponse:
       type: object

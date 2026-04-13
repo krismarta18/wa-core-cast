@@ -99,3 +99,63 @@ func (s *Subscription) ToResponse() *SubscriptionResponse {
 		CreatedAt:   s.CreatedAt,
 	}
 }
+
+// BillingOverviewResponse is the dashboard response for billing & quota.
+type BillingOverviewResponse struct {
+	CurrentPlan  *BillingCurrentPlanResponse `json:"current_plan,omitempty"`
+	UsageHistory []BillingUsagePoint         `json:"usage_history"`
+	Plans        []BillingPlanSummary        `json:"plans"`
+	Invoices     []BillingInvoiceSummary     `json:"invoices"`
+}
+
+type BillingCheckoutRequest struct {
+	PlanID string `json:"plan_id" binding:"required"`
+}
+
+type BillingCheckoutResponse struct {
+	Subscription *BillingCurrentPlanResponse `json:"subscription"`
+	Invoice      BillingInvoiceSummary       `json:"invoice"`
+	PaymentStatus string                     `json:"payment_status"`
+	PaymentMethod string                     `json:"payment_method"`
+}
+
+type BillingCurrentPlanResponse struct {
+	SubscriptionID uuid.UUID   `json:"subscription_id"`
+	PlanID         uuid.UUID   `json:"plan_id"`
+	Name           string      `json:"name"`
+	Price          float64     `json:"price"`
+	BillingCycle   string      `json:"billing_cycle"`
+	RenewalDate    *time.Time  `json:"renewal_date,omitempty"`
+	QuotaUsed      int64       `json:"quota_used"`
+	QuotaLimit     int         `json:"quota_limit"`
+	DeviceUsed     int         `json:"device_used"`
+	DeviceMax      int         `json:"device_max"`
+	AutoRenew      bool        `json:"auto_renew"`
+	Status         string      `json:"status"`
+	Features       json.RawMessage `json:"features,omitempty"`
+}
+
+type BillingUsagePoint struct {
+	Date   string `json:"date"`
+	Sent   int64  `json:"sent"`
+	Failed int64  `json:"failed"`
+}
+
+type BillingPlanSummary struct {
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Price      float64   `json:"price"`
+	QuotaLimit int       `json:"quota_limit"`
+	DeviceMax  int       `json:"device_max"`
+	Current    bool      `json:"current"`
+	IsActive   bool      `json:"is_active"`
+}
+
+type BillingInvoiceSummary struct {
+	ID          string     `json:"id"`
+	SubscriptionID uuid.UUID `json:"subscription_id"`
+	Date        time.Time  `json:"date"`
+	PlanName    string     `json:"plan_name"`
+	Amount      float64    `json:"amount"`
+	Status      string     `json:"status"`
+}

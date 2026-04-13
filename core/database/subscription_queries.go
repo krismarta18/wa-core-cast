@@ -14,14 +14,25 @@ import (
 // CreateSubscription creates a new subscription
 func (d *Database) CreateSubscription(subscription *models.Subscription) error {
 	query := `
-		INSERT INTO subscriptions (id, user_id, plan_id, status, auto_renew, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO subscriptions (
+			id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	now := time.Now()
+	startDate := subscription.StartDate
+	if startDate == nil {
+		startDate = &now
+	}
+	renewalDate := subscription.RenewalDate
+	if renewalDate == nil {
+		renewalDate = startDate
+	}
+	endDate := subscription.EndDate
 	_, err := d.Exec(query,
 		subscription.ID, subscription.UserID, subscription.PlanID,
-		subscription.Status, subscription.AutoRenew, now, now,
+		subscription.Status, startDate, endDate, renewalDate, subscription.AutoRenew, now, now,
 	)
 
 	if err != nil {
@@ -103,6 +114,15 @@ func (d *Database) UpdateSubscription(subID uuid.UUID, update *models.UpdateSubs
 		argCount++
 	}
 
+	if update.AutoRenew != nil {
+		if argCount > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("auto_renew = $%d", argCount)
+		args = append(args, *update.AutoRenew)
+		argCount++
+	}
+
 	if argCount == 1 {
 		return nil
 	}
@@ -122,15 +142,15 @@ func (d *Database) UpdateSubscription(subID uuid.UUID, update *models.UpdateSubs
 // GetBillingPlanByID retrieves a billing plan by ID
 func (d *Database) GetBillingPlanByID(planID uuid.UUID) (*models.BillingPlan, error) {
 	query := `
-		SELECT id, name, price, max_devices, max_messages_per_day, features
+		SELECT id, name, price, billing_cycle, max_devices, max_messages_per_day, features, is_active, created_at, updated_at
 		FROM billing_plans
 		WHERE id = $1
 	`
 
 	plan := &models.BillingPlan{}
 	err := d.QueryRow(query, planID).Scan(
-		&plan.ID, &plan.Name, &plan.Price, &plan.MaxDevices,
-		&plan.MaxMessagesPerDay, &plan.Features,
+		&plan.ID, &plan.Name, &plan.Price, &plan.BillingCycle, &plan.MaxDevices,
+		&plan.MaxMessagesPerDay, &plan.Features, &plan.IsActive, &plan.CreatedAt, &plan.UpdatedAt,
 	)
 
 	if err != nil {
@@ -144,9 +164,9 @@ func (d *Database) GetBillingPlanByID(planID uuid.UUID) (*models.BillingPlan, er
 // GetAllBillingPlans retrieves all billing plans
 func (d *Database) GetAllBillingPlans() ([]models.BillingPlan, error) {
 	query := `
-		SELECT id, name, price, max_devices, max_messages_per_day, features
+		SELECT id, name, price, billing_cycle, max_devices, max_messages_per_day, features, is_active, created_at, updated_at
 		FROM billing_plans
-		ORDER BY price ASC
+		ORDER BY is_active DESC, price ASC
 	`
 
 	rows, err := d.Query(query)
@@ -160,8 +180,8 @@ func (d *Database) GetAllBillingPlans() ([]models.BillingPlan, error) {
 	for rows.Next() {
 		plan := models.BillingPlan{}
 		err := rows.Scan(
-			&plan.ID, &plan.Name, &plan.Price, &plan.MaxDevices,
-			&plan.MaxMessagesPerDay, &plan.Features,
+			&plan.ID, &plan.Name, &plan.Price, &plan.BillingCycle, &plan.MaxDevices,
+			&plan.MaxMessagesPerDay, &plan.Features, &plan.IsActive, &plan.CreatedAt, &plan.UpdatedAt,
 		)
 		if err != nil {
 			utils.Error("Failed to scan billing plan", zap.Error(err))
@@ -176,13 +196,16 @@ func (d *Database) GetAllBillingPlans() ([]models.BillingPlan, error) {
 // CreateBillingPlan creates a new billing plan
 func (d *Database) CreateBillingPlan(plan *models.BillingPlan) error {
 	query := `
-		INSERT INTO billing_plans (id, name, price, max_devices, max_messages_per_day, features)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO billing_plans (
+			id, name, price, billing_cycle, max_devices, max_messages_per_day, features, is_active, created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
+	now := time.Now()
 	_, err := d.Exec(query,
-		plan.ID, plan.Name, plan.Price, plan.MaxDevices,
-		plan.MaxMessagesPerDay, plan.Features,
+		plan.ID, plan.Name, plan.Price, plan.BillingCycle, plan.MaxDevices,
+		plan.MaxMessagesPerDay, plan.Features, plan.IsActive, now, now,
 	)
 
 	if err != nil {
@@ -209,9 +232,9 @@ func (d *Database) GetSubscriptionCount() (int64, error) {
 
 // DeactivateSubscription deactivates a subscription
 func (d *Database) DeactivateSubscription(subID uuid.UUID) error {
-	query := `UPDATE subscriptions SET status = 0 WHERE id = $1`
+	query := `UPDATE subscriptions SET status = 'inactive', updated_at = $2 WHERE id = $1`
 
-	_, err := d.Exec(query, subID)
+	_, err := d.Exec(query, subID, time.Now())
 	if err != nil {
 		utils.Error("Failed to deactivate subscription", zap.Error(err))
 		return err
@@ -222,9 +245,9 @@ func (d *Database) DeactivateSubscription(subID uuid.UUID) error {
 
 // ActivateSubscription activates a subscription
 func (d *Database) ActivateSubscription(subID uuid.UUID) error {
-	query := `UPDATE subscriptions SET status = 1 WHERE id = $1`
+	query := `UPDATE subscriptions SET status = 'active', updated_at = $2 WHERE id = $1`
 
-	_, err := d.Exec(query, subID)
+	_, err := d.Exec(query, subID, time.Now())
 	if err != nil {
 		utils.Error("Failed to activate subscription", zap.Error(err))
 		return err

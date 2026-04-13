@@ -1,47 +1,105 @@
 "use client";
 
-import { Crown, TrendingUp, Calendar, CreditCard, ArrowUpRight, Download, Receipt } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, Calendar, CreditCard, Crown, Download, Receipt, TrendingUp } from "lucide-react";
 
-const PLAN = {
-  name: "Business Pro",
-  price: "Rp 299.000",
-  cycle: "per bulan",
-  renewDate: "12 Mei 2026",
-  quotaUsed: 8_420,
-  quotaLimit: 10_000,
-  deviceUsed: 4,
-  deviceMax: 10,
-};
+import { getApiErrorMessage } from "@/lib/api-error";
+import { billingApi } from "@/lib/api";
+import type { BillingOverview } from "@/lib/types";
 
-const USAGE_HISTORY = [
-  { date: "12 Apr", sent: 1243, failed: 17 },
-  { date: "11 Apr", sent: 980, failed: 8 },
-  { date: "10 Apr", sent: 1102, failed: 22 },
-  { date: "09 Apr", sent: 876, failed: 5 },
-  { date: "08 Apr", sent: 1340, failed: 11 },
-  { date: "07 Apr", sent: 490, failed: 3 },
-  { date: "06 Apr", sent: 389, failed: 2 },
-];
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
-const PLANS = [
-  { name: "Starter", price: "Rp 99.000", quota: "2.000 pesan", devices: "2 device", current: false },
-  { name: "Business Pro", price: "Rp 299.000", quota: "10.000 pesan", devices: "10 device", current: true },
-  { name: "Enterprise", price: "Rp 799.000", quota: "Unlimited", devices: "Unlimited", current: false },
-];
+function formatDate(date?: string | null) {
+  if (!date) {
+    return "-";
+  }
 
-const INVOICES = [
-  { id: "INV-2026-04", date: "01 Apr 2026", plan: "Business Pro", amount: "Rp 299.000" },
-  { id: "INV-2026-03", date: "01 Mar 2026", plan: "Business Pro", amount: "Rp 299.000" },
-  { id: "INV-2026-02", date: "01 Feb 2026", plan: "Business Pro", amount: "Rp 299.000" },
-  { id: "INV-2026-01", date: "01 Jan 2026", plan: "Starter",      amount: "Rp 99.000" },
-  { id: "INV-2025-12", date: "01 Des 2025", plan: "Starter",      amount: "Rp 99.000" },
-];
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(date));
+}
 
-const maxSent = Math.max(...USAGE_HISTORY.map((h) => h.sent));
+function formatCycle(cycle: string) {
+  return cycle === "yearly" ? "per tahun" : "per bulan";
+}
+
+function percentage(used: number, limit: number) {
+  if (limit <= 0) {
+    return 0;
+  }
+
+  return Math.min(100, Math.round((used / limit) * 100));
+}
 
 export default function BillingPage() {
-  const quotaPct = Math.round((PLAN.quotaUsed / PLAN.quotaLimit) * 100);
-  const devicePct = Math.round((PLAN.deviceUsed / PLAN.deviceMax) * 100);
+  const [billing, setBilling] = useState<BillingOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
+  const [submittingPlanId, setSubmittingPlanId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadBilling() {
+      try {
+        setLoading(true);
+        setError(null);
+        setCheckoutMessage(null);
+        const response = await billingApi.overview();
+        if (!active) {
+          return;
+        }
+        setBilling(response.billing);
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        setError(getApiErrorMessage(err, "Gagal memuat data billing"));
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadBilling();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleCheckout(planId: string) {
+    try {
+      setSubmittingPlanId(planId);
+      setError(null);
+      const checkoutResponse = await billingApi.checkout({ plan_id: planId });
+      const overviewResponse = await billingApi.overview();
+      setBilling(overviewResponse.billing);
+      setCheckoutMessage(checkoutResponse.message ?? "Paket berhasil diaktifkan.");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Gagal memproses pembayaran dummy"));
+    } finally {
+      setSubmittingPlanId(null);
+    }
+  }
+
+  const plan = billing?.current_plan ?? null;
+  const usageHistory = billing?.usage_history ?? [];
+  const plans = billing?.plans ?? [];
+  const invoices = billing?.invoices ?? [];
+  const maxSent = Math.max(1, ...usageHistory.map((entry) => entry.sent));
+  const quotaPct = percentage(plan?.quota_used ?? 0, plan?.quota_limit ?? 0);
+  const devicePct = percentage(plan?.device_used ?? 0, plan?.device_max ?? 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -51,6 +109,18 @@ export default function BillingPage() {
       </div>
 
       <div className="p-6 space-y-5">
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        {checkoutMessage ? (
+          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {checkoutMessage}
+          </div>
+        ) : null}
+
         {/* Current plan */}
         <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -60,17 +130,17 @@ export default function BillingPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Paket Aktif</p>
-                <p className="text-xl font-bold text-gray-900">{PLAN.name}</p>
+                <p className="text-xl font-bold text-gray-900">{plan?.name ?? (loading ? "Memuat..." : "Belum ada paket aktif")}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900">{PLAN.price}</p>
-              <p className="text-sm text-gray-500">{PLAN.cycle}</p>
+              <p className="text-2xl font-bold text-gray-900">{plan ? formatCurrency(plan.price) : "-"}</p>
+              <p className="text-sm text-gray-500">{plan ? formatCycle(plan.billing_cycle) : "-"}</p>
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
             <Calendar className="h-4 w-4" />
-            Perpanjang otomatis: <span className="font-medium text-gray-800">{PLAN.renewDate}</span>
+            Perpanjang otomatis: <span className="font-medium text-gray-800">{formatDate(plan?.renewal_date)}</span>
           </div>
         </div>
 
@@ -79,7 +149,7 @@ export default function BillingPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-700">Kuota Pesan</p>
-              <p className="text-sm font-bold text-gray-900">{PLAN.quotaUsed.toLocaleString("id")} / {PLAN.quotaLimit.toLocaleString("id")}</p>
+              <p className="text-sm font-bold text-gray-900">{(plan?.quota_used ?? 0).toLocaleString("id")} / {(plan?.quota_limit ?? 0).toLocaleString("id")}</p>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
@@ -95,7 +165,7 @@ export default function BillingPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-700">Slot Device</p>
-              <p className="text-sm font-bold text-gray-900">{PLAN.deviceUsed} / {PLAN.deviceMax}</p>
+              <p className="text-sm font-bold text-gray-900">{plan?.device_used ?? 0} / {plan?.device_max ?? 0}</p>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
@@ -114,7 +184,7 @@ export default function BillingPage() {
             <h2 className="font-semibold text-gray-900">Penggunaan 7 Hari Terakhir</h2>
           </div>
           <div className="flex items-end gap-2 h-32">
-            {USAGE_HISTORY.map((h) => (
+            {usageHistory.map((h) => (
               <div key={h.date} className="flex flex-1 flex-col items-center gap-1">
                 <div className="flex w-full flex-col-reverse gap-0.5">
                   <div
@@ -127,6 +197,9 @@ export default function BillingPage() {
               </div>
             ))}
           </div>
+          {!loading && usageHistory.length === 0 ? (
+            <p className="text-sm text-gray-400">Belum ada data penggunaan untuk 7 hari terakhir.</p>
+          ) : null}
           <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
             <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-green-400" /> Terkirim</span>
           </div>
@@ -139,9 +212,9 @@ export default function BillingPage() {
             <h2 className="font-semibold text-gray-900">Pilihan Paket</h2>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {PLANS.map((p) => (
+            {plans.map((p) => (
               <div
-                key={p.name}
+                key={p.id}
                 className={`rounded-xl border-2 p-4 ${p.current ? "border-green-400 bg-green-50" : "border-gray-100"}`}
               >
                 {p.current && (
@@ -150,19 +223,27 @@ export default function BillingPage() {
                   </span>
                 )}
                 <p className="font-bold text-gray-900">{p.name}</p>
-                <p className="mt-1 text-xl font-bold text-gray-800">{p.price}<span className="text-sm font-normal text-gray-400">/bln</span></p>
+                <p className="mt-1 text-xl font-bold text-gray-800">{formatCurrency(p.price)}<span className="text-sm font-normal text-gray-400">/bln</span></p>
                 <ul className="mt-3 space-y-1 text-xs text-gray-500">
-                  <li>✓ {p.quota}</li>
-                  <li>✓ {p.devices}</li>
+                  <li>✓ {p.quota_limit > 0 ? `${p.quota_limit.toLocaleString("id")} pesan/hari` : "Kuota fleksibel"}</li>
+                  <li>✓ {p.device_max > 0 ? `${p.device_max} device` : "Device fleksibel"}</li>
                 </ul>
                 {!p.current && (
-                  <button className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 py-1.5 text-xs text-gray-600 hover:border-green-400 hover:text-green-600">
-                    Upgrade <ArrowUpRight className="h-3 w-3" />
+                  <button
+                    className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 py-1.5 text-xs text-gray-600 hover:border-green-400 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => void handleCheckout(p.id)}
+                    type="button"
+                    disabled={submittingPlanId !== null}
+                  >
+                    {submittingPlanId === p.id ? "Memproses..." : "Bayar Dummy & Aktifkan"} <ArrowUpRight className="h-3 w-3" />
                   </button>
                 )}
               </div>
             ))}
           </div>
+          {!loading && plans.length === 0 ? (
+            <p className="text-sm text-gray-400">Belum ada paket billing yang tersedia.</p>
+          ) : null}
         </div>
 
         {/* Invoice history */}
@@ -184,24 +265,31 @@ export default function BillingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {INVOICES.map((inv) => (
+                {invoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3 font-mono text-xs font-medium text-gray-700">{inv.id}</td>
-                    <td className="px-5 py-3 text-gray-600">{inv.date}</td>
-                    <td className="px-5 py-3 text-gray-600">{inv.plan}</td>
-                    <td className="px-5 py-3 font-semibold text-gray-900">{inv.amount}</td>
+                    <td className="px-5 py-3 text-gray-600">{formatDate(inv.date)}</td>
+                    <td className="px-5 py-3 text-gray-600">{inv.plan_name}</td>
+                    <td className="px-5 py-3 font-semibold text-gray-900">{formatCurrency(inv.amount)}</td>
                     <td className="px-5 py-3">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                        ✓ Lunas
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${inv.status === "active" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                        {inv.status === "active" ? "✓ Aktif" : inv.status}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <button className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 hover:border-green-400 hover:text-green-600">
+                      <button className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 hover:border-green-400 hover:text-green-600" type="button">
                         <Download className="h-3 w-3" /> PDF
                       </button>
                     </td>
                   </tr>
                 ))}
+                {!loading && invoices.length === 0 ? (
+                  <tr>
+                    <td className="px-5 py-6 text-center text-sm text-gray-400" colSpan={6}>
+                      Belum ada riwayat invoice.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

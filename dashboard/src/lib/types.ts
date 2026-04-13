@@ -145,6 +145,78 @@ export interface AuthMeResponse {
   user: AuthUser;
 }
 
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export interface BillingUsagePoint {
+  date: string;
+  sent: number;
+  failed: number;
+}
+
+export interface BillingPlanSummary {
+  id: string;
+  name: string;
+  price: number;
+  quota_limit: number;
+  device_max: number;
+  current: boolean;
+  is_active: boolean;
+}
+
+export interface BillingInvoiceSummary {
+  id: string;
+  subscription_id: string;
+  date: string;
+  plan_name: string;
+  amount: number;
+  status: string;
+}
+
+export interface BillingCurrentPlan {
+  subscription_id: string;
+  plan_id: string;
+  name: string;
+  price: number;
+  billing_cycle: string;
+  renewal_date?: string | null;
+  quota_used: number;
+  quota_limit: number;
+  device_used: number;
+  device_max: number;
+  auto_renew: boolean;
+  status: string;
+  features?: string[] | Record<string, unknown> | null;
+}
+
+export interface BillingOverview {
+  current_plan?: BillingCurrentPlan | null;
+  usage_history: BillingUsagePoint[];
+  plans: BillingPlanSummary[];
+  invoices: BillingInvoiceSummary[];
+}
+
+export interface BillingOverviewResponse {
+  success: boolean;
+  billing: BillingOverview;
+}
+
+export interface BillingCheckoutRequest {
+  plan_id: string;
+}
+
+export interface BillingCheckoutData {
+  subscription: BillingCurrentPlan;
+  invoice: BillingInvoiceSummary;
+  payment_status: string;
+  payment_method: string;
+}
+
+export interface BillingCheckoutResponse {
+  success: boolean;
+  message?: string;
+  checkout: BillingCheckoutData;
+}
+
 // ─── Generic API ─────────────────────────────────────────────────────────────
 
 export interface ApiError {

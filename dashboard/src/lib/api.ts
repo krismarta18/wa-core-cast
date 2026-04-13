@@ -7,6 +7,9 @@ import type {
   AuthRegisterRequest,
   AuthSessionResponse,
   AuthVerifyOTPRequest,
+  BillingCheckoutRequest,
+  BillingCheckoutResponse,
+  BillingOverviewResponse,
   Device,
   SessionListResponse,
   InitiateSessionRequest,
@@ -155,6 +158,16 @@ export const authApi = {
   me: () => api.get<AuthMeResponse>("/api/v1/auth/me").then((r) => r.data),
 
   logout: () => api.post<AuthGenericSuccessResponse>("/api/v1/auth/logout").then((r) => r.data),
+};
+
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export const billingApi = {
+  overview: () =>
+    api.get<BillingOverviewResponse>("/api/v1/billing/overview").then((r) => r.data),
+
+  checkout: (body: BillingCheckoutRequest) =>
+    api.post<BillingCheckoutResponse>("/api/v1/billing/checkout", body).then((r) => r.data),
 };
 
 // ─── Sessions ─────────────────────────────────────────────────────────────────

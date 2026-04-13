@@ -223,7 +223,12 @@ func (d *Database) GetDeviceByPhone(phone string) (*models.Device, error) {
 
 // CountUserDevices counts non-banned devices for a user
 func (d *Database) CountUserDevices(userID uuid.UUID) (int, error) {
-	query := `SELECT COUNT(*) FROM devices WHERE user_id = $1 AND status != 'banned'`
+	query := `
+		SELECT COUNT(*)
+		FROM devices
+		WHERE user_id = $1
+		  AND COALESCE(status::text, '') NOT IN ('banned', '3')
+	`
 
 	var count int
 	err := d.QueryRow(query, userID).Scan(&count)
