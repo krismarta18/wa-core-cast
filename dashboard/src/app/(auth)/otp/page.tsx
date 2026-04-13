@@ -3,8 +3,13 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessageSquareMore, RotateCcw, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { authApi } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { clearPendingAuthState, getPendingAuthState } from "@/lib/auth-session";
+import { useAuth } from "@/providers/auth-provider";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60; // seconds
@@ -12,14 +17,29 @@ const RESEND_COOLDOWN = 60; // seconds
 function OTPPageInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const phone = params.get("phone") ?? "";
-  const context = params.get("context") ?? "login"; // "login" | "register"
+  const { completeAuth, session, hydrated } = useAuth();
+  const pendingAuth = getPendingAuthState();
+  const phone = params.get("phone") ?? pendingAuth?.phoneNumber ?? "";
+  const context = (params.get("context") ?? pendingAuth?.context ?? "login") as "login" | "register";
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
+  const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (hydrated && session) {
+      router.replace("/");
+      return;
+    }
+
+    if (!pendingAuth || !phone) {
+      router.replace(context === "register" ? "/register" : "/login");
+    }
+  }, [context, hydrated, pendingAuth, phone, router, session]);
 
   // Countdown timer
   useEffect(() => {
@@ -73,17 +93,32 @@ function OTPPageInner() {
   };
 
   const handleSubmit = useCallback(
-    (e?: React.FormEvent) => {
+    async (e?: React.FormEvent) => {
       e?.preventDefault();
       const code = otp.join("");
       if (code.length < OTP_LENGTH) {
         setError("Masukkan 6 digit kode OTP");
         return;
       }
-      // On success, go to dashboard
-      router.push("/");
+
+      setSubmitting(true);
+
+      try {
+        const result = await authApi.verifyOTP({
+          phone_number: phone,
+          otp_code: code,
+        });
+        completeAuth(result, pendingAuth?.rememberMe ?? false);
+        clearPendingAuthState();
+        toast.success("Login berhasil");
+        router.replace("/");
+      } catch (submitError) {
+        setError(getApiErrorMessage(submitError, "Verifikasi OTP gagal"));
+      } finally {
+        setSubmitting(false);
+      }
     },
-    [otp, router]
+    [completeAuth, otp, pendingAuth?.rememberMe, phone, router]
   );
 
   // Auto-submit when all digits filled
@@ -94,12 +129,31 @@ function OTPPageInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (countdown > 0) return;
-    setOtp(Array(OTP_LENGTH).fill(""));
-    setError("");
-    setCountdown(RESEND_COOLDOWN);
-    focusInput(0);
+
+    setResending(true);
+
+    try {
+      if (context === "register") {
+        await authApi.register({
+          phone_number: phone,
+          full_name: pendingAuth?.fullName ?? "User WACAST",
+        });
+      } else {
+        await authApi.requestOTP({ phone_number: phone });
+      }
+
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setError("");
+      setCountdown(RESEND_COOLDOWN);
+      focusInput(0);
+      toast.success("Kode OTP baru berhasil dikirim");
+    } catch (resendError) {
+      setError(getApiErrorMessage(resendError, "Gagal mengirim ulang OTP"));
+    } finally {
+      setResending(false);
+    }
   };
 
   const maskedPhone = phone
@@ -213,7 +267,7 @@ function OTPPageInner() {
               type="submit"
               size="lg"
               className="w-full"
-              disabled={otp.some((d) => !d)}
+              disabled={otp.some((d) => !d) || submitting}
             >
               Verifikasi
             </Button>
@@ -225,7 +279,7 @@ function OTPPageInner() {
             <button
               type="button"
               onClick={handleResend}
-              disabled={countdown > 0}
+              disabled={countdown > 0 || resending}
               className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-green-600 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RotateCcw className="h-3.5 w-3.5" />

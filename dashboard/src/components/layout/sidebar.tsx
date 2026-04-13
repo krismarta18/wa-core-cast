@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navigation } from "@/lib/navigation";
-import { MessageSquareMore, ExternalLink } from "lucide-react";
+import { MessageSquareMore, ExternalLink, LogOut } from "lucide-react";
+import { useAuth } from "@/providers/auth-provider";
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { session, logout } = useAuth();
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
@@ -89,6 +91,23 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Footer */}
       <div className="border-t border-gray-200 px-6 py-4">
+        {session && (
+          <div className="mb-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+            <p className="text-sm font-semibold text-gray-900">{session.user.full_name}</p>
+            <p className="text-xs text-gray-500">{session.user.phone_number}</p>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate?.();
+            void logout();
+          }}
+          className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          <LogOut className="h-4 w-4 text-gray-400" />
+          Keluar
+        </button>
         <p className="text-xs text-gray-400">WACAST Core v1.0.0</p>
       </div>
     </aside>

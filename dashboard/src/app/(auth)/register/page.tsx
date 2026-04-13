@@ -1,21 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquareMore } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { authApi } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { savePendingAuthState } from "@/lib/auth-session";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { session, hydrated } = useAuth();
   const [dialCode, setDialCode] = useState("+62");
   const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("");
   const [agree, setAgree] = useState(false);
-  const [errors, setErrors] = useState<{ phone?: string; agree?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ fullName?: string; phone?: string; agree?: string }>({});
+
+  useEffect(() => {
+    if (hydrated && session) {
+      router.replace("/");
+    }
+  }, [hydrated, router, session]);
 
   const validate = () => {
-    const e: { phone?: string; agree?: string } = {};
+    const e: { fullName?: string; phone?: string; agree?: string } = {};
+    if (!fullName.trim()) e.fullName = "Nama lengkap wajib diisi";
+    else if (fullName.trim().length < 2) e.fullName = "Nama terlalu pendek";
     if (!phone) e.phone = "Nomor HP wajib diisi";
     else if (phone.length < 7) e.phone = "Nomor tidak valid";
     if (!agree) e.agree = "Anda harus menyetujui syarat & ketentuan";
@@ -23,11 +39,32 @@ export default function RegisterPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
     const fullPhone = dialCode.replace("+", "") + phone;
-    router.push(`/otp?phone=${encodeURIComponent(fullPhone)}&context=register`);
+
+    setSubmitting(true);
+
+    try {
+      await authApi.register({
+        phone_number: fullPhone,
+        full_name: fullName.trim(),
+      });
+      savePendingAuthState({
+        phoneNumber: fullPhone,
+        context: "register",
+        fullName: fullName.trim(),
+        rememberMe: true,
+      });
+      toast.success("Kode OTP registrasi berhasil dikirim");
+      router.push(`/otp?phone=${encodeURIComponent(fullPhone)}&context=register`);
+    } catch (error) {
+      setErrors({ phone: getApiErrorMessage(error, "Gagal memulai registrasi") });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -84,6 +121,21 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="full-name" className="text-sm font-medium text-gray-700">
+                Nama Lengkap
+              </label>
+              <input
+                id="full-name"
+                type="text"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                className="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                placeholder="Masukkan nama lengkap"
+              />
+              {errors.fullName && <p className="text-xs text-red-600">{errors.fullName}</p>}
+            </div>
+
             {/* Phone */}
             <div className="flex flex-col gap-1">
               <label htmlFor="reg-phone" className="text-sm font-medium text-gray-700">
@@ -125,7 +177,7 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <Button type="submit" size="lg" className="w-full mt-2">
+            <Button type="submit" size="lg" className="w-full mt-2" disabled={submitting}>
               Kirim Kode OTP
             </Button>
           </form>

@@ -89,6 +89,62 @@ export interface HealthResponse {
   uptime?: number;
 }
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export interface AuthUser {
+  id: string;
+  phone_number: string;
+  full_name: string;
+  email?: string | null;
+  company_name?: string | null;
+  timezone: string;
+  is_verified: boolean;
+  is_banned: boolean;
+  is_api_enabled: boolean;
+  created_at: string;
+  last_login_at?: string | null;
+}
+
+export interface AuthRegisterRequest {
+  phone_number: string;
+  full_name: string;
+}
+
+export interface AuthOTPRequest {
+  phone_number: string;
+}
+
+export interface AuthVerifyOTPRequest {
+  phone_number: string;
+  otp_code: string;
+}
+
+export interface AuthRefreshTokenRequest {
+  refresh_token: string;
+}
+
+export interface AuthGenericSuccessResponse {
+  success: boolean;
+  message?: string;
+  phone_number?: string;
+}
+
+export interface AuthSessionResponse {
+  success: boolean;
+  message?: string;
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_expires_in: number;
+  user: AuthUser;
+}
+
+export interface AuthMeResponse {
+  success: boolean;
+  user: AuthUser;
+}
+
 // ─── Generic API ─────────────────────────────────────────────────────────────
 
 export interface ApiError {

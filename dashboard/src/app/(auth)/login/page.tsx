@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquareMore } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { authApi } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { savePendingAuthState } from "@/lib/auth-session";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { session, hydrated } = useAuth();
   const [dialCode, setDialCode] = useState("+62");
   const [phone, setPhone] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ phone?: string }>({});
+
+  useEffect(() => {
+    if (hydrated && session) {
+      router.replace("/");
+    }
+  }, [hydrated, router, session]);
 
   const validate = () => {
     const e: { phone?: string } = {};
@@ -22,11 +35,28 @@ export default function LoginPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
     const fullPhone = dialCode.replace("+", "") + phone;
-    router.push(`/otp?phone=${encodeURIComponent(fullPhone)}&context=login`);
+
+    setSubmitting(true);
+
+    try {
+      await authApi.requestOTP({ phone_number: fullPhone });
+      savePendingAuthState({
+        phoneNumber: fullPhone,
+        context: "login",
+        rememberMe,
+      });
+      toast.success("Kode OTP berhasil dikirim");
+      router.push(`/otp?phone=${encodeURIComponent(fullPhone)}&context=login`);
+    } catch (error) {
+      setErrors({ phone: getApiErrorMessage(error, "Gagal mengirim OTP login") });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -112,7 +142,7 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <Button type="submit" size="lg" className="w-full mt-2">
+            <Button type="submit" size="lg" className="w-full mt-2" disabled={submitting}>
               Kirim Kode OTP
             </Button>
           </form>
