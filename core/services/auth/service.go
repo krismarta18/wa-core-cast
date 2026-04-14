@@ -280,6 +280,44 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, err
 	return user, nil
 }
 
+// UpdateProfile updates the profile information of the user identified by userID.
+func (s *Service) UpdateProfile(ctx context.Context, userID string, req models.UpdateUserRequest) (*models.User, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	db := s.db.GetConnection()
+	
+	existing, err := getUserByID(ctx, db, uid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("update-profile: check user: %w", err)
+	}
+
+	if req.FullName != nil {
+		existing.FullName = *req.FullName
+	}
+	if req.Email != nil {
+		existing.Email = req.Email
+	}
+	if req.CompanyName != nil {
+		existing.CompanyName = req.CompanyName
+	}
+	if req.Timezone != nil {
+		existing.Timezone = *req.Timezone
+	}
+
+	user, err := updateUserProfile(ctx, db, existing)
+	if err != nil {
+		return nil, fmt.Errorf("update-profile: execute update: %w", err)
+	}
+
+	return user, nil
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -369,6 +407,15 @@ func markUserVerifiedAndLogin(ctx context.Context, db *sql.DB, phoneNumber strin
 		WHERE phone_number = $1
 		RETURNING ` + userSelectCols
 	return scanUser(db.QueryRowContext(ctx, q, phoneNumber))
+}
+
+func updateUserProfile(ctx context.Context, db *sql.DB, user *models.User) (*models.User, error) {
+	q := `
+		UPDATE users
+		SET full_name = $1, email = $2, company_name = $3, timezone = $4, updated_at = NOW()
+		WHERE id = $5
+		RETURNING ` + userSelectCols
+	return scanUser(db.QueryRowContext(ctx, q, user.FullName, user.Email, user.CompanyName, user.Timezone, user.ID))
 }
 
 func invalidatePendingOTPs(ctx context.Context, db *sql.DB, phoneNumber string) error {

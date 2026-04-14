@@ -5,7 +5,9 @@ import type {
   AuthOTPRequest,
   AuthRefreshTokenRequest,
   AuthRegisterRequest,
+  AuthRegisterRequest,
   AuthSessionResponse,
+  AuthUpdateProfileRequest,
   AuthVerifyOTPRequest,
   BillingCheckoutRequest,
   BillingCheckoutResponse,
@@ -156,6 +158,9 @@ export const authApi = {
       .then((r) => r.data),
 
   me: () => api.get<AuthMeResponse>("/api/v1/auth/me").then((r) => r.data),
+
+  updateProfile: (body: AuthUpdateProfileRequest) =>
+    api.put<AuthMeResponse>("/api/v1/auth/profile", body).then((r) => r.data),
 
   logout: () => api.post<AuthGenericSuccessResponse>("/api/v1/auth/logout").then((r) => r.data),
 };

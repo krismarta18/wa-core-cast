@@ -77,6 +77,15 @@ func (s *Service) CheckoutDummy(ctx context.Context, userID string, planID strin
 		return nil, fmt.Errorf("create subscription: %w", err)
 	}
 
+	InvoiceID := uuid.New()
+	if _, err = tx.ExecContext(ctx, `INSERT INTO invoices(id, user_id, subscription_id,invoice_number, issue_date,due_date,
+	paid_at, amount, currency, status, payment_method, created_at) VALUES 
+	($1, $2,$3,$4,$5::date,$5::date,$5::timestamptz,$6,$7,$8,$9,$5::timestamptz)`, InvoiceID, uid, subscriptionID,
+		fmt.Sprintf("INV-%s-%s", now.Format("2006-01"), subscriptionID.String()[:8]),
+		now, plan.Price, "Rupiah", "paid", "dummy"); err != nil {
+		return nil, fmt.Errorf("create invoice: %w", err)
+	}
+
 	if err = tx.Commit(); err != nil {
 		return nil, fmt.Errorf("commit transaction: %w", err)
 	}

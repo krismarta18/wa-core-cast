@@ -70,6 +70,7 @@ type SessionConfig struct {
 	DeviceID        string
 	UserID          string
 	Phone           string
+	DisplayName     string
 	EncryptionKey   string // 32-byte hex string
 	SessionTimeout  int    // Seconds before auto-disconnect
 	ReconnectLimit  int    // Maximum reconnection attempts

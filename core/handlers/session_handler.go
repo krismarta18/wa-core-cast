@@ -31,9 +31,10 @@ func NewSessionHandler(svc *session.Service, encryptionKey string, sessionTimeou
 
 // InitiateSessionRequest is the request body for initiating a session
 type InitiateSessionRequest struct {
-	DeviceID string `json:"device_id" binding:"required"`
-	UserID   string `json:"user_id" binding:"required"`
-	Phone    string `json:"phone" binding:"required"`
+	DeviceID    string `json:"device_id" binding:"required"`
+	UserID      string `json:"user_id" binding:"required"`
+	Phone       string `json:"phone" binding:"required"`
+	DisplayName string `json:"display_name"`
 }
 
 // SessionStatusResponse is the response for session status
@@ -204,6 +205,7 @@ func (h *SessionHandler) InitiateSession(c *gin.Context) {
 		DeviceID:       req.DeviceID,
 		UserID:         req.UserID,
 		Phone:          req.Phone,
+		DisplayName:    req.DisplayName,
 		EncryptionKey:  h.encryptionKey,
 		SessionTimeout: h.sessionTimeout,
 		ReconnectLimit: 5,

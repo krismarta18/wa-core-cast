@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { QrCode, Smartphone, CheckCircle2, RefreshCw, Info } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { QrCode, Smartphone, CheckCircle2, RefreshCw, Info, Loader2 } from "lucide-react";
+import { authApi, sessionsApi } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
 
 const STEPS = [
   "Buka WhatsApp di HP kamu",
@@ -11,9 +13,95 @@ const STEPS = [
 ];
 
 export default function QRScannerPage() {
+  const { error } = useToast();
   const [deviceName, setDeviceName] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [connected, setConnected] = useState(false);
+  
+  // Real-time integration states
+  const [qrSrc, setQrSrc] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [deviceId, setDeviceId] = useState<string>("");
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper to safely slugify device name -> now using UUID
+  function generateSafeId() {
+    return crypto.randomUUID();
+  }
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
+
+  async function handleGenerateQR() {
+    setLoading(true);
+    try {
+      // 1. Get current logged in user context
+      const meRes = await authApi.me();
+      if (!meRes.success || !meRes.user) {
+        throw new Error("Sesi pengguna tidak valid.");
+      }
+
+      const newDeviceId = generateSafeId();
+      setDeviceId(newDeviceId);
+
+      // 2. Initiate session
+      await sessionsApi.initiate({
+        device_id: newDeviceId,
+        user_id: meRes.user.id,
+        phone: meRes.user.phone_number,
+        display_name: deviceName,
+      });
+
+      setShowQR(true);
+      startPollingQR(newDeviceId);
+
+    } catch (err: any) {
+      console.error(err);
+      if (typeof error === 'function') {
+         error("Gagal", err?.message || "Tidak dapat membuat QR code saat ini.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function startPollingQR(currentDeviceId: string) {
+    // Clear any existing polling
+    if (pollingRef.current) clearInterval(pollingRef.current);
+
+    // Initial fetch
+    fetchQrAndStatus(currentDeviceId);
+
+    // Pool every 4 seconds
+    pollingRef.current = setInterval(() => {
+      fetchQrAndStatus(currentDeviceId);
+    }, 4000);
+  }
+
+  async function fetchQrAndStatus(currentDeviceId: string) {
+    try {
+      // Check status
+      const statusRes = await sessionsApi.get(currentDeviceId).catch(() => null);
+      if (statusRes && statusRes.status === 1) { // 1 = session active
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        setConnected(true);
+        setShowQR(false);
+        return;
+      }
+
+      // Fetch QR
+      const qrRes = await sessionsApi.qr(currentDeviceId).catch(() => null);
+      if (qrRes && qrRes.qr_code_image?.base64_png) {
+        setQrSrc(qrRes.qr_code_image.base64_png);
+      }
+    } catch (err) {
+      console.error("Kesalahan sinkronisasi dengan server", err);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,12 +145,21 @@ export default function QRScannerPage() {
                 />
 
                 <button
-                  disabled={!deviceName.trim()}
-                  onClick={() => setShowQR(true)}
-                  className="mt-4 w-full rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
+                  disabled={!deviceName.trim() || loading}
+                  onClick={handleGenerateQR}
+                  className="mt-4 w-full flex items-center justify-center rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
                 >
-                  <QrCode className="mr-2 inline h-4 w-4" />
-                  Generate QR Code
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                      Membuat Sesi...
+                    </>
+                  ) : (
+                    <>
+                      <QrCode className="mr-2 inline h-4 w-4" />
+                      Generate QR Code
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -72,18 +169,23 @@ export default function QRScannerPage() {
                   <p className="mb-1 text-sm font-medium text-gray-700">
                     Scan QR untuk <span className="font-bold text-green-700">{deviceName}</span>
                   </p>
-                  <p className="mb-6 text-xs text-gray-400">QR code berlaku selama 60 detik</p>
+                  <p className="mb-6 text-xs text-gray-400">
+                    ID Perangkat: <span className="font-mono text-gray-600 bg-gray-100 px-1 rounded">{deviceId}</span>
+                  </p>
 
-                  {/* Placeholder QR — akan diganti WebSocket real QR */}
-                  <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50">
-                    <div className="text-center">
-                      <QrCode className="mx-auto h-16 w-16 text-gray-300" />
-                      <p className="mt-2 text-xs text-gray-400">QR akan muncul di sini</p>
-                    </div>
+                  <div className="mx-auto flex h-60 w-60 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 overflow-hidden">
+                    {qrSrc ? (
+                      <img src={qrSrc} alt="WhatsApp Web QR Code" className="h-full w-full object-contain p-2" />
+                    ) : (
+                      <div className="text-center text-gray-400 flex flex-col items-center">
+                        <Loader2 className="mb-2 h-8 w-8 animate-spin text-green-500" />
+                        <span className="text-xs">Mengambil QR terbaru...</span>
+                      </div>
+                    )}
                   </div>
 
-                  <button className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:underline">
-                    <RefreshCw className="h-4 w-4" /> Refresh QR
+                  <button onClick={() => fetchQrAndStatus(deviceId)} className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:underline">
+                    <RefreshCw className="h-4 w-4" />Refresh Sekarang
                   </button>
 
                   {/* Dev shortcut */}
@@ -115,7 +217,7 @@ export default function QRScannerPage() {
                   Lihat Semua Device
                 </a>
                 <button
-                  onClick={() => { setConnected(false); setShowQR(false); setDeviceName(""); }}
+                  onClick={() => { setConnected(false); setShowQR(false); setDeviceName(""); setQrSrc(""); setDeviceId(""); }}
                   className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                 >
                   Tambah Device Lain

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"wacast/core/models"
 	"wacast/core/services/auth"
 	"wacast/core/utils"
 )
@@ -44,6 +45,7 @@ func RegisterAuthRoutes(v1 *gin.RouterGroup, svc *auth.Service, jwtSecret string
 	protected.Use(JWTAuthMiddleware(jwtSecret, svc))
 	{
 		protected.GET("/me", h.Me)
+		protected.PUT("/profile", h.UpdateProfile)
 		protected.POST("/logout", h.Logout)
 	}
 }
@@ -222,6 +224,36 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, successResponse("", gin.H{
+		"user": user.ToResponse(),
+	}))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /auth/profile (protected)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// UpdateProfile updates the currently authenticated user's profile.
+func (h *AuthHandler) UpdateProfile(c *gin.Context) {
+	userID := c.GetString(ContextKeyUserID)
+
+	var req models.UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		badRequest(c, err.Error())
+		return
+	}
+
+	user, err := h.authService.UpdateProfile(c.Request.Context(), userID, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, auth.ErrUserNotFound):
+			notFound(c, "USER_NOT_FOUND", err.Error())
+		default:
+			internalError(c, err)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, successResponse("Profile updated successfully", gin.H{
 		"user": user.ToResponse(),
 	}))
 }

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types/events"
@@ -15,7 +16,9 @@ import (
 	qrcode "github.com/skip2/go-qrcode"
 
 	"wacast/core/database"
+	"wacast/core/models"
 	"wacast/core/utils"
+	importStore "go.mau.fi/whatsmeow/store"
 )
 
 // Service implements SessionServiceInterface
@@ -80,13 +83,41 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 
 	s.sessions[cfg.DeviceID] = session
 
+	// Generate Device Record in Database
+	devID, errDev := uuid.Parse(cfg.DeviceID)
+	if errDev != nil {
+		utils.Error("Failed to parse DeviceID as UUID", zap.Error(errDev), zap.String("device_id", cfg.DeviceID))
+	} else {
+		uID, errUser := uuid.Parse(cfg.UserID)
+		if errUser != nil {
+			utils.Error("Failed to parse UserID as UUID", zap.Error(errUser), zap.String("user_id", cfg.UserID))
+		} else {
+			displayName := cfg.DisplayName
+			if displayName == "" {
+				displayName = "WhatsApp Device"
+			}
+			device := &models.Device{
+				ID:          devID,
+				UserID:      uID,
+				UniqueName:  cfg.DeviceID,
+				DisplayName: displayName,
+				PhoneNumber: cfg.Phone,
+				Status:      models.DeviceStatusPendingQR,
+			}
+			if errDB := s.db.CreateDevice(device); errDB != nil {
+				utils.Error("Failed to insert device into database", zap.Error(errDB))
+			} else {
+				utils.Info("Device record successfully inserted into database", zap.String("device_id", cfg.DeviceID))
+			}
+		}
+	}
+
 	// ========================================================================
 	// Initialize WhatsApp Web connection - Proper whatsmeow implementation
 	// ========================================================================
 	
 	go func() {
 		deviceID := cfg.DeviceID
-		var err error
 
 		// Use a background context so the goroutine is NOT tied to the HTTP
 		// request context (which is cancelled as soon as the handler returns).
@@ -115,11 +146,24 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 		session.Client = client
 		s.mu.Unlock()
 		
-		// Set up event handlers BEFORE connecting
-		// This ensures we capture all events including QR code
-		client.AddEventHandler(func(evt interface{}) {
-			switch v := evt.(type) {
-			case *events.QR:
+		s.setupEventHandlersAndConnect(deviceID, client)
+	}()
+
+	utils.Info("Session initiated (connecting to WhatsApp Web)",
+		zap.String("device_id", cfg.DeviceID),
+		zap.String("phone", cfg.Phone),
+	)
+
+	return nil
+}
+
+// setupEventHandlersAndConnect centralizes the WhatsApp events and connects to the websocket.
+func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeow.Client) {
+	// Set up event handlers BEFORE connecting
+	// This ensures we capture all events including QR code
+	client.AddEventHandler(func(evt interface{}) {
+		switch v := evt.(type) {
+		case *events.QR:
 				// ✅ Capture actual QR code from WhatsApp
 				utils.Info("QR code received from WhatsApp",
 					zap.String("device_id", deviceID),
@@ -172,6 +216,21 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 				}
 				s.mu.Unlock()
 				
+				// Update status in Database
+				if parsedID, err := uuid.Parse(deviceID); err == nil {
+					_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusConnected)
+					
+					// Ensure we save the REAL WhatsApp number to the device's phone_number
+					// This acts as the bridge for multi-session restoration!
+					if client.Store != nil && client.Store.ID != nil {
+						actualPhone := client.Store.ID.User
+						updatePhone := &models.UpdateDeviceRequest{
+							PhoneNumber: &actualPhone,
+						}
+						_ = s.db.UpdateDeviceInfo(parsedID, updatePhone)
+					}
+				}
+				
 			case *events.Disconnected:
 				// ❌ Connection lost
 				utils.Warn("Lost connection to WhatsApp",
@@ -183,6 +242,11 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 				}
 				s.mu.Unlock()
 				
+				// Update status in Database
+				if parsedID, err := uuid.Parse(deviceID); err == nil {
+					_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
+				}
+				
 			case *events.ConnectFailure:
 				// ❌ Connection failed
 				utils.Error("Connection failure",
@@ -192,32 +256,24 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 			}
 		})
 		
-		// ✅ Connect to WhatsApp Web
-		utils.Info("Attempting to connect to WhatsApp Web",
+	// ✅ Connect to WhatsApp Web
+	utils.Info("Attempting to connect to WhatsApp Web",
+		zap.String("device_id", deviceID),
+	)
+	
+	err := client.Connect()
+	if err != nil {
+		utils.Error("Failed to connect to WhatsApp",
 			zap.String("device_id", deviceID),
+			zap.Error(err),
 		)
 		
-		err = client.Connect()
-		if err != nil {
-			utils.Error("Failed to connect to WhatsApp",
-				zap.String("device_id", deviceID),
-				zap.Error(err),
-			)
-			
-			s.mu.Lock()
-			if sess, exists := s.sessions[deviceID]; exists {
-				sess.Status = SessionInactive
-			}
-			s.mu.Unlock()
+		s.mu.Lock()
+		if sess, exists := s.sessions[deviceID]; exists {
+			sess.Status = SessionInactive
 		}
-	}()
-
-	utils.Info("Session initiated (connecting to WhatsApp Web)",
-		zap.String("device_id", cfg.DeviceID),
-		zap.String("phone", cfg.Phone),
-	)
-
-	return nil
+		s.mu.Unlock()
+	}
 }
 
 // StopSession disconnects and removes a session
@@ -335,10 +391,78 @@ func (s *Service) RestorePreviousSessions(ctx context.Context) error {
 
 	utils.Info("Restoring previous sessions...")
 
-	// In a real implementation, query database for active devices
-	// For now, just log that restoration is attempted
-	utils.Debug("No previous sessions to restore (stub implementation)")
+	// 1. Initialize store container
+	storeContainer := sqlstore.NewWithDB(s.db.GetConnection(), "postgres", waLog.Noop)
+	// We don't upgrade schema here as it belongs to initialization lifecycle
+	
+	// 2. Fetch Whatsmeow device stores that have logged in Data
+	waDevices, err := storeContainer.GetAllDevices(context.Background())
+	if err != nil {
+		utils.Error("Failed to get whatsmeow devices from database", zap.Error(err))
+		return err
+	}
 
+	// 3. Fetch active/connected backend Devices
+	dbDevices, err := s.db.GetActiveDevices()
+	if err != nil {
+		utils.Error("Failed to get backend devices from database", zap.Error(err))
+		return err
+	}
+
+	// 4. Match and Restore
+	restoredCount := 0
+	for _, dbDevice := range dbDevices {
+		var matchedStore *importStore.Device
+		
+		// Bridging logic: Check if WhatsApp phone number matches our db device phone number!
+		for _, wDevice := range waDevices {
+			if wDevice.ID != nil && wDevice.ID.User == dbDevice.PhoneNumber {
+				matchedStore = wDevice
+				break
+			}
+		}
+
+		if matchedStore == nil {
+			utils.Warn("Device missing in whatsmeow storage. Moving to disconnected.", 
+				zap.String("device_id", dbDevice.ID.String()),
+				zap.String("phone", dbDevice.PhoneNumber),
+			)
+			_ = s.db.UpdateDeviceStatus(dbDevice.ID, models.DeviceStatusDisconnected)
+			continue
+		}
+
+		// Recreate configuration block
+		cfg := &SessionConfig{
+			DeviceID:       dbDevice.ID.String(),
+			UserID:         dbDevice.UserID.String(),
+			Phone:          dbDevice.PhoneNumber,
+			DisplayName:    dbDevice.DisplayName,
+			EncryptionKey:  s.encryptionKey,
+			SessionTimeout: s.sessionTimeout,
+		}
+
+		// Allocate new whatsmeow client utilizing the restored Storage State
+		client := whatsmeow.NewClient(matchedStore, waLog.Noop)
+
+		// Create Session Memory Instance
+		session := &WhatsAppSession{
+			ID:               dbDevice.ID.String(),
+			Client:           client,
+			Status:           SessionActive, // Resume active
+			LastActivity:     time.Now().Unix(),
+			EnableReceiptAck: true,
+			config:           cfg,
+		}
+
+		s.sessions[cfg.DeviceID] = session
+
+		// Perform WebSocket Reconnection asynchronously 
+		go s.setupEventHandlersAndConnect(cfg.DeviceID, client)
+		
+		restoredCount++
+	}
+
+	utils.Info("Successfully triggered session restoration", zap.Int("total_restored", restoredCount))
 	return nil
 }
 

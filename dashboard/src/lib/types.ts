@@ -17,6 +17,7 @@ export interface InitiateSessionRequest {
   device_id: string;
   user_id: string;
   phone: string;
+  display_name?: string;
 }
 
 export interface QRCodeResponse {
@@ -143,6 +144,13 @@ export interface AuthSessionResponse {
 export interface AuthMeResponse {
   success: boolean;
   user: AuthUser;
+}
+
+export interface AuthUpdateProfileRequest {
+  full_name?: string;
+  email?: string;
+  company_name?: string;
+  timezone?: string;
 }
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
