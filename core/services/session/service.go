@@ -32,6 +32,9 @@ import (
 // Status int: 1=sent, 2=delivered, 3=read, 4=failed (matches MessageStatus in message package)
 type ReceiptCallback func(whatsappMessageID string, newStatus int)
 
+// MessageCallback is called when a new WhatsApp message is received.
+type MessageCallback func(deviceID string, event *MessageReceivedEvent)
+
 // Service implements SessionServiceInterface
 type Service struct {
 	mu                 sync.RWMutex
@@ -46,6 +49,7 @@ type Service struct {
 	statusCallbacks    map[string]func(*ConnectionStatusEvent)
 	messageHandlers    map[string]func(*MessageReceivedEvent)
 	receiptCallbacks   []ReceiptCallback                                    // ✅ Global receipt callbacks
+	messageCallbacks   []MessageCallback                                    // ✅ Global message callbacks
 	onQRUpdate         func(deviceID, qrCode string, status int)            // ✅ Callback for WebSocket
 }
 
@@ -63,7 +67,15 @@ func NewService(db *database.Database, encryptionKey string, maxSessions int, se
 		statusCallbacks:    make(map[string]func(*ConnectionStatusEvent)),
 		messageHandlers:    make(map[string]func(*MessageReceivedEvent)),
 		receiptCallbacks:   make([]ReceiptCallback, 0),
+		messageCallbacks:   make([]MessageCallback, 0),
 	}
+}
+
+// RegisterMessageCallback registers a callback for incoming messages.
+func (s *Service) RegisterMessageCallback(fn MessageCallback) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.messageCallbacks = append(s.messageCallbacks, fn)
 }
 
 // RegisterReceiptCallback registers a callback that is invoked whenever a delivery/read receipt arrives.
@@ -309,7 +321,6 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 					s.mu.RLock()
 					callbacks := s.receiptCallbacks
 					s.mu.RUnlock()
-
 					for _, msgID := range v.MessageIDs {
 						utils.Debug("Receipt received",
 							zap.String("device_id", deviceID),
@@ -319,6 +330,65 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 						for _, cb := range callbacks {
 							go cb(msgID, newStatus)
 						}
+					}
+				}
+
+			case *events.Message:
+				// Avoid processing our own messages sent from other devices (if needed)
+				if v.Info.IsFromMe {
+					return
+				}
+				// Log raw message info
+				utils.Debug("Raw WhatsApp message received",
+					zap.String("device_id", deviceID),
+					zap.String("sender", v.Info.Sender.String()),
+					zap.String("chat", v.Info.Chat.String()),
+				)
+
+				// Extract Message Text Content
+				content := ""
+				if v.Message.GetConversation() != "" {
+					content = v.Message.GetConversation()
+				} else if v.Message.GetExtendedTextMessage().GetText() != "" {
+					content = v.Message.GetExtendedTextMessage().GetText()
+				} else if v.Message.GetImageMessage().GetCaption() != "" {
+					content = v.Message.GetImageMessage().GetCaption()
+				} else if v.Message.GetVideoMessage().GetCaption() != "" {
+					content = v.Message.GetVideoMessage().GetCaption()
+				} else if v.Message.GetButtonsResponseMessage().GetSelectedDisplayText() != "" {
+					content = v.Message.GetButtonsResponseMessage().GetSelectedDisplayText()
+				} else if v.Message.GetTemplateButtonReplyMessage().GetSelectedDisplayText() != "" {
+					content = v.Message.GetTemplateButtonReplyMessage().GetSelectedDisplayText()
+				}
+
+				// If we found text content, trigger callbacks
+				if content != "" {
+					utils.Info("Incoming text message",
+						zap.String("device_id", deviceID),
+						zap.String("from", v.Info.Sender.String()),
+						zap.String("content", content),
+					)
+					event := &MessageReceivedEvent{
+						DeviceID:    deviceID,
+						FromJID:     v.Info.Sender.String(),
+						GroupJID:    v.Info.Chat.String(),
+						MessageID:   v.Info.ID,
+						Content:     content,
+						ContentType: "text",
+						Timestamp:   v.Info.Timestamp.Unix(),
+						IsGroup:     v.Info.IsGroup,
+					}
+					
+					if !v.Info.IsGroup {
+						event.GroupJID = ""
+					}
+
+					s.mu.RLock()
+					callbacks := s.messageCallbacks
+					s.mu.RUnlock()
+
+					for _, cb := range callbacks {
+						go cb(deviceID, event)
 					}
 				}
 			}

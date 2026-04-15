@@ -116,6 +116,36 @@ func NewService(db *database.Database, sessionService *session.Service, analytic
 		}
 	})
 
+	// Register message callback: whenever a new message arrives from WA,
+	// save it to local DB and trigger "Received" callbacks.
+	sessionService.RegisterMessageCallback(func(deviceID string, evt *session.MessageReceivedEvent) {
+		rm := &ReceivedMessage{
+			ID:          evt.MessageID,
+			DeviceID:    evt.DeviceID,
+			FromJID:     evt.FromJID,
+			ContentType: evt.ContentType,
+			Content:     evt.Content,
+			MessageID:   evt.MessageID,
+			Timestamp:   evt.Timestamp,
+		}
+		if evt.IsGroup && evt.GroupJID != "" {
+			rm.GroupJID = &evt.GroupJID
+		}
+
+		// Retrieve UserID from session service
+		uID, err := sessionService.GetUserID(deviceID)
+		if err == nil {
+			rm.UserID = uID
+		}
+
+		if err := svc.ReceiveMessage(rm); err != nil {
+			utils.Error("Failed to handle incoming message callback",
+				zap.String("device_id", deviceID),
+				zap.String("msg_id", evt.MessageID),
+				zap.Error(err),
+			)
+		}
+	})
 
 	return svc
 }
@@ -286,13 +316,24 @@ func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, tar
 
 // ReceiveMessage processes an incoming message
 func (s *Service) ReceiveMessage(rm *ReceivedMessage) error {
+	utils.Info("Processing incoming message",
+		zap.String("device_id", rm.DeviceID),
+		zap.String("msg_id", rm.MessageID),
+		zap.String("from", rm.FromJID),
+		zap.String("content", rm.Content),
+	)
+
 	if err := s.store.SaveReceivedMessage(rm); err != nil {
+		utils.Error("Failed to save received message to database", zap.Error(err))
 		return fmt.Errorf("failed to save received message: %w", err)
 	}
+
+	utils.Debug("Incoming message saved successfully", zap.String("msg_id", rm.MessageID))
 
 	s.metrics.recordMessageReceived()
 
 	// Trigger receive callbacks
+	utils.Debug("Triggering receive callbacks", zap.Int("count", len(s.receiveCallbacks)))
 	for _, callback := range s.receiveCallbacks {
 		go callback(rm)
 	}

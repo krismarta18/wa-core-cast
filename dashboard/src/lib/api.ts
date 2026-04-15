@@ -5,7 +5,6 @@ import type {
   AuthOTPRequest,
   AuthRefreshTokenRequest,
   AuthRegisterRequest,
-  AuthRegisterRequest,
   AuthSessionResponse,
   AuthUpdateProfileRequest,
   AuthVerifyOTPRequest,
@@ -34,6 +33,12 @@ import type {
   BroadcastCampaign,
   CreateBroadcastRequest,
   BroadcastStatus,
+  AutoResponseKeyword,
+  CreateKeywordRequest,
+  UpdateKeywordRequest,
+  MessageTemplate,
+  CreateTemplateRequest,
+  UpdateTemplateRequest,
 } from "./types";
 import {
   clearAuthSession,
@@ -363,6 +368,44 @@ export const broadcastApi = {
 
   start: (id: string) =>
     api.post<{ message: string }>(`/api/v1/broadcasts/${id}/start`).then((r) => r.data),
+};
+
+// --- Auto Response API -------------------------------------------------------
+export const autoResponseApi = {
+  getKeywords: async (): Promise<{ keywords: AutoResponseKeyword[] }> => {
+    const res = await api.get('/api/v1/auto-response/keywords');
+    return res.data;
+  },
+  createKeyword: async (data: CreateKeywordRequest): Promise<AutoResponseKeyword> => {
+    const res = await api.post('/api/v1/auto-response/keywords', data);
+    return res.data;
+  },
+  updateKeyword: async (id: string, data: UpdateKeywordRequest): Promise<AutoResponseKeyword> => {
+    const res = await api.put(`/api/v1/auto-response/keywords/${id}`, data);
+    return res.data;
+  },
+  deleteKeyword: async (id: string): Promise<void> => {
+    await api.delete(`/api/v1/auto-response/keywords/${id}`);
+  },
+  toggleKeyword: async (id: string): Promise<AutoResponseKeyword> => {
+    const res = await api.patch(`/api/v1/auto-response/keywords/${id}/toggle`);
+    return res.data;
+  },
+  getTemplates: async (): Promise<{ templates: MessageTemplate[] }> => {
+    const res = await api.get('/api/v1/auto-response/templates');
+    return res.data;
+  },
+  createTemplate: async (data: CreateTemplateRequest): Promise<MessageTemplate> => {
+    const res = await api.post('/api/v1/auto-response/templates', data);
+    return res.data;
+  },
+  updateTemplate: async (id: string, data: UpdateTemplateRequest): Promise<MessageTemplate> => {
+    const res = await api.put(`/api/v1/auto-response/templates/${id}`, data);
+    return res.data;
+  },
+  deleteTemplate: async (id: string): Promise<void> => {
+    await api.delete(`/api/v1/auto-response/templates/${id}`);
+  },
 };
 
 export default api;

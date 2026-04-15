@@ -13,6 +13,7 @@ import (
 	"wacast/core/database"
 	"wacast/core/services/analytics"
 	"wacast/core/services/auth"
+	"wacast/core/services/autoresponse"
 	"wacast/core/services/billing"
 	"wacast/core/services/broadcast"
 	"wacast/core/services/contact"
@@ -20,6 +21,7 @@ import (
 	"wacast/core/services/session"
 	"wacast/core/utils"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -110,10 +112,19 @@ func main() {
 
 	utils.Info("Session service initialized successfully")
 
+	// Create a dummy context generator for background jobs
+	paramContext := func() context.Context { return context.Background() }
+
+
 	utils.Info("Initializing analytics service...")
 	analyticStore := analytics.NewStore(db)
 	analyticService := analytics.NewService(analyticStore)
 	utils.Info("Analytics service initialized successfully")
+
+	utils.Info("Initializing autoresponse service...")
+	autoresponseStore := autoresponse.NewStore(db.GetConnection())
+	autoresponseService := autoresponse.NewService(autoresponseStore)
+	utils.Info("Autoresponse service initialized successfully")
 
 	// Initialize message service
 	utils.Info("Initializing message service...")
@@ -133,9 +144,58 @@ func main() {
 		utils.Debug("Incoming message received",
 			zap.String("from_jid", rm.FromJID),
 			zap.String("content", rm.Content),
+			zap.String("device_id", rm.DeviceID),
 		)
-		// TODO: Route to webhook service
+		
+		// 1. Get UserID from message (or DeviceID if not populated)
+		userID := rm.UserID
+		parsedDeviceID, _ := uuid.Parse(rm.DeviceID)
+
+		if userID == uuid.Nil {
+			utils.Debug("UserID missing in message, looking up device", zap.String("device_id", rm.DeviceID))
+			device, err := db.GetDeviceByID(parsedDeviceID)
+			if err == nil && device != nil {
+				userID = device.UserID
+			}
+		}
+
+		if userID == uuid.Nil {
+			utils.Warn("Could not identify user for incoming message", zap.String("device_id", rm.DeviceID))
+			return
+		}
+		
+		// 2. Check AutoResponse
+		utils.Debug("Checking auto-response keywords", 
+			zap.String("user_id", userID.String()), 
+			zap.String("device_id", rm.DeviceID),
+			zap.String("content", rm.Content),
+		)
+		
+		replyText := autoresponseService.DetectAndReply(userID, &parsedDeviceID, rm.Content)
+		if replyText != "" {
+			utils.Info("Auto-reply triggered", 
+				zap.String("user_id", userID.String()),
+				zap.String("device_id", rm.DeviceID), 
+				zap.String("to", rm.FromJID),
+				zap.String("reply", replyText),
+			)
+			// Send reply using messageService
+			target := rm.FromJID
+			if rm.GroupJID != nil && *rm.GroupJID != "" {
+				target = *rm.GroupJID
+			}
+
+			msgID, err := messageService.SendMessage(paramContext(), rm.DeviceID, target, replyText, nil, nil)
+			if err != nil {
+				utils.Error("Failed to send auto-reply", zap.Error(err))
+			} else {
+				utils.Debug("Auto-reply queued", zap.String("msg_id", msgID))
+			}
+		} else {
+			utils.Debug("No auto-response keywords matched")
+		}
 	})
+
 
 	// Register delivery callbacks for status updates
 	messageService.RegisterDeliveryCallback(func(msu *message.MessageStatusUpdate) {
@@ -177,6 +237,7 @@ func main() {
 		contactService,
 		analyticService,
 		broadcastService,
+		autoresponseService,
 		db,
 		cfg,
 		cfg.ServerHost,

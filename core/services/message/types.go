@@ -3,6 +3,8 @@ package message
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // MessageStatus represents the state of a message
@@ -49,9 +51,10 @@ type QueuedMessage struct {
 
 // ReceivedMessage represents an incoming message from WhatsApp
 type ReceivedMessage struct {
-	ID              string  `json:"id"`
-	DeviceID        string  `json:"device_id"`
-	FromJID         string  `json:"from_jid"`
+	ID              string    `json:"id"`
+	DeviceID        string    `json:"device_id"`
+	UserID          uuid.UUID `json:"user_id"`
+	FromJID         string    `json:"from_jid"`
 	GroupJID        *string `json:"group_jid,omitempty"`
 	ContentType     string  `json:"content_type"`
 	Content         string  `json:"content"`

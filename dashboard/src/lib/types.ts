@@ -405,3 +405,54 @@ export interface BroadcastCampaignResponse {
   completed_at?: string;
   created_at: string;
 }
+ 
+ 
+// --- Auto Response ------------------------------------------------------------
+
+export interface AutoResponseKeyword {
+  id: string;
+  user_id: string;
+  device_id?: string;
+  keyword: string;
+  response_text: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateKeywordRequest {
+  device_id?: string;
+  keyword: string;
+  response_text: string;
+}
+
+export interface UpdateKeywordRequest {
+  keyword?: string;
+  response_text?: string;
+  is_active?: boolean;
+}
+
+// --- Message Templates ----------------------------------------------------------
+
+export interface MessageTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  category: string;
+  content: string;
+  used_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTemplateRequest {
+  name: string;
+  category: string;
+  content: string;
+}
+
+export interface UpdateTemplateRequest {
+  name?: string;
+  category?: string;
+  content?: string;
+}

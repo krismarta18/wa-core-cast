@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/google/uuid"
 	"wacast/core/database"
 	"wacast/core/utils"
 )
@@ -75,7 +76,7 @@ func (dms *DatabaseMessageStore) EnqueueMessage(qm *QueuedMessage) error {
 	now := time.Now()
 
 	_, err := dms.db.Exec(query,
-		qm.ID, qm.DeviceID, "OUT", qm.TargetJID, contentTypeToInt(qm.ContentType), qm.Content,
+		qm.ID, qm.DeviceID, "outbound", qm.TargetJID, contentTypeToInt(qm.ContentType), qm.Content,
 		statusToInt(qm.Status), qm.ErrorLog, qm.Priority, 0, qm.MaxRetries,
 		qm.ScheduledFor, qm.BroadcastID, qm.MediaURL, qm.Caption, now, now,
 	)
@@ -126,7 +127,7 @@ const queuedMessageSelect = `
 // DequeueMessages retrieves pending outgoing messages for a device
 func (dms *DatabaseMessageStore) DequeueMessages(deviceID string, limit int) ([]*QueuedMessage, error) {
 	query := queuedMessageSelect + `
-		WHERE device_id = $1 AND status_message = $2 AND direction = 'OUT'
+		WHERE device_id = $1 AND status_message = $2 AND direction = 'outbound'
 		  AND (scheduled_for IS NULL OR scheduled_for <= NOW())
 		ORDER BY priority DESC, created_at ASC
 		LIMIT $3
@@ -150,7 +151,7 @@ func (dms *DatabaseMessageStore) DequeueMessages(deviceID string, limit int) ([]
 
 // GetQueuedMessage retrieves a specific queued outgoing message by ID
 func (dms *DatabaseMessageStore) GetQueuedMessage(messageID string) (*QueuedMessage, error) {
-	query := queuedMessageSelect + `WHERE id = $1 AND direction = 'OUT'`
+	query := queuedMessageSelect + `WHERE id = $1 AND direction = 'outbound'`
 	row := dms.db.QueryRow(query, messageID)
 	msg, err := scanQueuedMessage(row.Scan)
 	if err != nil {
@@ -183,7 +184,7 @@ func (dms *DatabaseMessageStore) MarkMessageSent(messageID string) error {
 // GetFailedMessages retrieves failed outgoing messages
 func (dms *DatabaseMessageStore) GetFailedMessages(limit int) ([]*QueuedMessage, error) {
 	query := queuedMessageSelect + `
-		WHERE status_message = $1 AND direction = 'OUT'
+		WHERE status_message = $1 AND direction = 'outbound'
 		ORDER BY created_at DESC
 		LIMIT $2
 	`
@@ -209,8 +210,8 @@ func (dms *DatabaseMessageStore) SaveReceivedMessage(rm *ReceivedMessage) error 
 	query := `
 		INSERT INTO messages (
 			id, device_id, direction, receipt_number, message_type, content,
-			status_message, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			status_message, whatsapp_message_id, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 	now := time.Now()
 	ts := time.Unix(rm.Timestamp, 0)
@@ -219,8 +220,8 @@ func (dms *DatabaseMessageStore) SaveReceivedMessage(rm *ReceivedMessage) error 
 	}
 
 	_, err := dms.db.Exec(query,
-		rm.ID, rm.DeviceID, "IN", rm.FromJID, 0, rm.Content,
-		statusToInt(StatusDelivered), ts, now,
+		uuid.New(), rm.DeviceID, "inbound", rm.FromJID, 0, rm.Content,
+		statusToInt(StatusDelivered), rm.MessageID, ts, now,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to save received message: %w", err)
@@ -237,7 +238,7 @@ func (dms *DatabaseMessageStore) SaveReceivedMessage(rm *ReceivedMessage) error 
 func (dms *DatabaseMessageStore) GetMessageByID(messageID string) (*ReceivedMessage, error) {
 	query := `
 		SELECT id, device_id, receipt_number, content, message_type, created_at
-		FROM messages WHERE id = $1 AND direction = 'IN'
+		FROM messages WHERE id = $1 AND direction = 'inbound'
 	`
 	msg := &ReceivedMessage{}
 	var cAt time.Time
@@ -259,7 +260,7 @@ func (dms *DatabaseMessageStore) GetMessageByID(messageID string) (*ReceivedMess
 func (dms *DatabaseMessageStore) GetMessagesByDevice(deviceID string, limit int, offset int) ([]*ReceivedMessage, error) {
 	query := `
 		SELECT id, device_id, receipt_number, content, message_type, created_at
-		FROM messages WHERE device_id = $1 AND direction = 'IN'
+		FROM messages WHERE device_id = $1 AND direction = 'inbound'
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
 	`
@@ -270,7 +271,7 @@ func (dms *DatabaseMessageStore) GetMessagesByDevice(deviceID string, limit int,
 func (dms *DatabaseMessageStore) GetMessagesByJID(jid string, limit int, offset int) ([]*ReceivedMessage, error) {
 	query := `
 		SELECT id, device_id, receipt_number, content, message_type, created_at
-		FROM messages WHERE receipt_number = $1 AND direction = 'IN'
+		FROM messages WHERE receipt_number = $1 AND direction = 'inbound'
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
 	`
@@ -348,7 +349,7 @@ func (dms *DatabaseMessageStore) ClearFailedMessages(beforeDate time.Time) error
 // GetScheduledMessages retrieves pending scheduled messages for a device
 func (dms *DatabaseMessageStore) GetScheduledMessages(deviceID string) ([]*QueuedMessage, error) {
 	query := queuedMessageSelect + `
-		WHERE device_id = $1 AND status_message = $2 AND direction = 'OUT'
+		WHERE device_id = $1 AND status_message = $2 AND direction = 'outbound'
 		  AND scheduled_for > NOW()
 		ORDER BY scheduled_for ASC
 	`
@@ -372,7 +373,7 @@ func (dms *DatabaseMessageStore) GetScheduledMessages(deviceID string) ([]*Queue
 // GetMessageHistory retrieves the history of sent or failed messages for a device
 func (dms *DatabaseMessageStore) GetMessageHistory(deviceID string, limit int) ([]*QueuedMessage, error) {
 	query := queuedMessageSelect + `
-		WHERE device_id = $1 AND direction = 'OUT' AND status_message != $2
+		WHERE device_id = $1 AND direction = 'outbound' AND status_message != $2
 		ORDER BY created_at DESC
 		LIMIT $3
 	`
@@ -403,7 +404,7 @@ func (dms *DatabaseMessageStore) GetGlobalMessageLogs(userID string, limit, offs
 		       m.error_log, m.priority, m.retry_count, m.max_retries, m.scheduled_for, m.broadcast_id, m.scheduled_message_id, m.media_url, m.caption, m.created_at
 		FROM messages m
 		JOIN devices d ON m.device_id = d.id
-		WHERE d.user_id = $1 AND m.direction = 'OUT'
+		WHERE d.user_id = $1 AND m.direction = 'outbound'
 		ORDER BY m.created_at DESC
 		LIMIT $2 OFFSET $3
 	`

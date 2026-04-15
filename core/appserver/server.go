@@ -14,6 +14,7 @@ import (
 	"wacast/core/handlers"
 	"wacast/core/services/analytics"
 	"wacast/core/services/auth"
+	"wacast/core/services/autoresponse"
 	"wacast/core/services/billing"
 	"wacast/core/services/broadcast"
 	"wacast/core/services/contact"
@@ -31,6 +32,7 @@ type Server struct {
 	contactService   *contact.Service
 	analyticService  *analytics.Service
 	broadcastService *broadcast.Service
+	autoresponseService *autoresponse.Service
 	db               *database.Database
 	config           *config.Config
 	port             int
@@ -47,6 +49,7 @@ func NewServer(
 	contactService *contact.Service,
 	analyticService *analytics.Service,
 	broadcastService *broadcast.Service,
+	autoresponseService *autoresponse.Service,
 	db *database.Database,
 	cfg *config.Config,
 	host string,
@@ -72,6 +75,7 @@ func NewServer(
 		contactService:   contactService,
 		analyticService:  analyticService,
 		broadcastService: broadcastService,
+		autoresponseService: autoresponseService,
 		db:               db,
 		config:           cfg,
 		port:             port,
@@ -118,6 +122,7 @@ func (s *Server) registerRoutes() {
 		handlers.RegisterContactRoutes(v1, s.contactService, s.config.JWTSecret, s.authService)
 		handlers.RegisterAnalyticRoutes(v1, s.analyticService, s.config.JWTSecret, s.authService)
 		handlers.RegisterBroadcastRoutes(v1, s.broadcastService, s.config.JWTSecret, s.authService)
+		handlers.RegisterAutoResponseRoutes(v1, s.autoresponseService, s.config.JWTSecret, s.authService)
 
 		info := v1.Group("/info")
 		{
