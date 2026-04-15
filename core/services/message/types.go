@@ -40,6 +40,7 @@ type QueuedMessage struct {
 	LastRetryAt     *time.Time    `json:"last_retry_at,omitempty"`
 	Priority        int           `json:"priority"` // 1-5, 5 being highest
 	ScheduledFor    *time.Time    `json:"scheduled_for,omitempty"` // For scheduled messages
+	BroadcastID     *string       `json:"broadcast_id,omitempty"` // For broadcast messages
 	CreatedAt       time.Time     `json:"created_at"`
 	UpdatedAt       time.Time     `json:"updated_at"`
 	ErrorLog        *string       `json:"error_log,omitempty"` // Last error message
@@ -149,9 +150,9 @@ type ReceiveCallback func(*ReceivedMessage)
 // ServiceInterface defines the message service contract
 type ServiceInterface interface {
 	// Sending
-	SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string) (string, error)
-	SendMessageWithMedia(ctx context.Context, deviceID string, targetJID string, mediaURL string, contentType string, caption *string) (string, error)
-	SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string) (string, error)
+	SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string, broadcastID *string) (string, error)
+	SendMessageWithMedia(ctx context.Context, deviceID string, targetJID string, mediaURL string, contentType string, caption *string, broadcastID *string) (string, error)
+	SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string, broadcastID *string) (string, error)
 
 	// Receiving
 	ReceiveMessage(rm *ReceivedMessage) error

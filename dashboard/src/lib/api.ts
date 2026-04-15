@@ -29,6 +29,11 @@ import type {
   ContactGroup,
   CreateContactGroupRequest,
   BlacklistEntry,
+  UsageStatsResponse,
+  FailureRateResponse,
+  BroadcastCampaign,
+  CreateBroadcastRequest,
+  BroadcastStatus,
 } from "./types";
 import {
   clearAuthSession,
@@ -254,6 +259,13 @@ export const messagesApi = {
 
   failed: () =>
     api.get<Message[]>("/api/v1/messages/failed").then((r) => r.data),
+
+  uploadMedia: (formData: FormData) =>
+    api
+      .post<{ url: string; filename: string; size: number }>("/api/v1/upload/media", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data),
 };
 
 // ─── Server Info ──────────────────────────────────────────────────────────────
@@ -317,6 +329,32 @@ export const blacklistApi = {
 
   unblock: (id: string) =>
     api.delete<{ message: string }>(`/api/v1/blacklists/${id}`).then((r) => r.data),
+};
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+export const analyticsApi = {
+  usage: () =>
+    api.get<UsageStatsResponse>("/api/v1/analytics/usage").then((r) => r.data),
+
+  failures: () =>
+    api.get<FailureRateResponse>("/api/v1/analytics/failures").then((r) => r.data),
+};
+
+// ─── Broadcasts ───────────────────────────────────────────────────────────────
+
+export const broadcastApi = {
+  list: () =>
+    api.get<{ broadcasts: BroadcastCampaign[] }>("/api/v1/broadcasts").then((r) => r.data),
+
+  create: (body: CreateBroadcastRequest) =>
+    api.post<BroadcastCampaign>("/api/v1/broadcasts", body).then((r) => r.data),
+
+  get: (id: string) =>
+    api.get<BroadcastCampaign>(`/api/v1/broadcasts/${id}`).then((r) => r.data),
+
+  start: (id: string) =>
+    api.post<{ message: string }>(`/api/v1/broadcasts/${id}/start`).then((r) => r.data),
 };
 
 export default api;

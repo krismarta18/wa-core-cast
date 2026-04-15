@@ -12,8 +12,10 @@ import (
 	"wacast/core/config"
 	"wacast/core/database"
 	"wacast/core/handlers"
+	"wacast/core/services/analytics"
 	"wacast/core/services/auth"
 	"wacast/core/services/billing"
+	"wacast/core/services/broadcast"
 	"wacast/core/services/contact"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
@@ -27,6 +29,8 @@ type Server struct {
 	sessionService   *session.Service
 	messageService   *message.Service
 	contactService   *contact.Service
+	analyticService  *analytics.Service
+	broadcastService *broadcast.Service
 	db               *database.Database
 	config           *config.Config
 	port             int
@@ -41,6 +45,8 @@ func NewServer(
 	sessionService *session.Service,
 	messageService *message.Service,
 	contactService *contact.Service,
+	analyticService *analytics.Service,
+	broadcastService *broadcast.Service,
 	db *database.Database,
 	cfg *config.Config,
 	host string,
@@ -64,6 +70,8 @@ func NewServer(
 		sessionService:   sessionService,
 		messageService:   messageService,
 		contactService:   contactService,
+		analyticService:  analyticService,
+		broadcastService: broadcastService,
 		db:               db,
 		config:           cfg,
 		port:             port,
@@ -105,9 +113,11 @@ func (s *Server) registerRoutes() {
 	{
 		handlers.RegisterAuthRoutes(v1, s.authService, s.config.JWTSecret)
 		handlers.RegisterBillingRoutes(v1, s.billingService, s.config.JWTSecret, s.authService)
-		handlers.RegisterSessionRoutes(v1, s.sessionService, s.config.EncryptionKey, s.config.SessionTimeout)
-		handlers.RegisterMessageRoutes(v1, s.messageService)
+		handlers.RegisterSessionRoutes(v1, s.sessionService, s.config.EncryptionKey, s.config.SessionTimeout, s.config.JWTSecret, s.authService)
+		handlers.RegisterMessageRoutes(v1, s.messageService, s.config.JWTSecret, s.authService)
 		handlers.RegisterContactRoutes(v1, s.contactService, s.config.JWTSecret, s.authService)
+		handlers.RegisterAnalyticRoutes(v1, s.analyticService, s.config.JWTSecret, s.authService)
+		handlers.RegisterBroadcastRoutes(v1, s.broadcastService, s.config.JWTSecret, s.authService)
 
 		info := v1.Group("/info")
 		{

@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"wacast/core/database"
+	"wacast/core/services/analytics"
 	"wacast/core/services/session"
 	"wacast/core/utils"
 )
@@ -28,6 +29,7 @@ type Service struct {
 	processorTicker     *time.Ticker
 	done                chan struct{}
 	metrics             *ServiceMetrics
+	analyticsService    *analytics.Service
 }
 
 // ServiceMetrics holds message service statistics
@@ -58,7 +60,7 @@ func DefaultQueueConfig() *MessageQueueConfig {
 }
 
 // NewService creates a new message service
-func NewService(db *database.Database, sessionService *session.Service, config *MessageQueueConfig) *Service {
+func NewService(db *database.Database, sessionService *session.Service, analyticsService *analytics.Service, config *MessageQueueConfig) *Service {
 	if config == nil {
 		config = DefaultQueueConfig()
 	}
@@ -70,6 +72,7 @@ func NewService(db *database.Database, sessionService *session.Service, config *
 		store:           store,
 		config:          config,
 		sessionService:  sessionService,
+		analyticsService: analyticsService,
 		deliveryCallbacks: make([]DeliveryCallback, 0),
 		receiveCallbacks:  make([]ReceiveCallback, 0),
 		done:             make(chan struct{}),
@@ -97,12 +100,22 @@ func NewService(db *database.Database, sessionService *session.Service, config *
 			)
 		} else {
 			utils.Debug("Message status updated from receipt",
-				zap.String("wa_msg_id", whatsappMsgID),
 				zap.String("internal_id", internalID),
 				zap.Int("status", newStatus),
 			)
+			// Record delivery/read analytics
+			if newStatus == 2 || newStatus == 3 {
+				if msg, err := store.GetQueuedMessage(internalID); err == nil {
+					uID, err := sessionService.GetUserID(msg.DeviceID)
+					if err == nil {
+						dID, _ := uuid.Parse(msg.DeviceID)
+						_ = analyticsService.RecordDelivery(uID, dID)
+					}
+				}
+			}
 		}
 	})
+
 
 	return svc
 }
@@ -152,7 +165,7 @@ func (s *Service) Stop() error {
 }
 
 // SendMessage queues a text message for delivery
-func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string) (string, error) {
+func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
 	}
@@ -166,6 +179,7 @@ func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID st
 		GroupID:     groupID,
 		Content:     content,
 		ContentType: "text",
+		BroadcastID: broadcastID,
 		Status:      StatusPending,
 		MaxRetries:  s.config.MaxRetries,
 		Priority:    3,
@@ -189,7 +203,7 @@ func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID st
 }
 
 // SendMessageWithMedia queues a message with media attachment
-func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, targetJID string, mediaURL string, contentType string, caption *string) (string, error) {
+func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, targetJID string, mediaURL string, contentType string, caption *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
 	}
@@ -203,6 +217,7 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, tar
 		MediaURL:    &mediaURL,
 		Caption:     caption,
 		ContentType: contentType,
+		BroadcastID: broadcastID,
 		Status:      StatusPending,
 		MaxRetries:  s.config.MaxRetries,
 		Priority:    2,
@@ -225,7 +240,7 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, tar
 }
 
 // SendScheduledMessage queues a message to be sent at a specific time
-func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string) (string, error) {
+func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
 	}
@@ -248,6 +263,7 @@ func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, tar
 		MediaURL:     mediaURL,
 		Caption:      caption,
 		Status:       StatusPending,
+		BroadcastID:  broadcastID,
 		ScheduledFor: &scheduledFor,
 		MaxRetries:   s.config.MaxRetries,
 		Priority:     1, // Lower priority for scheduled
@@ -462,14 +478,19 @@ func (s *Service) sendQueuedMessageSync(deviceID string, msg *QueuedMessage) {
 		}
 	}
 
-	s.metrics.recordMessageSent()
-
 	utils.Info("Message sent successfully",
 		zap.String("message_id", msg.ID),
 		zap.String("wa_message_id", waMessageID),
 		zap.String("content_type", msg.ContentType),
 		zap.String("target_jid", msg.TargetJID),
 	)
+	// Record success analytics
+	if uID, err := s.sessionService.GetUserID(deviceID); err == nil {
+		mID, _ := uuid.Parse(msg.ID)
+		dID, _ := uuid.Parse(deviceID)
+		_ = s.analyticsService.RecordSent(uID, dID)
+		_ = mID 
+	}
 }
 
 
@@ -495,6 +516,13 @@ func (s *Service) handleSendFailure(msg *QueuedMessage, err error) {
 			zap.String("message_id", msg.ID),
 			zap.Error(err),
 		)
+
+		// Record failure analytics
+		if uID, errS := s.sessionService.GetUserID(msg.DeviceID); errS == nil {
+			mID, _ := uuid.Parse(msg.ID)
+			dID, _ := uuid.Parse(msg.DeviceID)
+			_ = s.analyticsService.RecordFailure(uID, dID, mID, msg.TargetJID, "Send Error", err.Error())
+		}
 
 		return
 	}

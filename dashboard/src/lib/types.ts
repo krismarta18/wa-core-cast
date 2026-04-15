@@ -52,6 +52,7 @@ export interface Message {
   delivered_at?: string;
   read_at?: string;
   failed_at?: string;
+  error_log?: string;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +60,8 @@ export interface Message {
 export interface SendMessageRequest {
   target_jid: string;
   content: string;
+  group_id?: string;
+  priority?: number;
 }
 
 export interface SendScheduledMessageRequest extends SendMessageRequest {
@@ -288,4 +291,115 @@ export interface BlacklistEntry {
   phone_number: string;
   reason: string;
   blocked_at: string;
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+export interface DailyStatPoint {
+  id: string;
+  user_id: string;
+  device_id: string;
+  stat_date: string;
+  sent_count: number;
+  failed_count: number;
+  delivered_count: number;
+  received_count: number;
+  success_rate: number;
+  created_at: string;
+}
+
+export interface DeviceAnalytics {
+  name: string;
+  sent: number;
+  success: number;
+}
+
+export interface UsageStatsResponse {
+  total_sent: number;
+  total_failed: number;
+  success_rate: number;
+  daily: DailyStatPoint[];
+  device_stats: DeviceAnalytics[];
+}
+
+export interface FailureReasonStat {
+  reason: string;
+  count: number;
+  pct: number;
+}
+
+export interface FailureLogItem {
+  id: string;
+  to: string;
+  device: string;
+  reason: string;
+  time: string;
+  type: string;
+}
+
+export interface FailureRateResponse {
+  total_failed: number;
+  failure_rate: number;
+  avg_retry_time: string;
+  reason_stats: FailureReasonStat[];
+  latest_logs: FailureLogItem[];
+}
+// ─── Broadcasts ───────────────────────────────────────────────────────────────
+
+export type BroadcastStatus = "draft" | "queued" | "sending" | "completed" | "failed" | "cancelled";
+
+export interface BroadcastCampaign {
+  id: string;
+  user_id: string;
+  device_id: string;
+  template_id?: string;
+  name: string;
+  message_content?: string;
+  total_recipients: number;
+  success_count: number;
+  failed_count: number;
+  delay_seconds: number;
+  scheduled_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  status: BroadcastStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BroadcastRecipient {
+  id: string;
+  campaign_id: string;
+  group_id?: string;
+  contact_id?: string;
+  phone_number: string;
+  status: "pending" | "sent" | "failed";
+  sent_at?: string;
+  failed_at?: string;
+  error_message?: string;
+  retry_count: number;
+  created_at: string;
+}
+
+export interface CreateBroadcastRequest {
+  device_id: string;
+  name: string;
+  template_id?: string;
+  message_content?: string;
+  delay_seconds: number;
+  scheduled_at?: string;
+  recipients: string[];
+}
+
+export interface BroadcastCampaignResponse {
+  id: string;
+  name: string;
+  total_recipients: number;
+  success_count: number;
+  failed_count: number;
+  status: BroadcastStatus;
+  scheduled_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_at: string;
 }

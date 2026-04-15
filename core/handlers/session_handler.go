@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"wacast/core/services/auth"
 	"wacast/core/services/session"
 	"wacast/core/utils"
 )
@@ -274,17 +275,17 @@ func (h *SessionHandler) StopSession(c *gin.Context) {
 // RegisterSessionRoutes registers all session routes
 func RegisterSessionRoutes(router interface {
 	Group(string, ...gin.HandlerFunc) *gin.RouterGroup
-}, sessionService *session.Service, encryptionKey string, sessionTimeout int) {
+}, sessionService *session.Service, encryptionKey string, sessionTimeout int, jwtSecret string, authService *auth.Service) {
 	handler := NewSessionHandler(sessionService, encryptionKey, sessionTimeout)
 
-	// Session endpoints
-	sessions := router.Group("/sessions")
+	// Protected group
+	group := router.Group("/sessions")
+	group.Use(JWTAuthMiddleware(jwtSecret, authService))
 	{
-		sessions.GET("", handler.GetAllActiveSessions)
-		sessions.GET("/:device_id", handler.GetSessionStatus)
-		sessions.GET("/:device_id/qr", handler.GetQRCode)
-		sessions.POST("/initiate", handler.InitiateSession)
-		sessions.POST("/:device_id/stop", handler.StopSession)
-		// Message sending is handled through /api/v1/devices/:device_id/messages
+		group.GET("", handler.GetAllActiveSessions)
+		group.GET("/:device_id", handler.GetSessionStatus)
+		group.GET("/:device_id/qr", handler.GetQRCode)
+		group.POST("/initiate", handler.InitiateSession)
+		group.POST("/:device_id/stop", handler.StopSession)
 	}
 }

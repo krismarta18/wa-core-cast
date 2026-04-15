@@ -452,6 +452,19 @@ func (s *Service) GetAllActiveSessions() []*WhatsAppSession {
 	return sessions
 }
 
+// GetUserID retrieves the owner UserID of a given device session.
+func (s *Service) GetUserID(deviceID string) (uuid.UUID, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	session, exists := s.sessions[deviceID]
+	if !exists || session.Config == nil {
+		return uuid.Nil, fmt.Errorf("session not found: %s", deviceID)
+	}
+
+	return uuid.Parse(session.Config.UserID)
+}
+
 // RestorePreviousSessions restores previous sessions from database
 func (s *Service) RestorePreviousSessions(ctx context.Context) error {
 	s.mu.Lock()

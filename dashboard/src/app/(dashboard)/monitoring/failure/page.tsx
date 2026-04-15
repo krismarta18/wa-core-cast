@@ -1,23 +1,9 @@
 "use client";
 
-import { AlertTriangle, AlertCircle, Clock } from "lucide-react";
-
-const FAILURES = [
-  { id: 1, to: "628111222333", device: "Device Marketing", reason: "Number not on WhatsApp", time: "12 Apr 2026, 10:03", type: "not_registered" },
-  { id: 2, to: "628222333444", device: "Device Backup", reason: "Session disconnected", time: "12 Apr 2026, 09:55", type: "session_error" },
-  { id: 3, to: "628333444555", device: "Device Utama", reason: "Rate limit exceeded", time: "12 Apr 2026, 09:40", type: "rate_limit" },
-  { id: 4, to: "628444555666", device: "Device Marketing", reason: "Number blocked by WhatsApp", time: "12 Apr 2026, 09:22", type: "blocked" },
-  { id: 5, to: "628555666777", device: "Device CS", reason: "Network timeout", time: "12 Apr 2026, 08:59", type: "timeout" },
-  { id: 6, to: "628666777888", device: "Device Backup", reason: "Number not on WhatsApp", time: "12 Apr 2026, 08:44", type: "not_registered" },
-];
-
-const REASON_STATS = [
-  { reason: "Number not on WhatsApp", count: 42, pct: 48 },
-  { reason: "Session disconnected", count: 21, pct: 24 },
-  { reason: "Rate limit exceeded", count: 15, pct: 17 },
-  { reason: "Network timeout", count: 8, pct: 9 },
-  { reason: "Number blocked", count: 2, pct: 2 },
-];
+import { useEffect, useState } from "react";
+import { AlertTriangle, AlertCircle, Clock, Loader2 } from "lucide-react";
+import { analyticsApi } from "@/lib/api";
+import { FailureRateResponse } from "@/lib/types";
 
 const TYPE_COLOR: Record<string, string> = {
   not_registered: "bg-gray-100 text-gray-600",
@@ -25,11 +11,48 @@ const TYPE_COLOR: Record<string, string> = {
   rate_limit: "bg-orange-50 text-orange-700",
   blocked: "bg-red-100 text-red-800",
   timeout: "bg-yellow-50 text-yellow-700",
+  send_failed: "bg-red-50 text-red-600",
 };
 
 export default function FailureRatePage() {
+  const [data, setData] = useState<FailureRateResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const res = await analyticsApi.failures();
+        setData(res);
+      } catch (err) {
+        console.error("Failed to fetch failure analytics", err);
+        setError("Gagal mengambil data analisis kegagalan");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <p className="text-red-500">{error || "Terjadi kesalahan"}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-10">
       <div className="border-b border-gray-200 bg-white px-6 py-4">
         <h1 className="text-xl font-bold text-gray-900">Failure Rate</h1>
         <p className="text-sm text-gray-500">Analisis kegagalan pengiriman pesan</p>
@@ -39,9 +62,9 @@ export default function FailureRatePage() {
         {/* Summary */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
-            { label: "Total Gagal (7 hari)", value: "88", icon: AlertCircle, color: "text-red-500", bg: "bg-red-50" },
-            { label: "Failure Rate", value: "1.4%", icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-50" },
-            { label: "Avg. Retry Time", value: "2.3s", icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "Total Gagal (7 hari)", value: data.total_failed.toString(), icon: AlertCircle, color: "text-red-500", bg: "bg-red-50" },
+            { label: "Failure Rate", value: `${data.failure_rate}%`, icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-50" },
+            { label: "Avg. Retry Time", value: data.avg_retry_time, icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
@@ -59,20 +82,24 @@ export default function FailureRatePage() {
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 font-semibold text-gray-900">Penyebab Kegagalan</h2>
           <div className="space-y-3">
-            {REASON_STATS.map((r) => (
-              <div key={r.reason}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-700">{r.reason}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">{r.count} kali</span>
-                    <span className="font-semibold text-red-600">{r.pct}%</span>
+            {data.reason_stats.length > 0 ? (
+              data.reason_stats.map((r) => (
+                <div key={r.reason}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-700 capitalize">{r.reason.replace(/_/g, " ")}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500">{r.count} kali</span>
+                      <span className="font-semibold text-red-600">{r.pct.toFixed(0)}%</span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-full rounded-full bg-red-400" style={{ width: `${r.pct}%` }} />
                   </div>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full rounded-full bg-red-400" style={{ width: `${r.pct}%` }} />
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-center py-4 text-sm text-gray-400">Belum ada data penyebab kegagalan</p>
+            )}
           </div>
         </div>
 
@@ -92,18 +119,26 @@ export default function FailureRatePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {FAILURES.map((f) => (
-                  <tr key={f.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 font-mono text-gray-600">{f.to}</td>
-                    <td className="px-5 py-3 text-gray-600">{f.device}</td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${TYPE_COLOR[f.type]}`}>
-                        <AlertCircle className="h-3 w-3" /> {f.reason}
-                      </span>
+                {data.latest_logs.length > 0 ? (
+                  data.latest_logs.map((f) => (
+                    <tr key={f.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3 font-mono text-gray-600">{f.to}</td>
+                      <td className="px-5 py-3 text-gray-600">{f.device}</td>
+                      <td className="px-5 py-3">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${TYPE_COLOR[f.type] || "bg-gray-100"}`}>
+                          <AlertCircle className="h-3 w-3" /> {f.reason || f.type}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-gray-500">{f.time}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-10 text-center text-gray-400">
+                      Tidak ada log kegagalan ditemukan
                     </td>
-                    <td className="px-5 py-3 text-gray-500">{f.time}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

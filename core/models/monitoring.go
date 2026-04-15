@@ -8,16 +8,16 @@ import (
 
 // DailyMessageStats holds aggregated daily message statistics per device
 type DailyMessageStats struct {
-	ID             uuid.UUID `json:"id"`
-	UserID         uuid.UUID `json:"user_id"`
-	DeviceID       uuid.UUID `json:"device_id"`
-	StatDate       time.Time `json:"stat_date"`
-	TotalSent      int       `json:"total_sent"`
-	TotalReceived  int       `json:"total_received"`
-	TotalFailed    int       `json:"total_failed"`
-	TotalDelivered int       `json:"total_delivered"`
-	TotalRead      int       `json:"total_read"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID             uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID         uuid.UUID `json:"user_id" gorm:"type:uuid;not null"`
+	DeviceID       uuid.UUID `json:"device_id" gorm:"type:uuid"`
+	StatDate       time.Time `json:"stat_date" gorm:"type:date;not null"`
+	SentCount      int       `json:"sent_count" gorm:"default:0"`
+	FailedCount    int       `json:"failed_count" gorm:"default:0"`
+	DeliveredCount int       `json:"delivered_count" gorm:"default:0"`
+	ReceivedCount  int       `json:"received_count" gorm:"default:0"`
+	SuccessRate    float64   `json:"success_rate" gorm:"type:numeric(5,2)"`
+	CreatedAt      time.Time `json:"created_at" gorm:"default:now()"`
 }
 
 // TableName returns the table name
@@ -27,13 +27,15 @@ func (DailyMessageStats) TableName() string {
 
 // FailureRecord logs a message delivery failure for analysis
 type FailureRecord struct {
-	ID           uuid.UUID `json:"id"`
-	MessageID    uuid.UUID `json:"message_id"`
-	DeviceID     uuid.UUID `json:"device_id"`
-	FailureType  string    `json:"failure_type"` // network/timeout/invalid_number/etc
-	ErrorMessage string    `json:"error_message"`
-	RetryCount   int       `json:"retry_count"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID             uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID         uuid.UUID `json:"user_id" gorm:"type:uuid;not null"`
+	DeviceID       uuid.UUID `json:"device_id" gorm:"type:uuid"`
+	MessageID      uuid.UUID `json:"message_id" gorm:"type:uuid"`
+	RecipientPhone string    `json:"recipient_phone" gorm:"type:varchar(30);not null"`
+	FailureType    string    `json:"failure_type" gorm:"type:varchar(50);not null"` // send_failed, timeout, invalid_number, banned
+	FailureReason  string    `json:"failure_reason" gorm:"type:text"`
+	OccurredAt     time.Time `json:"occurred_at" gorm:"default:now()"`
+	CreatedAt      time.Time `json:"created_at" gorm:"default:now()"`
 }
 
 // TableName returns the table name

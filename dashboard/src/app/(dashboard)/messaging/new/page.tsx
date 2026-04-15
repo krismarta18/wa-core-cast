@@ -100,10 +100,10 @@ export default function NewMessagePage() {
     sessionsApi.list()
       .then((res) => {
         // sessionsApi.list() returns SessionListResponse which has 'sessions' array
-        const activeDevices = (res.sessions || []).filter((d: Device) => d.status === 1 || d.status === "ACTIVE" || d.is_active);
+        const activeDevices = (res.sessions || []).filter((d: Device) => d.status === 1 || d.is_active);
         setDevices(activeDevices);
         if (activeDevices.length > 0) {
-          setDevice(activeDevices[0].device_id || activeDevices[0].id);
+          setDevice(activeDevices[0].device_id);
         }
       })
       .catch((err) => {

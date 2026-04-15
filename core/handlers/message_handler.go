@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"wacast/core/services/auth"
 	"wacast/core/services/message"
 	"wacast/core/utils"
 )
@@ -96,7 +97,7 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	messageID, err := h.messageService.SendMessage(ctx, deviceID, req.TargetJID, req.Content, req.GroupID)
+	messageID, err := h.messageService.SendMessage(ctx, deviceID, req.TargetJID, req.Content, req.GroupID, nil)
 	if err != nil {
 		utils.Error("Failed to send message",
 			zap.String("device_id", deviceID),
@@ -130,7 +131,7 @@ func (h *MessageHandler) SendMessageWithMedia(c *gin.Context) {
 			return
 		}
 		ctx := c.Request.Context()
-		messageID, err := h.messageService.SendMessageWithMedia(ctx, deviceID, req.TargetJID, req.MediaURL, req.ContentType, req.Caption)
+		messageID, err := h.messageService.SendMessageWithMedia(ctx, deviceID, req.TargetJID, req.MediaURL, req.ContentType, req.Caption, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -169,7 +170,7 @@ func (h *MessageHandler) SendMessageWithMedia(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	messageID, err := h.messageService.SendMessageWithMedia(ctx, deviceID, targetJID, mediaURL, contentType, caption)
+	messageID, err := h.messageService.SendMessageWithMedia(ctx, deviceID, targetJID, mediaURL, contentType, caption, nil)
 	if err != nil {
 		utils.Error("Failed to send media message", zap.String("device_id", deviceID), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -318,7 +319,7 @@ func (h *MessageHandler) SendScheduledMessage(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	messageID, err := h.messageService.SendScheduledMessage(ctx, deviceID, targetJID, content, scheduledFor, mediaURL, contentType, caption)
+	messageID, err := h.messageService.SendScheduledMessage(ctx, deviceID, targetJID, content, scheduledFor, mediaURL, contentType, caption, nil)
 	if err != nil {
 		utils.Error("Failed to schedule message", zap.String("device_id", deviceID), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -474,11 +475,15 @@ func (h *MessageHandler) CancelScheduledMessage(c *gin.Context) {
 // RegisterMessageRoutes registers all message routes
 func RegisterMessageRoutes(router interface {
 	Group(string, ...gin.HandlerFunc) *gin.RouterGroup
-}, messageService *message.Service) {
+}, messageService *message.Service, jwtSecret string, authService *auth.Service) {
 	handler := NewMessageHandler(messageService)
 
+	// Protected group
+	group := router.Group("")
+	group.Use(JWTAuthMiddleware(jwtSecret, authService))
+
 	// Message sending endpoints
-	messages := router.Group("/devices/:device_id/messages")
+	messages := group.Group("/devices/:device_id/messages")
 	{
 		messages.POST("", handler.SendMessage)                    // Send text message
 		messages.POST("/media", handler.SendMessageWithMedia)     // Send media message (multipart)
@@ -488,10 +493,10 @@ func RegisterMessageRoutes(router interface {
 	}
 
 	// File upload
-	router.Group("").POST("/upload/media", handler.UploadMedia) // Upload media file → returns URL
+	group.POST("/upload/media", handler.UploadMedia) // Upload media file → returns URL
 
 	// Queue management endpoints
-	queue := router.Group("/messages")
+	queue := group.Group("/messages")
 	{
 		queue.GET("/:message_id/status", handler.GetMessageStatus)  // Check message status
 		queue.DELETE("/:message_id", handler.CancelScheduledMessage) // Cancel/Delete message

@@ -65,11 +65,11 @@ func (dms *DatabaseMessageStore) EnqueueMessage(qm *QueuedMessage) error {
 		INSERT INTO messages (
 			id, device_id, direction, receipt_number, message_type, content,
 			status_message, error_log, priority, retry_count, max_retries,
-			scheduled_for, media_url, caption, created_at, updated_at
+			scheduled_for, broadcast_id, media_url, caption, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6,
 			$7, $8, $9, $10, $11,
-			$12, $13, $14, $15, $16
+			$12, $13, $14, $15, $16, $17
 		)
 	`
 	now := time.Now()
@@ -77,7 +77,7 @@ func (dms *DatabaseMessageStore) EnqueueMessage(qm *QueuedMessage) error {
 	_, err := dms.db.Exec(query,
 		qm.ID, qm.DeviceID, "OUT", qm.TargetJID, contentTypeToInt(qm.ContentType), qm.Content,
 		statusToInt(qm.Status), qm.ErrorLog, qm.Priority, 0, qm.MaxRetries,
-		qm.ScheduledFor, qm.MediaURL, qm.Caption, now, now,
+		qm.ScheduledFor, qm.BroadcastID, qm.MediaURL, qm.Caption, now, now,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to enqueue message: %w", err)
@@ -102,7 +102,7 @@ func scanQueuedMessage(scan func(...interface{}) error) (*QueuedMessage, error) 
 		&msg.ID, &msg.DeviceID, &msg.TargetJID, &msg.Content,
 		&msgTypeInt, &statusInt, &errLog,
 		&priority, &retryCount, &maxRetries,
-		&msg.ScheduledFor, &msg.MediaURL, &msg.Caption, &msg.CreatedAt,
+		&msg.ScheduledFor, &msg.BroadcastID, &msg.MediaURL, &msg.Caption, &msg.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func scanQueuedMessage(scan func(...interface{}) error) (*QueuedMessage, error) 
 
 const queuedMessageSelect = `
 	SELECT id, device_id, receipt_number, content, message_type, status_message,
-	       error_log, priority, retry_count, max_retries, scheduled_for, media_url, caption, created_at
+	       error_log, priority, retry_count, max_retries, scheduled_for, broadcast_id, media_url, caption, created_at
 	FROM messages
 `
 

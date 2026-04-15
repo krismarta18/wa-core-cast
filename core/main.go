@@ -11,8 +11,10 @@ import (
 	"wacast/core/appserver"
 	"wacast/core/config"
 	"wacast/core/database"
+	"wacast/core/services/analytics"
 	"wacast/core/services/auth"
 	"wacast/core/services/billing"
+	"wacast/core/services/broadcast"
 	"wacast/core/services/contact"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
@@ -108,11 +110,17 @@ func main() {
 
 	utils.Info("Session service initialized successfully")
 
+	utils.Info("Initializing analytics service...")
+	analyticStore := analytics.NewStore(db)
+	analyticService := analytics.NewService(analyticStore)
+	utils.Info("Analytics service initialized successfully")
+
 	// Initialize message service
 	utils.Info("Initializing message service...")
 	messageService := message.NewService(
 		db,
 		sessionService,
+		analyticService,
 		message.DefaultQueueConfig(),
 	)
 
@@ -139,6 +147,12 @@ func main() {
 	})
 
 	utils.Info("Message service initialized successfully")
+	
+	// Initialize broadcast service
+	utils.Info("Initializing broadcast service...")
+	broadcastStore := broadcast.NewStore(db)
+	broadcastService := broadcast.NewService(broadcastStore, messageService)
+	utils.Info("Broadcast service initialized successfully")
 
 	// Initialize auth service
 	utils.Info("Initializing auth service...")
@@ -161,6 +175,8 @@ func main() {
 		sessionService,
 		messageService,
 		contactService,
+		analyticService,
+		broadcastService,
 		db,
 		cfg,
 		cfg.ServerHost,

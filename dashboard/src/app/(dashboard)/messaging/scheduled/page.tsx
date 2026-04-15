@@ -27,15 +27,14 @@ export default function ScheduledPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Status mapping helper
-  const getStatusInfo = (status: number | string) => {
-    const s = Number(status);
-    switch (s) {
-      case 0: return { label: "Pending", color: "bg-yellow-50 text-yellow-600", dot: "bg-yellow-500" };
-      case 1: return { label: "Sent", color: "bg-blue-50 text-blue-600", dot: "bg-blue-500" };
-      case 2: return { label: "Delivered", color: "bg-green-50 text-green-600", dot: "bg-green-500" };
-      case 3: return { label: "Read", color: "bg-green-100 text-green-700", dot: "bg-green-600" };
-      case 4: return { label: "Failed", color: "bg-red-50 text-red-600", dot: "bg-red-500" };
-      default: return { label: "Unknown", color: "bg-gray-50 text-gray-500", dot: "bg-gray-400" };
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case "pending": return { label: "Pending", color: "bg-yellow-50 text-yellow-600", dot: "bg-yellow-500" };
+      case "sent": return { label: "Sent", color: "bg-blue-50 text-blue-600", dot: "bg-blue-500" };
+      case "delivered": return { label: "Delivered", color: "bg-green-50 text-green-600", dot: "bg-green-500" };
+      case "read": return { label: "Read", color: "bg-green-100 text-green-700", dot: "bg-green-600" };
+      case "failed": return { label: "Failed", color: "bg-red-50 text-red-600", dot: "bg-red-500" };
+      default: return { label: status || "Unknown", color: "bg-gray-50 text-gray-500", dot: "bg-gray-400" };
     }
   };
 
@@ -187,8 +186,7 @@ export default function ScheduledPage() {
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pesan Terkirim</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {historyMessages.filter(m => {
-                    const s = Number(m.status);
-                    return s === 1 || s === 2 || s === 3;
+                    return m.status === "sent" || m.status === "delivered" || m.status === "read";
                   }).length}
                 </p>
               </div>
@@ -282,7 +280,7 @@ export default function ScheduledPage() {
                           {isMedia && <Smartphone className="h-3.5 w-3.5 text-purple-500" />}
                           <p className="max-w-xs truncate text-gray-500">{m.content}</p>
                         </div>
-                        {Number(m.status) === 4 && m.error_log && (
+                        {m.status === "failed" && m.error_log && (
                           <p className="text-[10px] text-red-500 mt-1 italic max-w-xs truncate" title={m.error_log}>
                             Error: {m.error_log}
                           </p>
