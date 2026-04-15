@@ -13,6 +13,7 @@ import (
 	"wacast/core/database"
 	"wacast/core/services/auth"
 	"wacast/core/services/billing"
+	"wacast/core/services/contact"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
 	"wacast/core/utils"
@@ -144,9 +145,13 @@ func main() {
 	authService := auth.NewService(db, cfg.JWTSecret, cfg.JWTExpiryHours, cfg.JWTRefreshExpiryHours)
 	utils.Info("Auth service initialized successfully")
 
-	utils.Info("Initializing billing service...")
 	billingService := billing.NewService(db)
 	utils.Info("Billing service initialized successfully")
+
+	utils.Info("Initializing contact service...")
+	contactStore := contact.NewStore(db)
+	contactService := contact.NewService(contactStore)
+	utils.Info("Contact service initialized successfully")
 
 	// 6. Initialize and start HTTP server
 	utils.Info("Initializing HTTP server...")
@@ -155,6 +160,7 @@ func main() {
 		billingService,
 		sessionService,
 		messageService,
+		contactService,
 		db,
 		cfg,
 		cfg.ServerHost,

@@ -85,7 +85,7 @@ type WhatsAppSession struct {
 	Status           SessionStatus
 	LastActivity     int64
 	EnableReceiptAck bool
-	config           *SessionConfig
+	Config           *SessionConfig
 }
 
 // SessionManager manages multiple WhatsApp sessions

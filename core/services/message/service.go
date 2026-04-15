@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -40,15 +41,19 @@ type ServiceMetrics struct {
 	SuccessfulRetries int64
 }
 
-// DefaultQueueConfig returns default configuration
+// DefaultQueueConfig returns default configuration with human-like anti-bot delays
 func DefaultQueueConfig() *MessageQueueConfig {
 	return &MessageQueueConfig{
 		MaxRetries:         3,
 		RetryDelayBase:     5 * time.Second,
 		MaxRetryDelay:      5 * time.Minute,
-		BatchSize:          50,
-		ProcessInterval:    2 * time.Second,
-		MaxConcurrentSends: 5,
+		BatchSize:          10,              // Smaller batch for more natural pacing
+		ProcessInterval:    3 * time.Second, // Check queue every 3 seconds
+		MaxConcurrentSends: 1,              // Sequential per device (anti-bot)
+		MinSendDelay:       1 * time.Second, // Min gap between messages
+		MaxSendDelay:       5 * time.Second, // Max gap between messages
+		SimulateTyping:     true,            // Add typing delay for text
+		TypingSpeedCPM:     300,             // ~300 chars/min (human speed)
 	}
 }
 
@@ -76,8 +81,32 @@ func NewService(db *database.Database, sessionService *session.Service, config *
 		},
 	}
 
+	// Register receipt callback: whenever WA sends a delivery/read receipt,
+	// look up the internal DB UUID by whatsapp_message_id and update status_message.
+	sessionService.RegisterReceiptCallback(func(whatsappMsgID string, newStatus int) {
+		internalID, err := store.GetDBIDByWhatsappID(whatsappMsgID)
+		if err != nil {
+			// Message may not be from this service (broadcast, etc.) — ignore silently
+			return
+		}
+		if err := store.UpdateQueuedMessageStatus(internalID, MessageStatus(newStatus), nil); err != nil {
+			utils.Error("Failed to update message status from receipt",
+				zap.String("wa_msg_id", whatsappMsgID),
+				zap.Int("status", newStatus),
+				zap.Error(err),
+			)
+		} else {
+			utils.Debug("Message status updated from receipt",
+				zap.String("wa_msg_id", whatsappMsgID),
+				zap.String("internal_id", internalID),
+				zap.Int("status", newStatus),
+			)
+		}
+	})
+
 	return svc
 }
+
 
 // Start begins processing the message queue
 func (s *Service) Start() error {
@@ -196,25 +225,34 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, tar
 }
 
 // SendScheduledMessage queues a message to be sent at a specific time
-func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time) (string, error) {
+func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
 	}
 
 	messageID := uuid.New().String()
 
+	// If it's a media message, ContentType should be the media type (image, video, etc)
+	// Otherwise it defaults to "text"
+	finalContentType := "text"
+	if contentType != "" {
+		finalContentType = contentType
+	}
+
 	queuedMsg := &QueuedMessage{
-		ID:          messageID,
-		DeviceID:    deviceID,
-		TargetJID:   targetJID,
-		Content:     content,
-		ContentType: "text",
-		Status:      StatusPending,
+		ID:           messageID,
+		DeviceID:     deviceID,
+		TargetJID:    targetJID,
+		Content:      content,
+		ContentType:  finalContentType,
+		MediaURL:     mediaURL,
+		Caption:      caption,
+		Status:       StatusPending,
 		ScheduledFor: &scheduledFor,
-		MaxRetries:  s.config.MaxRetries,
-		Priority:    1, // Lower priority for scheduled
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		MaxRetries:   s.config.MaxRetries,
+		Priority:     1, // Lower priority for scheduled
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	if err := s.store.EnqueueMessage(queuedMsg); err != nil {
@@ -224,6 +262,7 @@ func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, tar
 	utils.Info("Scheduled message queued",
 		zap.String("message_id", messageID),
 		zap.Time("scheduled_for", scheduledFor),
+		zap.String("media_type", finalContentType),
 	)
 
 	return messageID, nil
@@ -305,7 +344,8 @@ func (s *Service) ProcessQueue() error {
 	return nil
 }
 
-// processDeviceQueue processes messages for a specific device
+// processDeviceQueue processes messages for a specific device.
+// Messages are sent SEQUENTIALLY with random delays to mimic human behaviour.
 func (s *Service) processDeviceQueue(deviceID string) {
 	messages, err := s.store.DequeueMessages(deviceID, s.config.BatchSize)
 	if err != nil {
@@ -320,23 +360,49 @@ func (s *Service) processDeviceQueue(deviceID string) {
 		return
 	}
 
-	semaphore := make(chan struct{}, s.config.MaxConcurrentSends)
-
-	for _, msg := range messages {
+	for i, msg := range messages {
 		// Skip scheduled messages that aren't ready
 		if msg.ScheduledFor != nil && time.Now().Before(*msg.ScheduledFor) {
 			continue
 		}
 
-		semaphore <- struct{}{}
-		go s.sendQueuedMessage(deviceID, msg, semaphore)
+		// 1. Anti-bot: simulate typing delay for text messages
+		if s.config.SimulateTyping && msg.ContentType == "text" && len(msg.Content) > 0 && s.config.TypingSpeedCPM > 0 {
+			typingSeconds := float64(len(msg.Content)) / float64(s.config.TypingSpeedCPM) * 60.0
+			// Cap at 10 seconds maximum typing delay
+			if typingSeconds > 10 {
+				typingSeconds = 10
+			}
+			// Add ±20% jitter on typing time
+			jitter := (rand.Float64()*0.4 - 0.2) * typingSeconds
+			typingDuration := time.Duration((typingSeconds+jitter)*1000) * time.Millisecond
+			utils.Debug("Simulating typing delay",
+				zap.String("device_id", deviceID),
+				zap.Duration("typing_delay", typingDuration),
+			)
+			time.Sleep(typingDuration)
+		}
+
+		// Send synchronously (sequential, no goroutine)
+		s.sendQueuedMessageSync(deviceID, msg)
+
+		// 2. Anti-bot: random delay between messages (skip after last message)
+		if i < len(messages)-1 && s.config.MaxSendDelay > 0 {
+			minMs := int64(s.config.MinSendDelay / time.Millisecond)
+			maxMs := int64(s.config.MaxSendDelay / time.Millisecond)
+			randMs := minMs + rand.Int63n(maxMs-minMs+1)
+			delay := time.Duration(randMs) * time.Millisecond
+			utils.Debug("Anti-bot delay between messages",
+				zap.String("device_id", deviceID),
+				zap.Duration("delay", delay),
+			)
+			time.Sleep(delay)
+		}
 	}
 }
 
-// sendQueuedMessage attempts to send a queued message
-func (s *Service) sendQueuedMessage(deviceID string, msg *QueuedMessage, semaphore chan struct{}) {
-	defer func() { <-semaphore }()
-
+// sendQueuedMessageSync sends a single queued message synchronously.
+func (s *Service) sendQueuedMessageSync(deviceID string, msg *QueuedMessage) {
 	session := s.sessionService.GetSession(deviceID)
 	if session == nil {
 		utils.Warn("Session not found for message delivery",
@@ -346,42 +412,78 @@ func (s *Service) sendQueuedMessage(deviceID string, msg *QueuedMessage, semapho
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	// Send the message via session service
-	_, err := s.sessionService.SendMessage(ctx, deviceID, msg.TargetJID, msg.Content, msg.GroupID)
-	if err != nil {
-		s.handleSendFailure(msg, err)
-		return
-	}
-
-	// Mark as sent if no error
+	// ⚠️  CLAIM the message first: mark as 'sent' (status=1) in DB BEFORE sending.
+	// This prevents the next queue tick from picking up the same message again
+	// while the upload/send is still in progress (race condition).
 	if err := s.store.MarkMessageSent(msg.ID); err != nil {
-		utils.Error("Failed to mark message as sent",
+		utils.Error("Failed to claim message before send — skipping to avoid double-send",
 			zap.String("message_id", msg.ID),
 			zap.Error(err),
 		)
+		return
+	}
+
+	// Route to correct send method based on content type
+	var waMessageID string
+	var sendErr error
+
+	switch msg.ContentType {
+	case "image", "video", "audio", "document":
+		if msg.MediaURL == nil || *msg.MediaURL == "" {
+			sendErr = fmt.Errorf("media message missing media_url")
+		} else {
+			waMessageID, sendErr = s.sessionService.SendMessageWithMedia(
+				ctx, deviceID, msg.TargetJID, *msg.MediaURL, msg.ContentType, msg.Caption,
+			)
+		}
+	default: // "text" and anything else
+		waMessageID, sendErr = s.sessionService.SendMessage(
+			ctx, deviceID, msg.TargetJID, msg.Content, msg.GroupID,
+		)
+	}
+
+	if sendErr != nil {
+		// Revert status back to pending so it can be retried
+		s.handleSendFailure(msg, sendErr)
+		return
+	}
+
+	// Persist WA-assigned message ID (status stays at sent=1 already set above)
+	if waMessageID != "" {
+		if err := s.store.UpdateWhatsappMessageID(msg.ID, waMessageID); err != nil {
+			utils.Error("Failed to save whatsapp_message_id",
+				zap.String("message_id", msg.ID),
+				zap.String("wa_message_id", waMessageID),
+				zap.Error(err),
+			)
+		}
 	}
 
 	s.metrics.recordMessageSent()
 
-	utils.Debug("Message sent successfully",
+	utils.Info("Message sent successfully",
 		zap.String("message_id", msg.ID),
+		zap.String("wa_message_id", waMessageID),
+		zap.String("content_type", msg.ContentType),
 		zap.String("target_jid", msg.TargetJID),
 	)
 }
 
-// handleSendFailure handles a failed message send attempt
+
+// handleSendFailure handles a failed message send attempt.
+// If retries remain, reverts status back to pending so the queue picks it up again.
 func (s *Service) handleSendFailure(msg *QueuedMessage, err error) {
 	msg.RetryCount++
 	msg.LastRetryAt = func() *time.Time { t := time.Now(); return &t }()
 
 	if msg.RetryCount >= msg.MaxRetries {
-		// Max retries exceeded, mark as failed
+		// Max retries exceeded, mark as failed permanently
 		errMsg := fmt.Sprintf("Failed after %d retries: %v", msg.MaxRetries, err)
 		if updateErr := s.store.UpdateQueuedMessageStatus(msg.ID, StatusFailed, &errMsg); updateErr != nil {
-			utils.Error("Failed to update message status",
+			utils.Error("Failed to update message status to failed",
 				zap.String("message_id", msg.ID),
 				zap.Error(updateErr),
 			)
@@ -397,7 +499,16 @@ func (s *Service) handleSendFailure(msg *QueuedMessage, err error) {
 		return
 	}
 
-	// Update retry count
+	// Revert status back to pending so queue processor picks it up on next tick
+	errMsg := err.Error()
+	if updateErr := s.store.UpdateQueuedMessageStatus(msg.ID, StatusPending, &errMsg); updateErr != nil {
+		utils.Error("Failed to revert message status to pending",
+			zap.String("message_id", msg.ID),
+			zap.Error(updateErr),
+		)
+	}
+
+	// Update retry count in DB
 	if updateErr := s.store.UpdateQueuedMessageRetry(msg.ID, msg.RetryCount, msg.LastRetryAt); updateErr != nil {
 		utils.Error("Failed to update retry count",
 			zap.String("message_id", msg.ID),
@@ -405,9 +516,10 @@ func (s *Service) handleSendFailure(msg *QueuedMessage, err error) {
 		)
 	}
 
-	utils.Debug("Message send failed, will retry",
+	utils.Warn("Message send failed, will retry",
 		zap.String("message_id", msg.ID),
 		zap.Int("retry_count", msg.RetryCount),
+		zap.Int("max_retries", msg.MaxRetries),
 		zap.Error(err),
 	)
 }
@@ -449,6 +561,34 @@ func (s *Service) Cleanup() error {
 	}
 
 	return nil
+}
+
+// ListScheduledMessages returns a list of pending scheduled messages for a device
+func (s *Service) ListScheduledMessages(deviceID string) ([]*QueuedMessage, error) {
+	return s.store.GetScheduledMessages(deviceID)
+}
+
+// ListMessageHistory returns a list of sent or failed messages for a device
+func (s *Service) ListMessageHistory(deviceID string, limit int) ([]*QueuedMessage, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	return s.store.GetMessageHistory(deviceID, limit)
+}
+
+// CancelScheduledMessage removes a pending scheduled message from the queue
+func (s *Service) CancelScheduledMessage(messageID string) error {
+	// We only allow deleting messages that are still pending
+	msg, err := s.store.GetQueuedMessage(messageID)
+	if err != nil {
+		return err
+	}
+
+	if msg.Status != StatusPending {
+		return fmt.Errorf("cannot cancel message with status %v", msg.Status)
+	}
+
+	return s.store.DeleteQueuedMessage(messageID)
 }
 
 // processLoop runs the message processing loop

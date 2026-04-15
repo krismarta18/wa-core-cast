@@ -3,15 +3,21 @@ package session
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
+	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 
 	qrcode "github.com/skip2/go-qrcode"
 
@@ -20,6 +26,11 @@ import (
 	"wacast/core/utils"
 	importStore "go.mau.fi/whatsmeow/store"
 )
+
+// ReceiptCallback is called when a WhatsApp delivery/read receipt is received.
+// Parameters: (whatsappMessageID string, newStatus int)
+// Status int: 1=sent, 2=delivered, 3=read, 4=failed (matches MessageStatus in message package)
+type ReceiptCallback func(whatsappMessageID string, newStatus int)
 
 // Service implements SessionServiceInterface
 type Service struct {
@@ -34,6 +45,7 @@ type Service struct {
 	qrCodeCallbacks    map[string]func(*QRCodeEvent)                        // Callbacks
 	statusCallbacks    map[string]func(*ConnectionStatusEvent)
 	messageHandlers    map[string]func(*MessageReceivedEvent)
+	receiptCallbacks   []ReceiptCallback                                    // ✅ Global receipt callbacks
 	onQRUpdate         func(deviceID, qrCode string, status int)            // ✅ Callback for WebSocket
 }
 
@@ -46,11 +58,19 @@ func NewService(db *database.Database, encryptionKey string, maxSessions int, se
 		sessionTimeout:     sessionTimeout,
 		sessions:           make(map[string]*WhatsAppSession),
 		qrCodes:            make(map[string]string),
-		qrCodeImages:       make(map[string][]byte),                          // ✅ Initialize QR images
+		qrCodeImages:       make(map[string][]byte),
 		qrCodeCallbacks:    make(map[string]func(*QRCodeEvent)),
 		statusCallbacks:    make(map[string]func(*ConnectionStatusEvent)),
 		messageHandlers:    make(map[string]func(*MessageReceivedEvent)),
+		receiptCallbacks:   make([]ReceiptCallback, 0),
 	}
+}
+
+// RegisterReceiptCallback registers a callback that is invoked whenever a delivery/read receipt arrives.
+func (s *Service) RegisterReceiptCallback(fn ReceiptCallback) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.receiptCallbacks = append(s.receiptCallbacks, fn)
 }
 
 // StartSession initializes and connects a new WhatsApp session
@@ -78,7 +98,7 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 		Status:           SessionPending, // ✅ Start as pending - waiting for QR
 		LastActivity:     time.Now().Unix(),
 		EnableReceiptAck: true,
-		config:           cfg,
+		Config:           cfg,
 	}
 
 	s.sessions[cfg.DeviceID] = session
@@ -253,6 +273,54 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 					zap.String("device_id", deviceID),
 					zap.String("reason", v.Message),
 				)
+
+			case *events.LoggedOut:
+				// ❌ Device unlinked by user from WhatsApp App
+				utils.Warn("Device unlinked from WhatsApp app",
+					zap.String("device_id", deviceID),
+					zap.String("reason", v.Reason.String()),
+				)
+				s.mu.Lock()
+				if sess, exists := s.sessions[deviceID]; exists {
+					sess.Status = SessionInactive // Set to inactive because session is invalid
+				}
+				s.mu.Unlock()
+				
+				// Update status in Database
+				if parsedID, err := uuid.Parse(deviceID); err == nil {
+					_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
+				}
+
+			case *events.Receipt:
+				// ✅ Message delivery / read receipt
+				// v.Type == types.ReceiptTypeDelivered → pesan diterima di HP penerima
+				// v.Type == types.ReceiptTypeRead     → pesan sudah dibaca
+				var newStatus int
+				switch v.Type {
+				case types.ReceiptTypeDelivered:
+					newStatus = 2 // StatusDelivered
+				case types.ReceiptTypeRead, types.ReceiptTypeReadSelf:
+					newStatus = 3 // StatusRead
+				default:
+					newStatus = 0 // Unknown, skip
+				}
+
+				if newStatus > 0 {
+					s.mu.RLock()
+					callbacks := s.receiptCallbacks
+					s.mu.RUnlock()
+
+					for _, msgID := range v.MessageIDs {
+						utils.Debug("Receipt received",
+							zap.String("device_id", deviceID),
+							zap.String("wa_msg_id", msgID),
+							zap.Int("status", newStatus),
+						)
+						for _, cb := range callbacks {
+							go cb(msgID, newStatus)
+						}
+					}
+				}
 			}
 		})
 		
@@ -318,7 +386,7 @@ func (s *Service) RestoreSession(ctx context.Context, deviceID string, sessionDa
 		Status:           SessionActive,
 		LastActivity:     time.Now().Unix(),
 		EnableReceiptAck: true,
-		config: &SessionConfig{
+		Config: &SessionConfig{
 			DeviceID:       deviceID,
 			Phone:          sessionData.Phone,
 			EncryptionKey:  s.encryptionKey,
@@ -451,7 +519,7 @@ func (s *Service) RestorePreviousSessions(ctx context.Context) error {
 			Status:           SessionActive, // Resume active
 			LastActivity:     time.Now().Unix(),
 			EnableReceiptAck: true,
-			config:           cfg,
+			Config:           cfg,
 		}
 
 		s.sessions[cfg.DeviceID] = session
@@ -565,7 +633,7 @@ func (s *Service) Shutdown(ctx context.Context) error {
 // Service Methods for Compatibility
 // ============================================================================
 
-// SendMessage sends a message via an active session
+// SendMessage sends a text message via the active WhatsApp session using whatsmeow
 func (s *Service) SendMessage(ctx context.Context, deviceID, targetJID, content string, groupID *string) (string, error) {
 	session := s.GetSession(deviceID)
 	if session == nil {
@@ -576,15 +644,207 @@ func (s *Service) SendMessage(ctx context.Context, deviceID, targetJID, content 
 		return "", fmt.Errorf("session not active: %s", deviceID)
 	}
 
-	// In real implementation, send message via session.Client
-	// For now, return a dummy message ID
-	messageID := fmt.Sprintf("msg_%d", time.Now().Unix())
+	if session.Client == nil {
+		return "", fmt.Errorf("whatsapp client not initialized for device: %s", deviceID)
+	}
 
-	utils.Debug("Message sent",
+	if !session.Client.IsConnected() {
+		return "", fmt.Errorf("whatsapp client not connected for device: %s", deviceID)
+	}
+
+	// Parse target JID
+	// targetJID can be phone number like "6285887373722" or full JID "6285887373722@s.whatsapp.net"
+	var recipient types.JID
+	var err error
+
+	if strings.Contains(targetJID, "@") {
+		// Already a full JID
+		recipient, err = types.ParseJID(targetJID)
+		if err != nil {
+			return "", fmt.Errorf("invalid JID format %q: %w", targetJID, err)
+		}
+	} else {
+		// Phone number only — append @s.whatsapp.net for personal chat
+		// or use groupID for group messages
+		if groupID != nil && *groupID != "" {
+			recipient, err = types.ParseJID(*groupID + "@g.us")
+			if err != nil {
+				return "", fmt.Errorf("invalid group JID %q: %w", *groupID, err)
+			}
+		} else {
+			recipient = types.NewJID(targetJID, types.DefaultUserServer)
+		}
+	}
+
+	// Build text message proto
+	msg := &waE2E.Message{
+		Conversation: proto.String(content),
+	}
+
+	// Send via whatsmeow
+	resp, err := session.Client.SendMessage(ctx, recipient, msg)
+	if err != nil {
+		utils.Error("Failed to send WhatsApp message",
+			zap.String("device_id", deviceID),
+			zap.String("target_jid", targetJID),
+			zap.Error(err),
+		)
+		return "", fmt.Errorf("failed to send message: %w", err)
+	}
+
+	utils.Info("WhatsApp message sent successfully",
 		zap.String("device_id", deviceID),
 		zap.String("target_jid", targetJID),
-		zap.String("message_id", messageID),
+		zap.String("message_id", resp.ID),
 	)
 
-	return messageID, nil
+	return resp.ID, nil
+}
+
+// SendMessageWithMedia downloads media from mediaURL, uploads to WhatsApp, and sends to targetJID.
+// contentType: "image" | "document" | "audio" | "video"
+func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID, targetJID, mediaURL, contentType string, caption *string) (string, error) {
+	session := s.GetSession(deviceID)
+	if session == nil {
+		return "", fmt.Errorf("session not found: %s", deviceID)
+	}
+	if session.Client == nil || !session.Client.IsConnected() {
+		return "", fmt.Errorf("whatsapp client not connected for device: %s", deviceID)
+	}
+
+	// 1. Parse recipient JID
+	var recipient types.JID
+	var err error
+	if strings.Contains(targetJID, "@") {
+		recipient, err = types.ParseJID(targetJID)
+		if err != nil {
+			return "", fmt.Errorf("invalid JID %q: %w", targetJID, err)
+		}
+	} else {
+		recipient = types.NewJID(targetJID, types.DefaultUserServer)
+	}
+
+	// 2. Download media bytes from URL
+	resp2, err := httpGet(mediaURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to download media from %q: %w", mediaURL, err)
+	}
+	defer resp2.Body.Close()
+
+	mediaBytes, err := io.ReadAll(resp2.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read media body: %w", err)
+	}
+
+	mimeType := resp2.Header.Get("Content-Type")
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+
+	// 3. Determine whatsmeow media type & build proto message
+	var waMsg *waE2E.Message
+
+	captionStr := ""
+	if caption != nil {
+		captionStr = *caption
+	}
+
+	switch contentType {
+	case "image":
+		uploaded, err := session.Client.Upload(ctx, mediaBytes, whatsmeow.MediaImage)
+		if err != nil {
+			return "", fmt.Errorf("failed to upload image: %w", err)
+		}
+		waMsg = &waE2E.Message{
+			ImageMessage: &waE2E.ImageMessage{
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(mediaBytes))),
+				Mimetype:      proto.String(mimeType),
+				Caption:       proto.String(captionStr),
+			},
+		}
+
+	case "video":
+		uploaded, err := session.Client.Upload(ctx, mediaBytes, whatsmeow.MediaVideo)
+		if err != nil {
+			return "", fmt.Errorf("failed to upload video: %w", err)
+		}
+		waMsg = &waE2E.Message{
+			VideoMessage: &waE2E.VideoMessage{
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(mediaBytes))),
+				Mimetype:      proto.String(mimeType),
+				Caption:       proto.String(captionStr),
+			},
+		}
+
+	case "audio":
+		uploaded, err := session.Client.Upload(ctx, mediaBytes, whatsmeow.MediaAudio)
+		if err != nil {
+			return "", fmt.Errorf("failed to upload audio: %w", err)
+		}
+		waMsg = &waE2E.Message{
+			AudioMessage: &waE2E.AudioMessage{
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(mediaBytes))),
+				Mimetype:      proto.String(mimeType),
+			},
+		}
+
+	default: // "document" and anything else
+		uploaded, err := session.Client.Upload(ctx, mediaBytes, whatsmeow.MediaDocument)
+		if err != nil {
+			return "", fmt.Errorf("failed to upload document: %w", err)
+		}
+		waMsg = &waE2E.Message{
+			DocumentMessage: &waE2E.DocumentMessage{
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(mediaBytes))),
+				Mimetype:      proto.String(mimeType),
+				Caption:       proto.String(captionStr),
+			},
+		}
+	}
+
+	// 4. Send message
+	sendResp, err := session.Client.SendMessage(ctx, recipient, waMsg)
+	if err != nil {
+		utils.Error("Failed to send WhatsApp media message",
+			zap.String("device_id", deviceID),
+			zap.String("target_jid", targetJID),
+			zap.String("content_type", contentType),
+			zap.Error(err),
+		)
+		return "", fmt.Errorf("failed to send media message: %w", err)
+	}
+
+	utils.Info("WhatsApp media message sent successfully",
+		zap.String("device_id", deviceID),
+		zap.String("target_jid", targetJID),
+		zap.String("content_type", contentType),
+		zap.String("message_id", sendResp.ID),
+	)
+
+	return sendResp.ID, nil
+}
+
+// httpGet is a simple HTTP GET helper (abstracted for testability)
+var httpGet = func(url string) (*http.Response, error) {
+	return http.Get(url) //nolint:noctx
 }

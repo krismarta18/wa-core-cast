@@ -26,39 +26,39 @@ const (
 
 // QueuedMessage represents a message in the outgoing queue
 type QueuedMessage struct {
-	ID              string
-	DeviceID        string
-	TargetJID       string  // Recipient JID
-	GroupID         *string // Optional group ID for group messages
-	Content         string
-	ContentType     string // text, image, document, etc
-	MediaURL        *string // URL to media if applicable
-	Caption         *string // Caption for media
-	Status          MessageStatus
-	RetryCount      int
-	MaxRetries      int
-	LastRetryAt     *time.Time
-	Priority        int // 1-5, 5 being highest
-	ScheduledFor    *time.Time // For scheduled messages
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	ErrorLog        *string // Last error message
+	ID              string        `json:"id"`
+	DeviceID        string        `json:"device_id"`
+	TargetJID       string        `json:"target_jid"`  // Recipient JID
+	GroupID         *string       `json:"group_id,omitempty"` // Optional group ID for group messages
+	Content         string        `json:"content"`
+	ContentType     string        `json:"content_type"` // text, image, document, etc
+	MediaURL        *string       `json:"media_url,omitempty"` // URL to media if applicable
+	Caption         *string       `json:"caption,omitempty"` // Caption for media
+	Status          MessageStatus `json:"status"`
+	RetryCount      int           `json:"retry_count"`
+	MaxRetries      int           `json:"max_retries"`
+	LastRetryAt     *time.Time    `json:"last_retry_at,omitempty"`
+	Priority        int           `json:"priority"` // 1-5, 5 being highest
+	ScheduledFor    *time.Time    `json:"scheduled_for,omitempty"` // For scheduled messages
+	CreatedAt       time.Time     `json:"created_at"`
+	UpdatedAt       time.Time     `json:"updated_at"`
+	ErrorLog        *string       `json:"error_log,omitempty"` // Last error message
 }
 
 // ReceivedMessage represents an incoming message from WhatsApp
 type ReceivedMessage struct {
-	ID              string
-	DeviceID        string
-	FromJID         string
-	GroupJID        *string
-	ContentType     string
-	Content         string
-	MessageID       string // WhatsApp message ID
-	ReceiptNumber   *string
-	Timestamp       int64
-	IsGroup         bool
-	SenderName      *string
-	CreatedAt       time.Time
+	ID              string  `json:"id"`
+	DeviceID        string  `json:"device_id"`
+	FromJID         string  `json:"from_jid"`
+	GroupJID        *string `json:"group_jid,omitempty"`
+	ContentType     string  `json:"content_type"`
+	Content         string  `json:"content"`
+	MessageID       string  `json:"message_id"` // WhatsApp message ID
+	ReceiptNumber   *string `json:"receipt_number,omitempty"`
+	Timestamp       int64   `json:"timestamp"`
+	IsGroup         bool    `json:"is_group"`
+	SenderName      *string `json:"sender_name,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // MessageStatusUpdate represents a status change event
@@ -79,6 +79,15 @@ type MessageQueueConfig struct {
 	BatchSize          int           // Messages to process per batch
 	ProcessInterval    time.Duration // Interval between processing cycles
 	MaxConcurrentSends int           // Max concurrent sends per device
+
+	// Anti-bot: random delay between each message send
+	MinSendDelay    time.Duration // Minimum delay between messages (e.g. 1s)
+	MaxSendDelay    time.Duration // Maximum delay between messages (e.g. 5s)
+
+	// Anti-bot: simulate human typing before sending text messages
+	// Delay is calculated as: len(content) / TypingSpeedCPM * 60 seconds
+	SimulateTyping  bool          // If true, add typing delay proportional to message length
+	TypingSpeedCPM  int           // Characters per minute (human avg: 200-400)
 }
 
 // MessageQueue stores messages waiting to be sent
@@ -117,9 +126,18 @@ type MessageStore interface {
 	GetPendingMessages(deviceID string) ([]*QueuedMessage, error)
 	CountByStatus(deviceID string, status MessageStatus) (int, error)
 
+	// WhatsApp message ID tracking (for receipt matching)
+	UpdateWhatsappMessageID(internalID, whatsappMsgID string) error
+	GetDBIDByWhatsappID(whatsappMsgID string) (string, error)
+
 	// Cleanup
 	DeleteOldMessages(beforeDate time.Time) error
 	ClearFailedMessages(beforeDate time.Time) error
+
+	// Scheduled and History
+	GetScheduledMessages(deviceID string) ([]*QueuedMessage, error)
+	GetMessageHistory(deviceID string, limit int) ([]*QueuedMessage, error)
+	DeleteQueuedMessage(messageID string) error
 }
 
 // DeliveryCallback is called when message delivery status changes
@@ -133,7 +151,7 @@ type ServiceInterface interface {
 	// Sending
 	SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string) (string, error)
 	SendMessageWithMedia(ctx context.Context, deviceID string, targetJID string, mediaURL string, contentType string, caption *string) (string, error)
-	SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time) (string, error)
+	SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string) (string, error)
 
 	// Receiving
 	ReceiveMessage(rm *ReceivedMessage) error
@@ -153,6 +171,11 @@ type ServiceInterface interface {
 
 	// Cleanup
 	Cleanup() error
+
+	// Scheduled and History
+	ListScheduledMessages(deviceID string) ([]*QueuedMessage, error)
+	ListMessageHistory(deviceID string, limit int) ([]*QueuedMessage, error)
+	CancelScheduledMessage(messageID string) error
 }
 
 // StatisticsFields for message metrics

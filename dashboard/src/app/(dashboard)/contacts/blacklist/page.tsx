@@ -1,17 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Ban, Plus, Trash2, X, ShieldAlert } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Ban, Plus, Trash2, X, ShieldAlert, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-
-interface BlockedNumber { id: number; phone: string; reason: string; blockedAt: string; }
-
-const INITIAL_BLOCKED: BlockedNumber[] = [
-  { id: 1, phone: "628111999001", reason: "Spam / pesan tidak diinginkan", blockedAt: "10 Apr 2026" },
-  { id: 2, phone: "628111999002", reason: "Nomor palsu", blockedAt: "09 Apr 2026" },
-  { id: 3, phone: "628111999003", reason: "Permintaan pengguna", blockedAt: "07 Apr 2026" },
-];
+import { blacklistApi } from "@/lib/api";
+import { BlacklistEntry } from "@/lib/types";
 
 const REASONS = [
   "Spam / pesan tidak diinginkan",
@@ -22,24 +16,54 @@ const REASONS = [
 ];
 
 export default function BlacklistPage() {
-  const { success, info } = useToast();
-  const [blocked, setBlocked] = useState<BlockedNumber[]>(INITIAL_BLOCKED);
+  const { success, info, error: showError } = useToast();
+  const [blocked, setBlocked] = useState<BlacklistEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ phone: "", reason: REASONS[0] });
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  function addBlock() {
-    if (!form.phone) return;
-    setBlocked([{ id: Date.now(), phone: form.phone, reason: form.reason, blockedAt: "Baru saja" }, ...blocked]);
-    setForm({ phone: "", reason: REASONS[0] });
-    setShowAdd(false);
-    success("Nomor Diblokir!", `${form.phone} berhasil ditambahkan ke blacklist.`);
+  useEffect(() => {
+    fetchBlacklist();
+  }, []);
+
+  async function fetchBlacklist() {
+    setLoading(true);
+    try {
+      const res = await blacklistApi.list();
+      setBlocked(res.blacklist || []);
+    } catch (err) {
+      showError("Gagal mengambil blacklist", "Terjadi kesalahan server.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function removeBlock(id: number) {
-    setBlocked(blocked.filter((b) => b.id !== id));
-    setConfirmDelete(null);
-    info("Blokir Dihapus", "Nomor berhasil dihapus dari blacklist.");
+  async function addBlock() {
+    if (!form.phone) return;
+    try {
+      await blacklistApi.block({
+        phone_number: form.phone,
+        reason: form.reason
+      });
+      setForm({ phone: "", reason: REASONS[0] });
+      setShowAdd(false);
+      success("Nomor Diblokir!", `${form.phone} berhasil ditambahkan ke blacklist.`);
+      fetchBlacklist();
+    } catch (err) {
+      showError("Gagal Memblokir", "Pastikan format nomor benar.");
+    }
+  }
+
+  async function removeBlock(id: string) {
+    try {
+      await blacklistApi.unblock(id);
+      setConfirmDelete(null);
+      info("Blokir Dihapus", "Nomor berhasil dihapus dari blacklist.");
+      fetchBlacklist();
+    } catch (err) {
+      showError("Gagal Menghapus", "Silakan coba lagi nanti.");
+    }
   }
 
   return (
@@ -73,7 +97,12 @@ export default function BlacklistPage() {
 
         {/* Table */}
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          {blocked.length === 0 ? (
+          {loading ? (
+             <div className="p-12 text-center">
+               <Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" />
+               <p className="mt-2 text-sm text-gray-500">Memuat data blacklist...</p>
+             </div>
+          ) : blocked.length === 0 ? (
             <div className="p-12 text-center">
               <Ban className="mx-auto h-10 w-10 text-gray-200" />
               <p className="mt-3 text-sm text-gray-400">Tidak ada nomor yang diblokir</p>
@@ -85,7 +114,7 @@ export default function BlacklistPage() {
                 <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   <th className="px-5 py-3">Nomor</th>
                   <th className="px-5 py-3">Alasan</th>
-                  <th className="px-5 py-3">Diblokir</th>
+                  <th className="px-5 py-3">Diblokir Pada</th>
                   <th className="px-5 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -95,11 +124,11 @@ export default function BlacklistPage() {
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <Ban className="h-3.5 w-3.5 text-red-400" />
-                        <span className="font-mono text-gray-700">{b.phone}</span>
+                        <span className="font-mono text-gray-700">{b.phone_number}</span>
                       </div>
                     </td>
                     <td className="px-5 py-3 text-gray-500">{b.reason}</td>
-                    <td className="px-5 py-3 text-gray-400">{b.blockedAt}</td>
+                    <td className="px-5 py-3 text-gray-400">{new Date(b.blocked_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     <td className="px-5 py-3 text-right">
                       <button
                         onClick={() => setConfirmDelete(b.id)}

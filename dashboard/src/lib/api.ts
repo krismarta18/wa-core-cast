@@ -23,6 +23,12 @@ import type {
   ServerStatus,
   ServerStats,
   HealthResponse,
+  Contact,
+  CreateContactRequest,
+  UpdateContactRequest,
+  ContactGroup,
+  CreateContactGroupRequest,
+  BlacklistEntry,
 } from "./types";
 import {
   clearAuthSession,
@@ -216,9 +222,26 @@ export const messagesApi = {
       })
       .then((r) => r.data),
 
-  schedule: (deviceId: string, body: SendScheduledMessageRequest) =>
+  schedule: (deviceId: string, body: SendScheduledMessageRequest | FormData) =>
     api
-      .post<Message>(`/api/v1/devices/${deviceId}/messages/scheduled`, body)
+      .post<Message>(`/api/v1/devices/${deviceId}/messages/scheduled`, body, {
+        headers: body instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+      })
+      .then((r) => r.data),
+
+  listScheduled: (deviceId: string) =>
+    api
+      .get<{ messages: Message[] }>(`/api/v1/devices/${deviceId}/messages/scheduled`)
+      .then((r) => r.data),
+
+  listHistory: (deviceId: string) =>
+    api
+      .get<{ messages: Message[] }>(`/api/v1/devices/${deviceId}/messages/history`)
+      .then((r) => r.data),
+
+  cancelScheduled: (messageId: string) =>
+    api
+      .delete<{ message: string }>(`/api/v1/messages/${messageId}`)
       .then((r) => r.data),
 
   getStatus: (messageId: string) =>
@@ -243,6 +266,57 @@ export const infoApi = {
     api.get<ServerStats>("/api/v1/info/stats").then((r) => r.data),
 
   health: () => api.get<HealthResponse>("/health").then((r) => r.data),
+};
+
+// ─── Contacts ─────────────────────────────────────────────────────────────────
+
+export const contactsApi = {
+  list: () =>
+    api.get<{ contacts: Contact[] }>("/api/v1/contacts").then((r) => r.data),
+
+  create: (body: CreateContactRequest) =>
+    api.post<Contact>("/api/v1/contacts", body).then((r) => r.data),
+
+  update: (id: string, body: UpdateContactRequest) =>
+    api.put<Contact>(`/api/v1/contacts/${id}`, body).then((r) => r.data),
+
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/api/v1/contacts/${id}`).then((r) => r.data),
+};
+
+// ─── Contact Groups ───────────────────────────────────────────────────────────
+
+export const groupsApi = {
+  list: () =>
+    api.get<{ groups: ContactGroup[] }>("/api/v1/contact-groups").then((r) => r.data),
+
+  create: (body: CreateContactGroupRequest) =>
+    api.post<ContactGroup>("/api/v1/contact-groups", body).then((r) => r.data),
+
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/api/v1/contact-groups/${id}`).then((r) => r.data),
+
+  listMembers: (id: string) =>
+    api.get<{ members: Contact[] }>(`/api/v1/contact-groups/${id}/members`).then((r) => r.data),
+
+  addMember: (id: string, contactId: string) =>
+    api.post<{ message: string }>(`/api/v1/contact-groups/${id}/members`, { contact_id: contactId }).then((r) => r.data),
+
+  removeMember: (id: string, contactId: string) =>
+    api.delete<{ message: string }>(`/api/v1/contact-groups/${id}/members/${contactId}`).then((r) => r.data),
+};
+
+// ─── Blacklist ────────────────────────────────────────────────────────────────
+
+export const blacklistApi = {
+  list: () =>
+    api.get<{ blacklist: BlacklistEntry[] }>("/api/v1/blacklists").then((r) => r.data),
+
+  block: (body: { phone_number: string; reason: string }) =>
+    api.post<{ message: string }>("/api/v1/blacklists", body).then((r) => r.data),
+
+  unblock: (id: string) =>
+    api.delete<{ message: string }>(`/api/v1/blacklists/${id}`).then((r) => r.data),
 };
 
 export default api;

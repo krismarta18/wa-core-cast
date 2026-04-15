@@ -1,35 +1,45 @@
 "use client";
 
-import { useState } from "react";
-import { Search, UserPlus, Tag, Phone, Trash2, Edit2, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, UserPlus, Tag, Phone, Trash2, Edit2, X, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { contactsApi } from "@/lib/api";
+import { Contact } from "@/lib/types";
 
 const LABELS = ["VIP", "Pelanggan", "Prospek", "Supplier", "Internal"];
 
-const INITIAL_CONTACTS = [
-  { id: 1, name: "Budi Santoso", phone: "628111000001", label: "VIP", note: "Pelanggan setia" },
-  { id: 2, name: "Siti Aminah", phone: "628111000002", label: "Pelanggan", note: "" },
-  { id: 3, name: "Ahmad Rizki", phone: "628111000003", label: "Prospek", note: "Follow up Senin" },
-  { id: 4, name: "Dewi Lestari", phone: "628111000004", label: "Supplier", note: "" },
-  { id: 5, name: "Hendra Kurniawan", phone: "628111000005", label: "Internal", note: "Tim CS" },
-  { id: 6, name: "Rina Widiastuti", phone: "628111000006", label: "Pelanggan", note: "" },
-];
-
-interface Contact { id: number; name: string; phone: string; label: string; note: string; }
-
 export default function PhonebookPage() {
-  const { success, info } = useToast();
-  const [contacts, setContacts] = useState<Contact[]>(INITIAL_CONTACTS);
+  const { success, info, error: showError } = useToast();
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterLabel, setFilterLabel] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", label: "Pelanggan", note: "" });
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  async function fetchContacts() {
+    setLoading(true);
+    try {
+      const res = await contactsApi.list();
+      setContacts(res.contacts || []);
+    } catch (err) {
+      showError("Gagal mengambil data", "Silakan coba lagi nanti.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filtered = contacts.filter((c) => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
-    const matchLabel = filterLabel === "all" || c.label === filterLabel;
+    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone_number.includes(search);
+    // In real scenario, label might be an ID. Here we assume it's a string or mapped.
+    const matchLabel = filterLabel === "all" || c.label_id === filterLabel;
     return matchSearch && matchLabel;
   });
 
@@ -41,18 +51,49 @@ export default function PhonebookPage() {
     Internal: "bg-green-50 text-green-700",
   };
 
-  function addContact() {
+  async function handleAddOrUpdate() {
     if (!form.name || !form.phone) return;
-    setContacts([...contacts, { id: Date.now(), ...form }]);
-    setForm({ name: "", phone: "", label: "Pelanggan", note: "" });
-    setShowAdd(false);
-    success("Kontak Ditambahkan!", `${form.name} berhasil disimpan ke phonebook.`);
+    
+    try {
+      if (editingContact) {
+        await contactsApi.update(editingContact.id, {
+          name: form.name,
+          phone_number: form.phone,
+          note: form.note,
+        });
+        success("Kontak Diperbarui", `${form.name} berhasil diperbarui.`);
+      } else {
+        await contactsApi.create({
+          name: form.name,
+          phone_number: form.phone,
+          note: form.note,
+        });
+        success("Kontak Ditambahkan!", `${form.name} berhasil disimpan ke phonebook.`);
+      }
+      setForm({ name: "", phone: "", label: "Pelanggan", note: "" });
+      setShowAdd(false);
+      setEditingContact(null);
+      fetchContacts();
+    } catch (err) {
+      showError("Operasi Gagal", "Terjadi kesalahan saat menyimpan kontak.");
+    }
   }
 
-  function deleteContact(id: number) {
-    setContacts(contacts.filter((c) => c.id !== id));
-    setConfirmDelete(null);
-    info("Kontak Dihapus", "Kontak berhasil dihapus dari phonebook.");
+  async function handleDelete(id: string) {
+    try {
+      await contactsApi.delete(id);
+      setConfirmDelete(null);
+      info("Kontak Dihapus", "Kontak berhasil dihapus dari phonebook.");
+      fetchContacts();
+    } catch (err) {
+      showError("Gagal Menghapus", "Nomor tidak dapat dihapus saat ini.");
+    }
+  }
+
+  function startEdit(c: Contact) {
+    setEditingContact(c);
+    setForm({ name: c.name, phone: c.phone_number, label: "Pelanggan", note: c.note || "" });
+    setShowAdd(true);
   }
 
   return (
@@ -63,7 +104,14 @@ export default function PhonebookPage() {
             <h1 className="text-xl font-bold text-gray-900">Phone Book</h1>
             <p className="text-sm text-gray-500">Kelola kontak dan label pengiriman</p>
           </div>
-          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+          <button 
+            onClick={() => {
+              setEditingContact(null);
+              setForm({ name: "", phone: "", label: "Pelanggan", note: "" });
+              setShowAdd(true);
+            }} 
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+          >
             <UserPlus className="h-4 w-4" /> Tambah Kontak
           </button>
         </div>
@@ -109,19 +157,26 @@ export default function PhonebookPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map((c) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-10 text-center">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin text-green-600" />
+                    <p className="mt-2 text-gray-500">Memuat data kontak...</p>
+                  </td>
+                </tr>
+              ) : filtered.map((c) => (
                 <tr key={c.id} className="hover:bg-gray-50">
                   <td className="px-5 py-3 font-medium text-gray-800">{c.name}</td>
-                  <td className="px-5 py-3 font-mono text-gray-600">{c.phone}</td>
+                  <td className="px-5 py-3 font-mono text-gray-600">{c.phone_number}</td>
                   <td className="px-5 py-3">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${LABEL_COLOR[c.label] ?? "bg-gray-100 text-gray-600"}`}>
-                      <Tag className="h-3 w-3" /> {c.label}
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${LABEL_COLOR["Pelanggan"]}`}>
+                      <Tag className="h-3 w-3" /> Pelanggan
                     </span>
                   </td>
                   <td className="px-5 py-3 text-gray-500">{c.note || "—"}</td>
                   <td className="px-5 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                      <button onClick={() => startEdit(c)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button onClick={() => setConfirmDelete(c.id)} className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500">
@@ -131,7 +186,7 @@ export default function PhonebookPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {!loading && filtered.length === 0 && (
                 <tr><td colSpan={5} className="px-5 py-10 text-center text-gray-400">Tidak ada kontak ditemukan</td></tr>
               )}
             </tbody>
@@ -145,7 +200,7 @@ export default function PhonebookPage() {
         title="Hapus Kontak?"
         description="Kontak ini akan dihapus dari phonebook secara permanen."
         confirmLabel="Ya, Hapus"
-        onConfirm={() => confirmDelete !== null && deleteContact(confirmDelete)}
+        onConfirm={() => confirmDelete !== null && handleDelete(confirmDelete)}
         onCancel={() => setConfirmDelete(null)}
       />
 
@@ -154,7 +209,7 @@ export default function PhonebookPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">Tambah Kontak</h2>
+              <h2 className="text-lg font-bold text-gray-900">{editingContact ? "Edit Kontak" : "Tambah Kontak"}</h2>
               <button onClick={() => setShowAdd(false)}><X className="h-5 w-5 text-gray-400" /></button>
             </div>
             <div className="space-y-3">
@@ -179,7 +234,7 @@ export default function PhonebookPage() {
             </div>
             <div className="mt-5 flex gap-3">
               <button onClick={() => setShowAdd(false)} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Batal</button>
-              <button onClick={addContact} className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700">Simpan</button>
+              <button onClick={handleAddOrUpdate} className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700">Simpan</button>
             </div>
           </div>
         </div>

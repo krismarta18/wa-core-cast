@@ -1,133 +1,147 @@
 "use client";
 
-import { useState } from "react";
-import { CalendarClock, Plus, X, Clock, Send, Phone, Users, CheckSquare, Square, Trash2 } from "lucide-react";
-
-interface ScheduledMsg {
-  id: number;
-  to: string;
-  toLabel: string;
-  message: string;
-  device: string;
-  scheduledAt: string;
-  status: "pending" | "sent" | "cancelled";
-}
-
-const DEVICES = ["Device Utama", "Device Marketing", "Device CS", "Device Backup"];
-
-const GROUPS = [
-  {
-    id: 1,
-    name: "Pelanggan VIP",
-    description: "Pelanggan tier premium",
-    count: 2,
-    members: [
-      { name: "Budi Santoso", phone: "628111000001" },
-      { name: "Dewi Lestari", phone: "628111000004" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Tim Internal",
-    description: "Staff dan karyawan",
-    count: 1,
-    members: [{ name: "Hendra Kurniawan", phone: "628111000005" }],
-  },
-  {
-    id: 3,
-    name: "Prospek Aktif",
-    description: "Calon pelanggan yang sedang difollow up",
-    count: 2,
-    members: [
-      { name: "Ahmad Rizki", phone: "628111000003" },
-      { name: "Rina Widiastuti", phone: "628111000006" },
-    ],
-  },
-];
-
-const INITIAL: ScheduledMsg[] = [
-  { id: 1, to: "628111222333", toLabel: "628111222333", message: "Halo! Pesanan kamu siap dikirim hari ini.", device: "Device Utama", scheduledAt: "2026-04-12 14:00", status: "pending" },
-  { id: 2, to: "Pelanggan VIP", toLabel: "2 kontak (group)", message: "Promo akhir bulan: diskon 30% berlaku s.d besok!", device: "Device Marketing", scheduledAt: "2026-04-12 18:00", status: "pending" },
-  { id: 3, to: "628333444555", toLabel: "628333444555", message: "Selamat ulang tahun! 🎂 Ada hadiah spesial untukmu.", device: "Device CS", scheduledAt: "2026-04-13 07:00", status: "pending" },
-  { id: 4, to: "628444555666", toLabel: "628444555666", message: "Tagihan bulan April sudah bisa dicek.", device: "Device Utama", scheduledAt: "2026-04-11 09:00", status: "sent" },
-  { id: 5, to: "Prospek Aktif", toLabel: "2 kontak (group)", message: "Flash sale dimulai jam 12 siang!", device: "Device Marketing", scheduledAt: "2026-04-10 11:30", status: "cancelled" },
-];
-
-const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-yellow-50 text-yellow-700",
-  sent: "bg-green-50 text-green-700",
-  cancelled: "bg-gray-100 text-gray-500",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Terjadwal",
-  sent: "Terkirim",
-  cancelled: "Dibatalkan",
-};
+import { useState, useEffect } from "react";
+import { CalendarClock, Plus, X, Clock, Send, Phone, Users, CheckSquare, Square, Trash2, Loader2, Smartphone, AlertCircle } from "lucide-react";
+import { sessionsApi, messagesApi } from "@/lib/api";
+import { Device, Message } from "@/lib/types";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 type RecipientMode = "manual" | "group";
 
 export default function ScheduledPage() {
-  const [messages, setMessages] = useState<ScheduledMsg[]>(INITIAL);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
+  const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modal state
   const [recipientMode, setRecipientMode] = useState<RecipientMode>("manual");
   const [manualTo, setManualTo] = useState("");
-  const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
   const [formMessage, setFormMessage] = useState("");
-  const [formDevice, setFormDevice] = useState(DEVICES[0]);
+  const [formDevice, setFormDevice] = useState("");
   const [formScheduledAt, setFormScheduledAt] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const pending = messages.filter((m) => m.status === "pending");
-  const history = messages.filter((m) => m.status !== "pending");
+  // Status mapping helper
+  const getStatusInfo = (status: number | string) => {
+    const s = Number(status);
+    switch (s) {
+      case 0: return { label: "Pending", color: "bg-yellow-50 text-yellow-600", dot: "bg-yellow-500" };
+      case 1: return { label: "Sent", color: "bg-blue-50 text-blue-600", dot: "bg-blue-500" };
+      case 2: return { label: "Delivered", color: "bg-green-50 text-green-600", dot: "bg-green-500" };
+      case 3: return { label: "Read", color: "bg-green-100 text-green-700", dot: "bg-green-600" };
+      case 4: return { label: "Failed", color: "bg-red-50 text-red-600", dot: "bg-red-500" };
+      default: return { label: "Unknown", color: "bg-gray-50 text-gray-500", dot: "bg-gray-400" };
+    }
+  };
 
-  const groupCount = GROUPS.filter((g) => selectedGroups.includes(g.id)).reduce((s, g) => s + g.count, 0);
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const sessRes = await sessionsApi.list();
+      const activeDevices = (sessRes.sessions || []).filter(d => d.status === 1);
+      setDevices(activeDevices);
+      if (activeDevices.length > 0 && !formDevice) {
+        setFormDevice(activeDevices[0].device_id);
+      }
+
+      if (activeDevices.length > 0) {
+        // Fetch from first device as default view, or all if you prefer
+        // For simplicity, we fetch based on the first active device if any
+        const devId = activeDevices[0].device_id;
+        const [schRes, histRes] = await Promise.all([
+          messagesApi.listScheduled(devId),
+          messagesApi.listHistory(devId)
+        ]);
+        setPendingMessages(schRes.messages || []);
+        setHistoryMessages(histRes.messages || []);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal memuat data pesan terjadwal.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const canSubmit =
-    formMessage.trim() &&
+    (formMessage.trim() || selectedFile) &&
     formScheduledAt &&
-    (recipientMode === "manual" ? /^[0-9]{9,15}$/.test(manualTo) : selectedGroups.length > 0);
-
-  function toggleGroup(id: number) {
-    setSelectedGroups((prev) => prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]);
-  }
+    formDevice &&
+    (recipientMode === "manual" ? /^[0-9]{9,15}$/.test(manualTo) : false);
 
   function resetModal() {
     setRecipientMode("manual");
     setManualTo("");
-    setSelectedGroups([]);
     setFormMessage("");
-    setFormDevice(DEVICES[0]);
     setFormScheduledAt("");
+    setSelectedFile(null);
     setShowModal(false);
   }
 
-  function addScheduled() {
+  async function addScheduled() {
     if (!canSubmit) return;
-    let to: string;
-    let toLabel: string;
-    if (recipientMode === "manual") {
-      to = manualTo;
-      toLabel = manualTo;
-    } else {
-      const names = GROUPS.filter((g) => selectedGroups.includes(g.id)).map((g) => g.name).join(", ");
-      to = names;
-      toLabel = `${groupCount} kontak (group)`;
+    setIsSubmitting(true);
+    try {
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("target_jid", manualTo);
+        formData.append("content", formMessage);
+        formData.append("scheduled_for", new Date(formScheduledAt).toISOString());
+        formData.append("file", selectedFile);
+        
+        const isImage = selectedFile.type.startsWith('image/');
+        formData.append("content_type", isImage ? "image" : "document");
+        formData.append("caption", formMessage);
+
+        await messagesApi.schedule(formDevice, formData);
+      } else {
+        await messagesApi.schedule(formDevice, {
+          target_jid: manualTo,
+          content: formMessage,
+          scheduled_for: new Date(formScheduledAt).toISOString()
+        });
+      }
+
+      toast.success("Pesan berhasil dijadwalkan.");
+      resetModal();
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Gagal menjadwalkan pesan.");
+    } finally {
+      setIsSubmitting(false);
     }
-    setMessages([
-      { id: Date.now(), to, toLabel, message: formMessage, device: formDevice, scheduledAt: formScheduledAt, status: "pending" },
-      ...messages,
-    ]);
-    resetModal();
   }
 
-  function cancelMsg(id: number) {
-    setMessages(messages.map((m) => (m.id === id ? { ...m, status: "cancelled" } : m)));
+  async function cancelMsg(id: string) {
+    try {
+      await messagesApi.cancelScheduled(id);
+      toast.success("Jadwal pesan dibatalkan.");
+      fetchData();
+    } catch (err) {
+      toast.error("Gagal membatalkan jadwal.");
+    }
+  }
+
+  if (isLoading && devices.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="border-b border-gray-200 bg-white px-6 py-4">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="border-b border-gray-200 bg-white px-6 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Scheduled Message</h1>
@@ -135,7 +149,8 @@ export default function ScheduledPage() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+            disabled={devices.length === 0}
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 shadow-lg shadow-green-100 disabled:bg-gray-200 disabled:shadow-none transition-all"
           >
             <Plus className="h-4 w-4" /> Jadwalkan Pesan
           </button>
@@ -143,247 +158,307 @@ export default function ScheduledPage() {
       </div>
 
       <div className="p-6 space-y-6">
+        {devices.length === 0 && (
+          <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <p className="text-sm">Tidak ada perangkat aktif. Harap hubungkan perangkat terlebih dahulu di menu <b>Connection Status</b>.</p>
+          </div>
+        )}
+
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Terjadwal", value: messages.filter((m) => m.status === "pending").length, color: "text-yellow-600", bg: "bg-yellow-50" },
-            { label: "Terkirim", value: messages.filter((m) => m.status === "sent").length, color: "text-green-600", bg: "bg-green-50" },
-            { label: "Dibatalkan", value: messages.filter((m) => m.status === "cancelled").length, color: "text-gray-500", bg: "bg-gray-50" },
-          ].map((s) => (
-            <div key={s.label} className={`rounded-xl border border-gray-200 ${s.bg} p-4 shadow-sm`}>
-              <p className="text-xs font-medium text-gray-500">{s.label}</p>
-              <p className={`mt-1 text-3xl font-bold ${s.color}`}>{s.value}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-50 text-yellow-600">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Antrian Aktif</p>
+                <p className="text-2xl font-bold text-gray-900">{pendingMessages.length}</p>
+              </div>
             </div>
-          ))}
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                <Send className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pesan Terkirim</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {historyMessages.filter(m => {
+                    const s = Number(m.status);
+                    return s === 1 || s === 2 || s === 3;
+                  }).length}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Pending queue */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4 bg-gray-50/50">
             <Clock className="h-4 w-4 text-yellow-500" />
-            <h2 className="font-semibold text-gray-900">Antrian Terjadwal</h2>
-            <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-700">
-              {pending.length} pesan
-            </span>
+            <h2 className="font-bold text-gray-900">Antrian Terjadwal</h2>
           </div>
-          {pending.length === 0 ? (
-            <div className="p-10 text-center">
-              <CalendarClock className="mx-auto h-8 w-8 text-gray-200" />
-              <p className="mt-2 text-sm text-gray-400">Tidak ada pesan terjadwal</p>
+          {pendingMessages.length === 0 ? (
+            <div className="p-16 text-center">
+              <CalendarClock className="mx-auto h-12 w-12 text-gray-100 mb-2" />
+              <p className="text-sm text-gray-400">Tidak ada pesan yang sedang dijadwalkan</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {pending.map((m) => (
-                <div key={m.id} className="flex items-start justify-between gap-4 px-5 py-4 hover:bg-gray-50">
+              {pendingMessages.map((m) => {
+                const isMedia = m.content_type && m.content_type !== "text";
+                return (
+                <div key={m.id} className="group flex items-center justify-between gap-4 px-6 py-5 hover:bg-gray-50/80 transition-colors">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-medium text-gray-700">{m.to}</span>
-                      {m.toLabel !== m.to && (
-                        <span className="rounded-full bg-purple-50 px-2 py-0.5 text-xs text-purple-600">{m.toLabel}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-sm font-bold text-gray-900">{m.target_jid}</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 uppercase">
+                        <Smartphone className="h-2.5 w-2.5" /> {devices.find(d => d.device_id === m.device_id)?.display_name || "Device"}
+                      </span>
+                      {isMedia && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-600 uppercase">
+                          <Smartphone className="h-2.5 w-2.5" /> {m.content_type}
+                        </span>
                       )}
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600">{m.device}</span>
                     </div>
-                    <p className="mt-0.5 truncate text-sm text-gray-500">{m.message}</p>
+                    <p className="mt-1 line-clamp-1 text-sm text-gray-500">{m.content || "(No text content)"}</p>
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-3">
+                  <div className="flex flex-shrink-0 items-center gap-4">
                     <div className="text-right">
-                      <p className="text-xs font-medium text-yellow-700">{m.scheduledAt}</p>
-                      <p className="text-xs text-gray-400">WIB</p>
+                      <p className="text-sm font-bold text-yellow-600">
+                        {m.scheduled_for ? format(new Date(m.scheduled_for), "HH:mm, dd MMM", { locale: id }) : "-"}
+                      </p>
+                      <p className="text-[10px] text-gray-400 uppercase font-medium tracking-tighter">Terjadwal</p>
                     </div>
                     <button
                       onClick={() => cancelMsg(m.id)}
-                      className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 hover:border-red-300 hover:text-red-500"
+                      className="opacity-0 group-hover:opacity-100 flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                      title="Batalkan"
                     >
-                      Batalkan
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* History */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4 bg-gray-50/50">
             <Send className="h-4 w-4 text-gray-400" />
-            <h2 className="font-semibold text-gray-900">Riwayat</h2>
+            <h2 className="font-bold text-gray-900">Riwayat Pengiriman</h2>
           </div>
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px] text-sm">
-            <thead>
-              <tr className="border-b border-gray-50 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                <th className="px-5 py-3">Tujuan</th>
-                <th className="px-5 py-3">Pesan</th>
-                <th className="px-5 py-3">Device</th>
-                <th className="px-5 py-3">Waktu</th>
-                <th className="px-5 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {history.map((m) => (
-                <tr key={m.id} className="hover:bg-gray-50">
-                  <td className="px-5 py-3">
-                    <p className="font-mono text-gray-600">{m.to}</p>
-                    {m.toLabel !== m.to && <p className="text-xs text-purple-500">{m.toLabel}</p>}
-                  </td>
-                  <td className="px-5 py-3 max-w-[200px] truncate text-gray-500">{m.message}</td>
-                  <td className="px-5 py-3 text-gray-500">{m.device}</td>
-                  <td className="px-5 py-3 text-gray-400">{m.scheduledAt}</td>
-                  <td className="px-5 py-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLE[m.status]}`}>
-                      {STATUS_LABEL[m.status]}
-                    </span>
-                  </td>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-50 bg-gray-50/30 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  <th className="px-6 py-3">Penerima</th>
+                  <th className="px-6 py-3">Pesan</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Waktu</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {historyMessages.map((m) => {
+                  const statusInfo = getStatusInfo(m.status);
+                  const isMedia = m.content_type && m.content_type !== "text";
+                  return (
+                    <tr key={m.id} className="hover:bg-gray-50/50">
+                      <td className="px-6 py-4">
+                        <p className="font-mono font-medium text-gray-700">{m.target_jid}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                          Via {devices.find(d => d.device_id === m.device_id)?.display_name || "Device"}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {isMedia && <Smartphone className="h-3.5 w-3.5 text-purple-500" />}
+                          <p className="max-w-xs truncate text-gray-500">{m.content}</p>
+                        </div>
+                        {Number(m.status) === 4 && m.error_log && (
+                          <p className="text-[10px] text-red-500 mt-1 italic max-w-xs truncate" title={m.error_log}>
+                            Error: {m.error_log}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusInfo.color}`}>
+                          <span className={`h-1 w-1 rounded-full ${statusInfo.dot}`} />
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-gray-400">
+                        {m.sent_at ? format(new Date(m.sent_at), "dd/MM/yy HH:mm") : format(new Date(m.created_at), "dd/MM/yy HH:mm")}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal header */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <h2 className="text-lg font-bold text-gray-900">Jadwalkan Pesan</h2>
-              <button onClick={resetModal}>
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+              <h2 className="text-xl font-bold text-gray-900">Jadwalkan Pesan</h2>
+              <button 
+                onClick={resetModal}
+                className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+                disabled={isSubmitting}
+              >
                 <X className="h-5 w-5 text-gray-400" />
               </button>
             </div>
 
-            <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-4">
-              {/* Recipient mode toggle */}
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-6 space-y-5">
+              {/* Recipient Input */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Penerima</label>
-                <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setRecipientMode("manual")}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all ${
-                      recipientMode === "manual" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <Phone className="h-3.5 w-3.5" /> By Nomor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRecipientMode("group")}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all ${
-                      recipientMode === "group" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <Users className="h-3.5 w-3.5" /> By Group
-                  </button>
-                </div>
-              </div>
-
-              {/* Manual input */}
-              {recipientMode === "manual" && (
-                <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">Nomor WhatsApp Penerima</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                  </div>
                   <input
                     value={manualTo}
                     onChange={(e) => setManualTo(e.target.value.replace(/\D/g, ""))}
                     placeholder="628xxxxxxxxxx"
-                    inputMode="numeric"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:border-green-500 focus:outline-none"
+                    disabled={isSubmitting}
+                    className="block w-full rounded-xl border border-gray-200 pl-10 pr-3 py-3 text-sm font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none bg-gray-50/50"
                   />
-                  <p className="mt-1 text-xs text-gray-400">Masukkan nomor dalam format internasional</p>
                 </div>
-              )}
-
-              {/* Group picker */}
-              {recipientMode === "group" && (
-                <div className="space-y-2">
-                  {GROUPS.map((g) => {
-                    const selected = selectedGroups.includes(g.id);
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => toggleGroup(g.id)}
-                        className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
-                          selected ? "border-green-400 bg-green-50" : "border-gray-100 bg-white hover:border-gray-200"
-                        }`}
-                      >
-                        {selected ? (
-                          <CheckSquare className="h-5 w-5 flex-shrink-0 text-green-600" />
-                        ) : (
-                          <Square className="h-5 w-5 flex-shrink-0 text-gray-300" />
-                        )}
-                        <div className="flex flex-1 items-center justify-between min-w-0">
-                          <div className="min-w-0">
-                            <p className={`text-sm font-semibold ${selected ? "text-green-800" : "text-gray-800"}`}>{g.name}</p>
-                            <p className="text-xs text-gray-400 truncate">{g.description}</p>
-                          </div>
-                          <span className={`ml-3 flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${selected ? "bg-green-200 text-green-800" : "bg-gray-100 text-gray-500"}`}>
-                            {g.count} kontak
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {selectedGroups.length > 0 && (
-                    <p className="text-xs text-green-700 font-medium pt-1">
-                      {groupCount} kontak dari {selectedGroups.length} group terpilih
-                    </p>
-                  )}
-                </div>
-              )}
+                <p className="mt-1.5 text-[10px] text-gray-400 font-medium">Contoh: 628123456789 (format internasional)</p>
+              </div>
 
               {/* Device */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Device Pengirim</label>
+                <label className="mb-2 block text-sm font-bold text-gray-700">Device Pengirim</label>
                 <select
                   value={formDevice}
                   onChange={(e) => setFormDevice(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:border-green-500 focus:outline-none bg-gray-50/50"
                 >
-                  {DEVICES.map((d) => <option key={d}>{d}</option>)}
+                  {devices.map((d) => (
+                    <option key={d.device_id} value={d.device_id}>
+                      {d.display_name || d.device_id} ({d.phone || "No Phone"})
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Scheduled at */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Waktu Kirim</label>
+                <label className="mb-2 block text-sm font-bold text-gray-700">Waktu Kirim (Server Time)</label>
                 <input
                   type="datetime-local"
                   value={formScheduledAt}
                   onChange={(e) => setFormScheduledAt(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:border-green-500 focus:outline-none bg-gray-50/50"
                 />
               </div>
 
-              {/* Message */}
+              {/* File Attachment */}
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-gray-700">Lampiran Media (Opsional)</label>
+                <div 
+                  className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 transition-all hover:bg-gray-50 ${
+                    selectedFile ? "border-green-500 bg-green-50" : "border-gray-200 bg-gray-50/30"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    className="absolute inset-0 z-10 cursor-pointer opacity-0"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setSelectedFile(file);
+                    }}
+                    disabled={isSubmitting}
+                  />
+                  {selectedFile ? (
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-green-100 p-2 text-green-600">
+                          <Plus className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-gray-900">{selectedFile.name}</p>
+                          <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                            {(selectedFile.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedFile(null);
+                        }}
+                        className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-transform group-hover:scale-110">
+                        <Plus className="h-5 w-5" />
+                      </div>
+                      <p className="text-sm font-bold text-gray-600">Klik atau drag file ke sini</p>
+                      <p className="text-[10px] text-gray-400 font-medium">PNG, JPG, PDF (Max 50MB)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Message / Caption */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Pesan</label>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  {selectedFile ? "Keterangan (Caption)" : "Isi Pesan"}
+                </label>
                 <textarea
                   value={formMessage}
                   onChange={(e) => setFormMessage(e.target.value)}
-                  rows={4}
-                  placeholder="Tulis pesan..."
-                  className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                  rows={selectedFile ? 2 : 4}
+                  placeholder={selectedFile ? "Tambahkan keterangan untuk media..." : "Tulis pesan yang ingin dijadwalkan..."}
+                  disabled={isSubmitting}
+                  className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-green-500 focus:outline-none bg-gray-50/50"
                 />
               </div>
             </div>
 
             {/* Modal footer */}
-            <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
+            <div className="flex gap-3 border-t border-gray-100 px-6 py-5 bg-gray-50/30">
               <button
                 onClick={resetModal}
-                className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-bold text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 Batal
               </button>
               <button
                 onClick={addScheduled}
-                disabled={!canSubmit}
-                className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                disabled={!canSubmit || isSubmitting}
+                className="flex-1 rounded-xl bg-green-600 py-3 text-sm font-bold text-white hover:bg-green-700 shadow-lg shadow-green-100 disabled:bg-gray-200 disabled:shadow-none transition-all flex items-center justify-center gap-2"
               >
-                Jadwalkan
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Sedang Memproses...
+                  </>
+                ) : (
+                  "Simpan Jadwal"
+                )}
               </button>
             </div>
           </div>

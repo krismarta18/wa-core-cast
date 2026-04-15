@@ -6,6 +6,8 @@ export interface Device {
   device_id: string;
   status: DeviceStatus;
   is_active: boolean;
+  phone?: string;
+  display_name?: string;
 }
 
 export interface SessionListResponse {
@@ -41,21 +43,29 @@ export type MessageDirection = "in" | "out";
 export interface Message {
   id: string;
   device_id: string;
-  direction: MessageDirection;
-  status: MessageStatus;
-  to_jid: string;
+  target_jid: string;
   content: string;
+  content_type: string;
+  status: string;
+  scheduled_for?: string;
+  sent_at?: string;
+  delivered_at?: string;
+  read_at?: string;
+  failed_at?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface SendMessageRequest {
-  to: string;
+  target_jid: string;
   content: string;
 }
 
 export interface SendScheduledMessageRequest extends SendMessageRequest {
-  scheduled_at: string; // ISO 8601
+  scheduled_for: string; // ISO 8601
+  media_url?: string;
+  content_type?: string;
+  caption?: string;
 }
 
 export interface QueueStats {
@@ -229,4 +239,53 @@ export interface BillingCheckoutResponse {
 
 export interface ApiError {
   error: string;
+}
+
+// ─── Contacts ─────────────────────────────────────────────────────────────────
+
+export interface Contact {
+  id: string;
+  user_id: string;
+  label_id?: string;
+  name: string;
+  phone_number: string;
+  note?: string;
+  additional_data?: any;
+  created_at: string;
+}
+
+export interface CreateContactRequest {
+  name: string;
+  phone_number: string;
+  label_id?: string;
+  note?: string;
+  additional_data?: Record<string, any>;
+}
+
+export interface UpdateContactRequest {
+  name?: string;
+  phone_number?: string;
+  label_id?: string;
+  note?: string;
+  additional_data?: Record<string, any>;
+}
+
+export interface ContactGroup {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface CreateContactGroupRequest {
+  name: string;
+  description?: string;
+}
+
+export interface BlacklistEntry {
+  id: string;
+  phone_number: string;
+  reason: string;
+  blocked_at: string;
 }

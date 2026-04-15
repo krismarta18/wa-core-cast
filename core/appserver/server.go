@@ -14,6 +14,7 @@ import (
 	"wacast/core/handlers"
 	"wacast/core/services/auth"
 	"wacast/core/services/billing"
+	"wacast/core/services/contact"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
 	"wacast/core/utils"
@@ -25,6 +26,7 @@ type Server struct {
 	billingService   *billing.Service
 	sessionService   *session.Service
 	messageService   *message.Service
+	contactService   *contact.Service
 	db               *database.Database
 	config           *config.Config
 	port             int
@@ -38,6 +40,7 @@ func NewServer(
 	billingService *billing.Service,
 	sessionService *session.Service,
 	messageService *message.Service,
+	contactService *contact.Service,
 	db *database.Database,
 	cfg *config.Config,
 	host string,
@@ -60,6 +63,7 @@ func NewServer(
 		billingService:   billingService,
 		sessionService:   sessionService,
 		messageService:   messageService,
+		contactService:   contactService,
 		db:               db,
 		config:           cfg,
 		port:             port,
@@ -94,12 +98,16 @@ func (s *Server) registerRoutes() {
 	s.engine.GET("/api/docs", s.ServeSwaggerUI)
 	s.engine.GET("/openapi.yaml", s.ServeOpenAPISpec)
 
+	// Serve uploaded files
+	s.engine.Static("/uploads", "./uploads")
+
 	v1 := s.engine.Group("/api/v1")
 	{
 		handlers.RegisterAuthRoutes(v1, s.authService, s.config.JWTSecret)
 		handlers.RegisterBillingRoutes(v1, s.billingService, s.config.JWTSecret, s.authService)
 		handlers.RegisterSessionRoutes(v1, s.sessionService, s.config.EncryptionKey, s.config.SessionTimeout)
 		handlers.RegisterMessageRoutes(v1, s.messageService)
+		handlers.RegisterContactRoutes(v1, s.contactService, s.config.JWTSecret, s.authService)
 
 		info := v1.Group("/info")
 		{

@@ -37,11 +37,12 @@ type InitiateSessionRequest struct {
 	DisplayName string `json:"display_name"`
 }
 
-// SessionStatusResponse is the response for session status
 type SessionStatusResponse struct {
-	DeviceID string `json:"device_id"`
-	Status   int    `json:"status"` // 0=inactive, 1=active, 2=pending
-	IsActive bool   `json:"is_active"`
+	DeviceID    string `json:"device_id"`
+	Status      int    `json:"status"` // 0=inactive, 1=active, 2=pending
+	IsActive    bool   `json:"is_active"`
+	Phone       string `json:"phone,omitempty"`
+	DisplayName string `json:"display_name,omitempty"`
 }
 
 // GetSessionStatus retrieves the status of a session
@@ -51,11 +52,20 @@ func (h *SessionHandler) GetSessionStatus(c *gin.Context) {
 
 	status := h.sessionService.GetSessionStatus(deviceID)
 	isActive := h.sessionService.IsSessionActive(deviceID)
+	
+	var phone, displayName string
+	sessionData := h.sessionService.GetSession(deviceID)
+	if sessionData != nil && sessionData.Config != nil {
+		phone = sessionData.Config.Phone
+		displayName = sessionData.Config.DisplayName
+	}
 
 	c.JSON(http.StatusOK, SessionStatusResponse{
-		DeviceID: deviceID,
-		Status:   int(status),
-		IsActive: isActive,
+		DeviceID:    deviceID,
+		Status:      int(status),
+		IsActive:    isActive,
+		Phone:       phone,
+		DisplayName: displayName,
 	})
 }
 
@@ -66,10 +76,18 @@ func (h *SessionHandler) GetAllActiveSessions(c *gin.Context) {
 
 	response := make([]SessionStatusResponse, len(sessions))
 	for i, s := range sessions {
+		var phone, displayName string
+		if s.Config != nil {
+			phone = s.Config.Phone
+			displayName = s.Config.DisplayName
+		}
+		
 		response[i] = SessionStatusResponse{
-			DeviceID: s.ID,
-			Status:   int(s.Status),
-			IsActive: s.Status == session.SessionActive,
+			DeviceID:    s.ID,
+			Status:      int(s.Status),
+			IsActive:    s.Status == session.SessionActive,
+			Phone:       phone,
+			DisplayName: displayName,
 		}
 	}
 
