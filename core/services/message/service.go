@@ -604,6 +604,14 @@ func (s *Service) ListMessageHistory(deviceID string, limit int) ([]*QueuedMessa
 	return s.store.GetMessageHistory(deviceID, limit)
 }
 
+// ListGlobalMessageLogs returns all outgoing messages for a user across all devices
+func (s *Service) ListGlobalMessageLogs(userID uuid.UUID, limit, offset int) ([]*QueuedMessage, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	return s.store.GetGlobalMessageLogs(userID.String(), limit, offset)
+}
+
 // CancelScheduledMessage removes a pending scheduled message from the queue
 func (s *Service) CancelScheduledMessage(messageID string) error {
 	// We only allow deleting messages that are still pending

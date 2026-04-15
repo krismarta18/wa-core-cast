@@ -266,6 +266,14 @@ export const messagesApi = {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((r) => r.data),
+  
+  getLogs: (limit: number = 50, offset: number = 0) =>
+    api
+      .get<{ messages: Message[]; count: number; limit: number; offset: number }>(
+        "/api/v1/messages/logs",
+        { params: { limit, offset } }
+      )
+      .then((r) => r.data),
 };
 
 // ─── Server Info ──────────────────────────────────────────────────────────────

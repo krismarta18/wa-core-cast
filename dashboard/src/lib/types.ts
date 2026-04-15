@@ -53,6 +53,8 @@ export interface Message {
   read_at?: string;
   failed_at?: string;
   error_log?: string;
+  broadcast_id?: string;
+  scheduled_message_id?: string;
   created_at: string;
   updated_at: string;
 }

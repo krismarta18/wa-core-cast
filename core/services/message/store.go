@@ -102,7 +102,7 @@ func scanQueuedMessage(scan func(...interface{}) error) (*QueuedMessage, error) 
 		&msg.ID, &msg.DeviceID, &msg.TargetJID, &msg.Content,
 		&msgTypeInt, &statusInt, &errLog,
 		&priority, &retryCount, &maxRetries,
-		&msg.ScheduledFor, &msg.BroadcastID, &msg.MediaURL, &msg.Caption, &msg.CreatedAt,
+		&msg.ScheduledFor, &msg.BroadcastID, &msg.ScheduledMessageID, &msg.MediaURL, &msg.Caption, &msg.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func scanQueuedMessage(scan func(...interface{}) error) (*QueuedMessage, error) 
 
 const queuedMessageSelect = `
 	SELECT id, device_id, receipt_number, content, message_type, status_message,
-	       error_log, priority, retry_count, max_retries, scheduled_for, broadcast_id, media_url, caption, created_at
+	       error_log, priority, retry_count, max_retries, scheduled_for, broadcast_id, scheduled_message_id, media_url, caption, created_at
 	FROM messages
 `
 
@@ -378,6 +378,36 @@ func (dms *DatabaseMessageStore) GetMessageHistory(deviceID string, limit int) (
 	`
 	// status_message != 0 (not pending anymore)
 	rows, err := dms.db.Query(query, deviceID, statusToInt(StatusPending), limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []*QueuedMessage
+	for rows.Next() {
+		msg, err := scanQueuedMessage(rows.Scan)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, msg)
+	}
+	return messages, nil
+}
+
+// GetGlobalMessageLogs retrieves all outgoing messages for a user across all devices
+func (dms *DatabaseMessageStore) GetGlobalMessageLogs(userID string, limit, offset int) ([]*QueuedMessage, error) {
+	// We need to JOIN with devices table because users own devices, and devices own messages.
+	// The messages table itself might not have a direct user_id column.
+	query := `
+		SELECT m.id, m.device_id, m.receipt_number, m.content, m.message_type, m.status_message,
+		       m.error_log, m.priority, m.retry_count, m.max_retries, m.scheduled_for, m.broadcast_id, m.scheduled_message_id, m.media_url, m.caption, m.created_at
+		FROM messages m
+		JOIN devices d ON m.device_id = d.id
+		WHERE d.user_id = $1 AND m.direction = 'OUT'
+		ORDER BY m.created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+	rows, err := dms.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"wacast/core/services/auth"
@@ -472,6 +473,45 @@ func (h *MessageHandler) CancelScheduledMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Scheduled message cancelled successfully"})
 }
 
+// GetMessageLogs returns all outgoing messages for the current user
+// GET /messages/logs
+func (h *MessageHandler) GetMessageLogs(c *gin.Context) {
+	userId, exists := c.Get(ContextKeyUserID)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Parse string from context into uuid.UUID
+	userID, err := uuid.Parse(fmt.Sprintf("%v", userId))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	limit := 50
+	if l := c.Query("limit"); l != "" {
+		fmt.Sscanf(l, "%d", &limit)
+	}
+	offset := 0
+	if o := c.Query("offset"); o != "" {
+		fmt.Sscanf(o, "%d", &offset)
+	}
+
+	msgs, err := h.messageService.ListGlobalMessageLogs(userID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"messages": msgs,
+		"count":    len(msgs),
+		"limit":    limit,
+		"offset":   offset,
+	})
+}
+
 // RegisterMessageRoutes registers all message routes
 func RegisterMessageRoutes(router interface {
 	Group(string, ...gin.HandlerFunc) *gin.RouterGroup
@@ -503,5 +543,6 @@ func RegisterMessageRoutes(router interface {
 		queue.GET("/stats", handler.GetQueueStats)                 // Get queue stats
 		queue.GET("/failed", handler.GetFailedMessages)            // List failed messages
 		queue.POST("/process", handler.ProcessQueueManually)       // Manual process
+		queue.GET("/logs", handler.GetMessageLogs)                  // Consolidated logs
 	}
 }

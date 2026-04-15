@@ -41,6 +41,7 @@ type QueuedMessage struct {
 	Priority        int           `json:"priority"` // 1-5, 5 being highest
 	ScheduledFor    *time.Time    `json:"scheduled_for,omitempty"` // For scheduled messages
 	BroadcastID     *string       `json:"broadcast_id,omitempty"` // For broadcast messages
+	ScheduledMessageID *string    `json:"scheduled_message_id,omitempty"` // For internal scheduler
 	CreatedAt       time.Time     `json:"created_at"`
 	UpdatedAt       time.Time     `json:"updated_at"`
 	ErrorLog        *string       `json:"error_log,omitempty"` // Last error message
@@ -138,6 +139,7 @@ type MessageStore interface {
 	// Scheduled and History
 	GetScheduledMessages(deviceID string) ([]*QueuedMessage, error)
 	GetMessageHistory(deviceID string, limit int) ([]*QueuedMessage, error)
+	GetGlobalMessageLogs(userID string, limit, offset int) ([]*QueuedMessage, error)
 	DeleteQueuedMessage(messageID string) error
 }
 
@@ -176,6 +178,7 @@ type ServiceInterface interface {
 	// Scheduled and History
 	ListScheduledMessages(deviceID string) ([]*QueuedMessage, error)
 	ListMessageHistory(deviceID string, limit int) ([]*QueuedMessage, error)
+	ListGlobalMessageLogs(userID string, limit, offset int) ([]*QueuedMessage, error)
 	CancelScheduledMessage(messageID string) error
 }
 
