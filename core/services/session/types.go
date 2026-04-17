@@ -115,11 +115,13 @@ type ServiceInterface interface {
 	// Session lifecycle
 	StartSession(ctx context.Context, cfg *SessionConfig) error
 	StopSession(ctx context.Context, deviceID string) error
+	DeleteSession(ctx context.Context, deviceID string) error
 	RestoreSession(ctx context.Context, deviceID string, sessionData *SessionData) error
 	
 	// Session queries
 	GetSession(deviceID string) *WhatsAppSession
 	GetAllActiveSessions() []*WhatsAppSession
+	GetAllSessions(userID string) ([]*WhatsAppSession, error)
 	GetSessionStatus(deviceID string) SessionStatus
 	IsSessionActive(deviceID string) bool
 	

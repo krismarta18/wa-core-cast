@@ -114,7 +114,13 @@ export default function ScheduledPage() {
       resetModal();
       fetchData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Gagal menjadwalkan pesan.");
+      if (err.response?.status === 403) {
+        toast.error("Batas Pesan Tercapai", {
+          description: "Anda telah mencapai kuota pesan harian. Silakan upgrade paket Anda untuk menjadwalkan lebih banyak pesan."
+        });
+      } else {
+        toast.error(err.response?.data?.error || "Gagal menjadwalkan pesan.");
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -3,9 +3,11 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"wacast/core/models"
 	"wacast/core/services/auth"
+	"wacast/core/services/billing"
 	"wacast/core/services/broadcast"
 	"wacast/core/utils"
 
@@ -55,7 +57,11 @@ func (h *BroadcastHandler) StartCampaign(c *gin.Context) {
 	}
 
 	if err := h.service.StartCampaign(c.Request.Context(), campaignID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		status := http.StatusInternalServerError
+		if err.Error() == billing.ErrMessageLimitReached.Error() || strings.Contains(err.Error(), billing.ErrMessageLimitReached.Error()) {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 

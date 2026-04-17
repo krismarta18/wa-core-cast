@@ -49,10 +49,9 @@ export const navigation: NavGroup[] = [
   {
     title: "Device Management",
     items: [
-      { label: "Connection Status", href: "/devices/status", icon: Wifi },
+      { label: "Session Management", href: "/devices/status", icon: Wifi },
       { label: "Connect New Device", href: "/devices/qr", icon: QrCode },
       { label: "Multi Device Info", href: "/devices/info", icon: Info },
-      { label: "Session Management", href: "/devices/session", icon: Power },
     ],
   },
   {

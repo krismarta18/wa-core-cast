@@ -61,8 +61,18 @@ export default function QRScannerPage() {
 
     } catch (err: any) {
       console.error(err);
-      if (typeof error === 'function') {
-         error("Gagal", err?.message || "Tidak dapat membuat QR code saat ini.");
+      if (err.response?.status === 403) {
+        if (typeof error === 'function') {
+          error("Batas Device Tercapai", "Paket Anda telah mencapai batas maksimum perangkat. Silakan upgrade paket untuk menambah perangkat baru.");
+        } else {
+          toast.error("Batas perangkat tercapai. Silakan upgrade paket Anda.");
+        }
+      } else {
+        if (typeof error === 'function') {
+          error("Gagal", err.response?.data?.error || "Tidak dapat membuat QR code saat ini.");
+        } else {
+          toast.error(err.response?.data?.error || "Gagal membuat sesi.");
+        }
       }
     } finally {
       setLoading(false);

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Tag, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, ToggleLeft, ToggleRight, Loader2, X } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Badge } from "@/components/ui/badge";
 import { autoResponseApi } from "@/lib/api";
 import type { AutoResponseKeyword } from "@/lib/types";
 
@@ -13,6 +14,8 @@ export default function KeywordsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ keyword: "", response_text: "" });
+  const [tags, setTags] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,27 +57,30 @@ export default function KeywordsPage() {
   };
 
   const saveKeyword = async () => {
-    if (!form.keyword || !form.response_text) return;
+    const finalKeyword = tags.join(", ");
+    if (!finalKeyword || !form.response_text) return;
 
     try {
       setIsSaving(true);
       if (editingId) {
         const updated = await autoResponseApi.updateKeyword(editingId, {
-          keyword: form.keyword,
+          keyword: finalKeyword,
           response_text: form.response_text,
         });
         setKeywords((ks) => ks.map((k) => (k.id === editingId ? updated : k)));
-        success("Berhasil", `Keyword "${form.keyword}" berhasil diperbarui.`);
+        success("Berhasil", `Keyword "${finalKeyword}" berhasil diperbarui.`);
       } else {
         const created = await autoResponseApi.createKeyword({
-          keyword: form.keyword,
+          keyword: finalKeyword,
           response_text: form.response_text,
         });
         setKeywords((ks) => [created, ...ks]);
-        success("Berhasil", `Keyword "${form.keyword}" berhasil ditambahkan.`);
+        success("Berhasil", `Keyword "${finalKeyword}" berhasil ditambahkan.`);
       }
       
       setForm({ keyword: "", response_text: "" });
+      setTags([]);
+      setInputValue("");
       setEditingId(null);
       setShowForm(false);
     } catch (err: any) {
@@ -85,9 +91,34 @@ export default function KeywordsPage() {
   };
 
   const editKeyword = (kw: AutoResponseKeyword) => {
+    const kwTags = kw.keyword.split(",").map(s => s.trim()).filter(Boolean);
+    setTags(kwTags);
     setForm({ keyword: kw.keyword, response_text: kw.response_text });
     setEditingId(kw.id);
     setShowForm(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag();
+    } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+      removeTag(tags.length - 1);
+    }
+  };
+
+  const addTag = () => {
+    const val = inputValue.trim().toLowerCase();
+    if (val && !tags.includes(val)) {
+      setTags([...tags, val]);
+      setInputValue("");
+    } else {
+      setInputValue("");
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
   };
 
   return (
@@ -128,15 +159,30 @@ export default function KeywordsPage() {
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700">Kata Kunci</label>
-                      <input
-                        type="text"
-                        placeholder="cth: harga, promo, info..."
-                        value={form.keyword}
-                        onChange={(e) => setForm({ ...form, keyword: e.target.value.toLowerCase() })}
-                        className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                        disabled={isSaving}
-                      />
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Kata Kunci (pisahkan dengan koma atau Enter)</label>
+                      <div className="flex min-h-[46px] w-full flex-wrap gap-2 rounded-lg border border-gray-300 bg-white p-2 text-sm focus-within:ring-2 focus-within:ring-green-500">
+                        {tags.map((tag, i) => (
+                          <Badge key={i} variant="success" className="gap-1 pr-1 capitalize">
+                            {tag}
+                            <button
+                              onClick={() => removeTag(i)}
+                              className="rounded-full bg-green-200/50 p-0.5 hover:bg-green-200"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        <input
+                          type="text"
+                          placeholder={tags.length === 0 ? "cth: harga, promo, info..." : ""}
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          onBlur={addTag}
+                          className="flex-1 min-w-[120px] bg-transparent outline-none"
+                          disabled={isSaving}
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="mb-1 block text-sm font-medium text-gray-700">Pesan Balasan</label>
@@ -162,6 +208,8 @@ export default function KeywordsPage() {
                         onClick={() => {
                           setShowForm(false);
                           setForm({ keyword: "", response_text: "" });
+                          setTags([]);
+                          setInputValue("");
                           setEditingId(null);
                         }}
                         disabled={isSaving}
@@ -192,11 +240,15 @@ export default function KeywordsPage() {
                   }`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Tag className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      <code className="rounded-md bg-gray-100 px-2 py-0.5 text-sm font-bold text-gray-800">
-                        {k.keyword}
-                      </code>
+                      <div className="flex flex-wrap gap-1.5">
+                        {k.keyword.split(",").map((s, i) => (
+                          <Badge key={i} variant="default" className="font-bold border-gray-200 bg-gray-50 text-gray-700 capitalize">
+                            {s.trim()}
+                          </Badge>
+                        ))}
+                      </div>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           k.is_active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"

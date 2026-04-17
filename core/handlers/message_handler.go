@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"wacast/core/services/auth"
+	"wacast/core/services/billing"
 	"wacast/core/services/message"
 	"wacast/core/utils"
 )
@@ -104,7 +105,13 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 			zap.String("device_id", deviceID),
 			zap.Error(err),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{
+		
+		status := http.StatusInternalServerError
+		if err == billing.ErrMessageLimitReached || err == billing.ErrNoActiveSubscription {
+			status = http.StatusForbidden
+		}
+
+		c.JSON(status, gin.H{
 			"error": fmt.Sprintf("Failed to send message: %v", err),
 		})
 		return
@@ -134,7 +141,11 @@ func (h *MessageHandler) SendMessageWithMedia(c *gin.Context) {
 		ctx := c.Request.Context()
 		messageID, err := h.messageService.SendMessageWithMedia(ctx, deviceID, req.TargetJID, req.MediaURL, req.ContentType, req.Caption, nil)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			status := http.StatusInternalServerError
+			if err == billing.ErrMessageLimitReached || err == billing.ErrNoActiveSubscription {
+				status = http.StatusForbidden
+			}
+			c.JSON(status, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, MessageSendResponse{MessageID: messageID, Status: "pending", Timestamp: time.Now().Unix()})
@@ -174,7 +185,11 @@ func (h *MessageHandler) SendMessageWithMedia(c *gin.Context) {
 	messageID, err := h.messageService.SendMessageWithMedia(ctx, deviceID, targetJID, mediaURL, contentType, caption, nil)
 	if err != nil {
 		utils.Error("Failed to send media message", zap.String("device_id", deviceID), zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		status := http.StatusInternalServerError
+		if err == billing.ErrMessageLimitReached || err == billing.ErrNoActiveSubscription {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -323,7 +338,11 @@ func (h *MessageHandler) SendScheduledMessage(c *gin.Context) {
 	messageID, err := h.messageService.SendScheduledMessage(ctx, deviceID, targetJID, content, scheduledFor, mediaURL, contentType, caption, nil)
 	if err != nil {
 		utils.Error("Failed to schedule message", zap.String("device_id", deviceID), zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{
+		status := http.StatusInternalServerError
+		if err == billing.ErrMessageLimitReached || err == billing.ErrNoActiveSubscription {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{
 			"error": fmt.Sprintf("Failed to schedule message: %v", err),
 		})
 		return

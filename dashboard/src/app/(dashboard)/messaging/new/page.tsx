@@ -181,7 +181,13 @@ export default function NewMessagePage() {
         setAttachedFile(null);
       }, 2500);
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Gagal mengirim pesan");
+      if (err.response?.status === 403) {
+        toast.error("Batas Pesan Tercapai", {
+          description: "Anda telah mencapai kuota pesan harian untuk paket saat ini. Silakan upgrade paket Anda untuk terus mengirim pesan."
+        });
+      } else {
+        toast.error(err.response?.data?.error || "Gagal mengirim pesan");
+      }
       console.error(err);
     } finally {
       setIsSubmitting(false);

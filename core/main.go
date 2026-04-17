@@ -86,12 +86,18 @@ func main() {
 		utils.Warn("Failed to print migration status", zap.Error(err))
 	}
 
-	// 5. Initialize services
+	// Initialize services
 	
+	// Create billing service early so it can be injected into others
+	utils.Info("Initializing billing service...")
+	billingService := billing.NewService(db)
+	utils.Info("Billing service initialized successfully")
+
 	// Initialize session service
 	utils.Info("Initializing WhatsApp session service...")
 	sessionService := session.NewService(
 		db,
+		billingService,
 		cfg.EncryptionKey,
 		25, // max sessions
 		cfg.SessionTimeout,
@@ -132,6 +138,7 @@ func main() {
 		db,
 		sessionService,
 		analyticService,
+		billingService,
 		message.DefaultQueueConfig(),
 	)
 
@@ -211,16 +218,13 @@ func main() {
 	// Initialize broadcast service
 	utils.Info("Initializing broadcast service...")
 	broadcastStore := broadcast.NewStore(db)
-	broadcastService := broadcast.NewService(broadcastStore, messageService)
+	broadcastService := broadcast.NewService(broadcastStore, messageService, billingService)
 	utils.Info("Broadcast service initialized successfully")
 
 	// Initialize auth service
 	utils.Info("Initializing auth service...")
 	authService := auth.NewService(db, cfg.JWTSecret, cfg.JWTExpiryHours, cfg.JWTRefreshExpiryHours)
 	utils.Info("Auth service initialized successfully")
-
-	billingService := billing.NewService(db)
-	utils.Info("Billing service initialized successfully")
 
 	utils.Info("Initializing contact service...")
 	contactStore := contact.NewStore(db)

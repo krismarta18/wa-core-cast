@@ -215,6 +215,11 @@ export const sessionsApi = {
     api
       .post<{ message: string }>(`/api/v1/sessions/${deviceId}/stop`)
       .then((r) => r.data),
+
+  delete: (deviceId: string) =>
+    api
+      .delete<{ message: string }>(`/api/v1/sessions/${deviceId}`)
+      .then((r) => r.data),
 };
 
 // ─── Messages ─────────────────────────────────────────────────────────────────

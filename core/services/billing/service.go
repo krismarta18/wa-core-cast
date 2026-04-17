@@ -19,12 +19,65 @@ type Service struct {
 }
 
 var (
-	ErrBillingPlanNotFound = errors.New("billing plan not found")
-	ErrBillingPlanInactive = errors.New("billing plan is inactive")
+	ErrBillingPlanNotFound    = errors.New("billing plan not found")
+	ErrBillingPlanInactive    = errors.New("billing plan is inactive")
+	ErrNoActiveSubscription   = errors.New("no active subscription found")
+	ErrDeviceLimitReached     = errors.New("device limit reached for your current plan")
+	ErrMessageLimitReached    = errors.New("daily message limit reached for your current plan")
 )
 
 func NewService(db *database.Database) *Service {
 	return &Service{db: db}
+}
+
+// CheckDeviceLimit verifies if a user can add/connect another device
+func (s *Service) CheckDeviceLimit(ctx context.Context, userID uuid.UUID) error {
+	subscription, err := s.db.GetSubscriptionByUserID(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNoActiveSubscription
+		}
+		return fmt.Errorf("failed to check subscription: %w", err)
+	}
+
+	// We use the limits stored directly in the subscription (snapshot from when they subbed)
+	currentDevices, err := s.db.CountUserDevices(userID)
+	if err != nil {
+		return fmt.Errorf("failed to count devices: %w", err)
+	}
+
+	if currentDevices >= subscription.MaxDevices {
+		return ErrDeviceLimitReached
+	}
+
+	return nil
+}
+
+// CheckMessageLimit verifies if a user can send more messages today
+func (s *Service) CheckMessageLimit(ctx context.Context, userID uuid.UUID) error {
+	subscription, err := s.db.GetSubscriptionByUserID(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNoActiveSubscription
+		}
+		return fmt.Errorf("failed to check subscription: %w", err)
+	}
+
+	// 0 means unlimited or not set (though usually we should have a default)
+	if subscription.MaxMessagesPerDay <= 0 {
+		return nil
+	}
+
+	currentMessages, err := s.db.GetMessageCountToday(userID)
+	if err != nil {
+		return fmt.Errorf("failed to count messages today: %w", err)
+	}
+
+	if currentMessages >= subscription.MaxMessagesPerDay {
+		return ErrMessageLimitReached
+	}
+
+	return nil
 }
 
 func (s *Service) CheckoutDummy(ctx context.Context, userID string, planID string) (*models.BillingCheckoutResponse, error) {
@@ -70,10 +123,10 @@ func (s *Service) CheckoutDummy(ctx context.Context, userID string, planID strin
 	subscriptionID := uuid.New()
 	if _, err = tx.ExecContext(ctx, `
 		INSERT INTO subscriptions (
-			id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, created_at, updated_at
+			id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, max_devices, max_messages_per_day, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, 'active', $4, $5, $6, true, $4, $4)
-	`, subscriptionID, uid, pid, now, endDate, renewalDate); err != nil {
+		VALUES ($1, $2, $3, 'active', $4, $5, $6, true, $7, $8, $4, $4)
+	`, subscriptionID, uid, pid, now, endDate, renewalDate, plan.MaxDevices, plan.MaxMessagesPerDay); err != nil {
 		return nil, fmt.Errorf("create subscription: %w", err)
 	}
 
@@ -168,15 +221,15 @@ func (s *Service) GetOverview(ctx context.Context, userID string) (*models.Billi
 
 		response.CurrentPlan = &models.BillingCurrentPlanResponse{
 			SubscriptionID: currentSubscription.ID,
-			PlanID:         plan.ID,
+			PlanID:         currentSubscription.PlanID, // This is still relevant for switching
 			Name:           plan.Name,
 			Price:          plan.Price,
 			BillingCycle:   normalizeBillingCycle(plan.BillingCycle),
 			RenewalDate:    currentSubscription.RenewalDate,
 			QuotaUsed:      sumSentMessages(usageHistory),
-			QuotaLimit:     plan.MaxMessagesPerDay,
+			QuotaLimit:     currentSubscription.MaxMessagesPerDay,
 			DeviceUsed:     deviceUsed,
-			DeviceMax:      plan.MaxDevices,
+			DeviceMax:      currentSubscription.MaxDevices,
 			AutoRenew:      currentSubscription.AutoRenew,
 			Status:         currentSubscription.Status,
 			Features:       plan.Features,

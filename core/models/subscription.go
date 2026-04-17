@@ -42,10 +42,12 @@ type Subscription struct {
 	Status      string     `json:"status"` // active/inactive/expired/cancelled
 	StartDate   *time.Time `json:"start_date,omitempty"`
 	EndDate     *time.Time `json:"end_date,omitempty"`
-	RenewalDate *time.Time `json:"renewal_date,omitempty"`
-	AutoRenew   bool       `json:"auto_renew"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	RenewalDate       *time.Time `json:"renewal_date,omitempty"`
+	AutoRenew         bool       `json:"auto_renew"`
+	MaxDevices        int        `json:"max_devices"`
+	MaxMessagesPerDay int        `json:"max_messages_per_day"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 // TableName returns the table name

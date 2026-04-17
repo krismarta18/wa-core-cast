@@ -15,9 +15,9 @@ import (
 func (d *Database) CreateSubscription(subscription *models.Subscription) error {
 	query := `
 		INSERT INTO subscriptions (
-			id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, created_at, updated_at
+			id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, max_devices, max_messages_per_day, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	now := time.Now()
@@ -32,7 +32,8 @@ func (d *Database) CreateSubscription(subscription *models.Subscription) error {
 	endDate := subscription.EndDate
 	_, err := d.Exec(query,
 		subscription.ID, subscription.UserID, subscription.PlanID,
-		subscription.Status, startDate, endDate, renewalDate, subscription.AutoRenew, now, now,
+		subscription.Status, startDate, endDate, renewalDate, subscription.AutoRenew, 
+		subscription.MaxDevices, subscription.MaxMessagesPerDay, now, now,
 	)
 
 	if err != nil {
@@ -47,7 +48,7 @@ func (d *Database) CreateSubscription(subscription *models.Subscription) error {
 // GetSubscriptionByID retrieves a subscription by ID
 func (d *Database) GetSubscriptionByID(subID uuid.UUID) (*models.Subscription, error) {
 	query := `
-		SELECT id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, created_at, updated_at
+		SELECT id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, max_devices, max_messages_per_day, created_at, updated_at
 		FROM subscriptions
 		WHERE id = $1
 	`
@@ -57,6 +58,7 @@ func (d *Database) GetSubscriptionByID(subID uuid.UUID) (*models.Subscription, e
 		&subscription.ID, &subscription.UserID, &subscription.PlanID,
 		&subscription.Status, &subscription.StartDate, &subscription.EndDate,
 		&subscription.RenewalDate, &subscription.AutoRenew,
+		&subscription.MaxDevices, &subscription.MaxMessagesPerDay,
 		&subscription.CreatedAt, &subscription.UpdatedAt,
 	)
 
@@ -71,7 +73,7 @@ func (d *Database) GetSubscriptionByID(subID uuid.UUID) (*models.Subscription, e
 // GetSubscriptionByUserID retrieves subscription for a user
 func (d *Database) GetSubscriptionByUserID(userID uuid.UUID) (*models.Subscription, error) {
 	query := `
-		SELECT id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, created_at, updated_at
+		SELECT id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, max_devices, max_messages_per_day, created_at, updated_at
 		FROM subscriptions
 		WHERE user_id = $1 AND status = 'active'
 		ORDER BY created_at DESC
@@ -83,6 +85,7 @@ func (d *Database) GetSubscriptionByUserID(userID uuid.UUID) (*models.Subscripti
 		&subscription.ID, &subscription.UserID, &subscription.PlanID,
 		&subscription.Status, &subscription.StartDate, &subscription.EndDate,
 		&subscription.RenewalDate, &subscription.AutoRenew,
+		&subscription.MaxDevices, &subscription.MaxMessagesPerDay,
 		&subscription.CreatedAt, &subscription.UpdatedAt,
 	)
 

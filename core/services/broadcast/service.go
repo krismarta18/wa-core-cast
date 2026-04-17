@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"wacast/core/models"
+	"wacast/core/services/billing"
 	"wacast/core/services/message"
 	"wacast/core/utils"
 
@@ -17,12 +18,14 @@ import (
 type Service struct {
 	store          *Store
 	messageService *message.Service
+	billingService *billing.Service
 }
 
-func NewService(store *Store, messageService *message.Service) *Service {
+func NewService(store *Store, messageService *message.Service, billingService *billing.Service) *Service {
 	s := &Service{
 		store:          store,
 		messageService: messageService,
+		billingService: billingService,
 	}
 
 	// Register callback to track broadcast completion status
@@ -73,6 +76,11 @@ func (s *Service) StartCampaign(ctx context.Context, campaignID uuid.UUID) error
 
 	if campaign.Status != models.BroadcastStatusDraft {
 		return fmt.Errorf("campaign already started or completed")
+	}
+
+	// billing limit check - pre-check before starting
+	if err := s.billingService.CheckMessageLimit(ctx, campaign.UserID); err != nil {
+		return fmt.Errorf("cannot start broadcast: %w", err)
 	}
 
 	recipients, err := s.store.GetPendingRecipients(campaignID, 10000)

@@ -10,8 +10,13 @@ import (
 	"go.uber.org/zap"
 
 	"wacast/core/services/auth"
+	"wacast/core/services/billing"
 	"wacast/core/services/session"
 	"wacast/core/utils"
+)
+
+var (
+	ErrDeviceLimitReached = billing.ErrDeviceLimitReached
 )
 
 // SessionHandler handles WhatsApp session endpoints
@@ -70,10 +75,24 @@ func (h *SessionHandler) GetSessionStatus(c *gin.Context) {
 	})
 }
 
-// GetAllActiveSessions retrieves all active sessions
+// GetAllActiveSessions retrieves all sessions belonging to the authenticated user
 // GET /sessions
 func (h *SessionHandler) GetAllActiveSessions(c *gin.Context) {
-	sessions := h.sessionService.GetAllActiveSessions()
+	userID := c.GetString(ContextKeyUserID)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User ID not found in session context",
+		})
+		return
+	}
+
+	sessions, err := h.sessionService.GetAllSessions(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Failed to retrieve sessions: %v", err),
+		})
+		return
+	}
 
 	response := make([]SessionStatusResponse, len(sessions))
 	for i, s := range sessions {
@@ -235,7 +254,13 @@ func (h *SessionHandler) InitiateSession(c *gin.Context) {
 			zap.String("device_id", req.DeviceID),
 			zap.Error(err),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{
+		
+		status := http.StatusInternalServerError
+		if err == billing.ErrDeviceLimitReached || err == billing.ErrNoActiveSubscription {
+			status = http.StatusForbidden
+		}
+
+		c.JSON(status, gin.H{
 			"error": fmt.Sprintf("Failed to start session: %v", err),
 		})
 		return
@@ -269,6 +294,25 @@ func (h *SessionHandler) StopSession(c *gin.Context) {
 	})
 }
 
+// DeleteSession deletes a device and its session
+// DELETE /sessions/:device_id
+func (h *SessionHandler) DeleteSession(c *gin.Context) {
+	deviceID := c.Param("device_id")
+	ctx := c.Request.Context()
+
+	if err := h.sessionService.DeleteSession(ctx, deviceID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Failed to delete device: %v", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "Device deleted successfully",
+		"device_id": deviceID,
+	})
+}
+
 // Message sending is handled through message handlers at /api/v1/devices/:device_id/messages
 // This maintains separation of concerns and allows proper queuing
 
@@ -287,5 +331,6 @@ func RegisterSessionRoutes(router interface {
 		group.GET("/:device_id/qr", handler.GetQRCode)
 		group.POST("/initiate", handler.InitiateSession)
 		group.POST("/:device_id/stop", handler.StopSession)
+		group.DELETE("/:device_id", handler.DeleteSession)
 	}
 }

@@ -23,6 +23,7 @@ import (
 
 	"wacast/core/database"
 	"wacast/core/models"
+	"wacast/core/services/billing"
 	"wacast/core/utils"
 	importStore "go.mau.fi/whatsmeow/store"
 )
@@ -42,6 +43,7 @@ type Service struct {
 	qrCodes            map[string]string                                    // Store QR code strings
 	qrCodeImages       map[string][]byte                                    // ✅ Store QR code PNG images (base64)
 	db                 *database.Database
+	billingService     *billing.Service
 	encryptionKey      string
 	maxSessions        int
 	sessionTimeout     int
@@ -54,12 +56,13 @@ type Service struct {
 }
 
 // NewService creates a new session service
-func NewService(db *database.Database, encryptionKey string, maxSessions int, sessionTimeout int) *Service {
+func NewService(db *database.Database, billingService *billing.Service, encryptionKey string, maxSessions int, timeout int) *Service {
 	return &Service{
-		db:                 db,
-		encryptionKey:      encryptionKey,
+		db:             db,
+		billingService: billingService,
+		encryptionKey:  encryptionKey,
 		maxSessions:        maxSessions,
-		sessionTimeout:     sessionTimeout,
+		sessionTimeout:     timeout,
 		sessions:           make(map[string]*WhatsAppSession),
 		qrCodes:            make(map[string]string),
 		qrCodeImages:       make(map[string][]byte),
@@ -87,6 +90,27 @@ func (s *Service) RegisterReceiptCallback(fn ReceiptCallback) {
 
 // StartSession initializes and connects a new WhatsApp session
 func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
+	// --- BILLING LIMIT CHECK ---
+	uID, errUser := uuid.Parse(cfg.UserID)
+	if errUser == nil {
+		if err := s.billingService.CheckDeviceLimit(ctx, uID); err != nil {
+			return err
+		}
+	}
+
+	// --- RECONNECT LOGIC START ---
+	// 1. Check if ANY device already has this phone number and is connected
+	if oldDevice, err := s.db.GetDeviceByPhone(cfg.Phone); err == nil && oldDevice != nil {
+		oldID := oldDevice.ID.String()
+		utils.Info("Force reconnect: Phone already active in another session. Stopping old session.", 
+			zap.String("phone", cfg.Phone), 
+			zap.String("old_device_id", oldID),
+			zap.String("new_device_id", cfg.DeviceID),
+		)
+		// We stop it before proceeding. Logout = true to unlink from WA.
+		_ = s.StopSession(ctx, oldID) 
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -94,10 +118,12 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 		return fmt.Errorf("maximum sessions reached: %d", s.maxSessions)
 	}
 
-	// Check if session already exists
+	// 2. Check if a session with the SAME DeviceID already exists in memory
 	if _, exists := s.sessions[cfg.DeviceID]; exists {
-		return fmt.Errorf("session already exists for device %s", cfg.DeviceID)
+		utils.Info("Session already exists in memory for this ID. Stopping before restart.", zap.String("device_id", cfg.DeviceID))
+		s.stopSessionLocked(ctx, cfg.DeviceID, true)
 	}
+	// --- RECONNECT LOGIC END ---
 
 	// Create whatsmeow client with in-memory store
 	// In production: use sqlstore with database backend
@@ -419,21 +445,65 @@ func (s *Service) StopSession(ctx context.Context, deviceID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	return s.stopSessionLocked(ctx, deviceID, true) // Default to Logout for "Putuskan"
+}
+
+// stopSessionLocked performs the actual cleanup logic.
+// CALLER MUST HOLD s.mu LOCK.
+func (s *Service) stopSessionLocked(ctx context.Context, deviceID string, logout bool) error {
 	session, exists := s.sessions[deviceID]
 	if !exists {
 		return fmt.Errorf("session not found: %s", deviceID)
 	}
 
-	// Disconnect
-	session.Client.Disconnect()
+	// 1. Unlink session from WhatsApp (Logout) or just Disconnect
+	if session.Client != nil {
+		if logout && session.Client.IsConnected() {
+			utils.Info("Logging out WhatsApp session", zap.String("device_id", deviceID))
+			if err := session.Client.Logout(ctx); err != nil {
+				utils.Warn("Failed to logout session, falling back to disconnect",
+					zap.String("device_id", deviceID),
+					zap.Error(err),
+				)
+				session.Client.Disconnect()
+			}
+		} else {
+			session.Client.Disconnect()
+		}
+	}
 
-	// Remove from manager
+	// 2. Remove from manager
 	delete(s.sessions, deviceID)
 
-	utils.Info("Session stopped",
+	// 3. Update status in Database immediately
+	if parsedID, err := uuid.Parse(deviceID); err == nil {
+		_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
+	}
+
+	utils.Info("Session stopped/unlinked",
 		zap.String("device_id", deviceID),
+		zap.Bool("was_logout", logout),
 	)
 
+	return nil
+}
+
+// DeleteSession stops the session and removes the device from the database
+func (s *Service) DeleteSession(ctx context.Context, deviceID string) error {
+	// 1. Try to stop the session if it's running in memory
+	_ = s.StopSession(ctx, deviceID)
+
+	// 2. Delete from database (mark as banned)
+	parsedID, err := uuid.Parse(deviceID)
+	if err != nil {
+		return fmt.Errorf("invalid device id: %w", err)
+	}
+
+	if err := s.db.DeleteDevice(parsedID); err != nil {
+		return fmt.Errorf("failed to delete device from database: %w", err)
+	}
+
+	utils.Info("Device deleted successfully", zap.String("device_id", deviceID))
 	return nil
 }
 
@@ -520,6 +590,56 @@ func (s *Service) GetAllActiveSessions() []*WhatsAppSession {
 	}
 
 	return sessions
+}
+
+// GetAllSessions returns all sessions for a user, merging DB data and in-memory state
+func (s *Service) GetAllSessions(userID string) ([]*WhatsAppSession, error) {
+	uID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user id: %w", err)
+	}
+
+	// Fetch devices from database
+	dbDevices, err := s.db.GetDevicesByUserID(uID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch devices from db: %w", err)
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var sessions []*WhatsAppSession
+	for _, dev := range dbDevices {
+		deviceID := dev.ID.String()
+
+		// Check if we have an in-memory session
+		if sess, exists := s.sessions[deviceID]; exists {
+			sessions = append(sessions, sess)
+			continue
+		}
+
+		// Otherwise, create a representative session object from DB data
+		status := SessionInactive
+		switch dev.Status {
+		case models.DeviceStatusConnected:
+			status = SessionActive
+		case models.DeviceStatusPendingQR:
+			status = SessionPending
+		}
+
+		sessions = append(sessions, &WhatsAppSession{
+			ID:     deviceID,
+			Status: status,
+			Config: &SessionConfig{
+				DeviceID:    deviceID,
+				UserID:      dev.UserID.String(),
+				Phone:       dev.PhoneNumber,
+				DisplayName: dev.DisplayName,
+			},
+		})
+	}
+
+	return sessions, nil
 }
 
 // GetUserID retrieves the owner UserID of a given device session.

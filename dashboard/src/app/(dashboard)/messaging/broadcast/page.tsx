@@ -223,7 +223,11 @@ export default function BroadcastPage() {
       removeMedia();
       
     } catch (err: any) {
-      errorToast("Gagal mengirim broadcast", err.response?.data?.error || err.message);
+      if (err.response?.status === 403) {
+        errorToast("Batas Pesan Tercapai", "Anda telah mencapai kuota pesan harian. Silakan upgrade paket Anda untuk mengirim broadcast ini.");
+      } else {
+        errorToast("Gagal mengirim broadcast", err.response?.data?.error || err.message);
+      }
     } finally {
       setSending(false);
     }

@@ -12,6 +12,7 @@ import (
 
 	"wacast/core/database"
 	"wacast/core/services/analytics"
+	"wacast/core/services/billing"
 	"wacast/core/services/session"
 	"wacast/core/utils"
 )
@@ -30,6 +31,7 @@ type Service struct {
 	done                chan struct{}
 	metrics             *ServiceMetrics
 	analyticsService    *analytics.Service
+	billingService      *billing.Service
 }
 
 // ServiceMetrics holds message service statistics
@@ -60,7 +62,7 @@ func DefaultQueueConfig() *MessageQueueConfig {
 }
 
 // NewService creates a new message service
-func NewService(db *database.Database, sessionService *session.Service, analyticsService *analytics.Service, config *MessageQueueConfig) *Service {
+func NewService(db *database.Database, sessionService *session.Service, analyticsService *analytics.Service, billingService *billing.Service, config *MessageQueueConfig) *Service {
 	if config == nil {
 		config = DefaultQueueConfig()
 	}
@@ -73,6 +75,7 @@ func NewService(db *database.Database, sessionService *session.Service, analytic
 		config:          config,
 		sessionService:  sessionService,
 		analyticsService: analyticsService,
+		billingService:   billingService,
 		deliveryCallbacks: make([]DeliveryCallback, 0),
 		receiveCallbacks:  make([]ReceiveCallback, 0),
 		done:             make(chan struct{}),
@@ -194,10 +197,16 @@ func (s *Service) Stop() error {
 	return nil
 }
 
-// SendMessage queues a text message for delivery
 func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
+	}
+
+	// billing limit check
+	if uID, err := s.sessionService.GetUserID(deviceID); err == nil {
+		if err := s.billingService.CheckMessageLimit(ctx, uID); err != nil {
+			return "", err
+		}
 	}
 
 	messageID := uuid.New().String()
@@ -232,10 +241,16 @@ func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID st
 	return messageID, nil
 }
 
-// SendMessageWithMedia queues a message with media attachment
 func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, targetJID string, mediaURL string, contentType string, caption *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
+	}
+
+	// billing limit check
+	if uID, err := s.sessionService.GetUserID(deviceID); err == nil {
+		if err := s.billingService.CheckMessageLimit(ctx, uID); err != nil {
+			return "", err
+		}
 	}
 
 	messageID := uuid.New().String()
@@ -269,10 +284,16 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, tar
 	return messageID, nil
 }
 
-// SendScheduledMessage queues a message to be sent at a specific time
 func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
+	}
+
+	// billing limit check
+	if uID, err := s.sessionService.GetUserID(deviceID); err == nil {
+		if err := s.billingService.CheckMessageLimit(ctx, uID); err != nil {
+			return "", err
+		}
 	}
 
 	messageID := uuid.New().String()

@@ -330,3 +330,22 @@ func (d *Database) GetMessageByReceiptNumber(receiptNumber string) (*models.Mess
 
 	return message, nil
 }
+// GetMessageCountToday counts outbound messages sent by a user today
+func (d *Database) GetMessageCountToday(userID uuid.UUID) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM messages
+		WHERE user_id = $1
+		  AND direction = 'outbound'
+		  AND created_at >= CURRENT_DATE
+	`
+
+	var count int
+	err := d.QueryRow(query, userID).Scan(&count)
+	if err != nil {
+		utils.Error("Failed to count messages today", zap.Error(err), zap.String("user_id", userID.String()))
+		return 0, err
+	}
+
+	return count, nil
+}
