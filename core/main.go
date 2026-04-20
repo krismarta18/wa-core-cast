@@ -50,40 +50,41 @@ func main() {
 	// 3. Connect to database
 	db, err := database.InitDatabase(cfg.Database)
 	if err != nil {
-		utils.Fatal("Failed to initialize database", zap.Error(err))
+		utils.Error("Could not connect to database on startup. Please configure via dashboard.", zap.Error(err))
+		// We continue anyway so the user can reach the /config API
 	}
-	defer db.Close()
+	defer func() {
+		if db != nil {
+			db.Close()
+		}
+	}()
 
 	database.DB = db
 
-	utils.Info("Database connection pool configured",
+	utils.Info("Database connection pool initialized",
 		zap.Int("max_open_conns", cfg.Database.MaxOpenConns),
 		zap.Int("max_idle_conns", cfg.Database.MaxIdleConns),
 	)
 
-	// 4. Run migrations
-	utils.Info("Running database migrations...")
+	// 4. Run migrations (Only if connected)
+	if db != nil && db.HealthCheck() {
+		utils.Info("Running database migrations...")
+		migrationRunner := database.NewMigrationRunner(db)
+		
+		// Load migrations from migrations directory
+		migrationsPath := "./migrations"
+		err = migrationRunner.LoadMigrationsFromDirectory(migrationsPath)
+		if err != nil {
+			utils.Error("Failed to load migrations", zap.Error(err))
+		}
 
-	migrationRunner := database.NewMigrationRunner(db)
-	
-	// Load migrations from migrations directory
-	migrationsPath := "./migrations"
-	err = migrationRunner.LoadMigrationsFromDirectory(migrationsPath)
-	if err != nil {
-		utils.Error("Failed to load migrations", zap.Error(err))
-		// Continue anyway, migrations might not be found during development
-	}
-
-	// Run pending migrations
-	err = migrationRunner.RunMigrations()
-	if err != nil {
-		utils.Fatal("Failed to run migrations", zap.Error(err))
-	}
-
-	// Print migration status
-	err = migrationRunner.PrintMigrationStatus()
-	if err != nil {
-		utils.Warn("Failed to print migration status", zap.Error(err))
+		// Run pending migrations
+		err = migrationRunner.RunMigrations()
+		if err != nil {
+			utils.Error("Failed to run migrations", zap.Error(err))
+		}
+	} else {
+		utils.Warn("Skipping database migrations - no active connection")
 	}
 
 	// Initialize services
@@ -107,14 +108,16 @@ func main() {
 	sessionManager := session.NewManager(sessionService, true, 30*time.Second)
 	sessionManager.Start()
 
-	// Attempt to restore previous sessions from database
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	if err := sessionService.RestorePreviousSessions(ctx); err != nil {
-		utils.Warn("Failed to restore previous sessions",
-			zap.Error(err),
-		)
+	// Attempt to restore previous sessions from database (Only if connected)
+	if db != nil && db.HealthCheck() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		if err := sessionService.RestorePreviousSessions(ctx); err != nil {
+			utils.Warn("Failed to restore previous sessions",
+				zap.Error(err),
+			)
+		}
+		cancel()
 	}
-	cancel()
 
 	utils.Info("Session service initialized successfully")
 
@@ -128,7 +131,7 @@ func main() {
 	utils.Info("Analytics service initialized successfully")
 
 	utils.Info("Initializing autoresponse service...")
-	autoresponseStore := autoresponse.NewStore(db.GetConnection())
+	autoresponseStore := autoresponse.NewStore(db)
 	autoresponseService := autoresponse.NewService(autoresponseStore)
 	utils.Info("Autoresponse service initialized successfully")
 

@@ -11,6 +11,8 @@ import { authApi } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { savePendingAuthState } from "@/lib/auth-session";
 import { useAuth } from "@/providers/auth-provider";
+import { Database } from "lucide-react";
+import DbConfigModal from "@/components/database/db-config-modal";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ phone?: string }>({});
+  const [dbModalOpen, setDbModalOpen] = useState(false);
 
   useEffect(() => {
     if (hydrated && session) {
@@ -156,8 +159,20 @@ export default function LoginPage() {
               Daftar sekarang
             </Link>
           </p>
+
+          <div className="mt-12 flex justify-center border-t pt-6">
+            <button
+              onClick={() => setDbModalOpen(true)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-green-600 transition-colors"
+            >
+              <Database className="h-4 w-4" />
+              Database Connection
+            </button>
+          </div>
         </div>
       </div>
+
+      <DbConfigModal open={dbModalOpen} onOpenChange={setDbModalOpen} />
     </div>
   );
 }

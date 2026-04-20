@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ import (
 	"wacast/core/services/contact"
 	"wacast/core/services/message"
 	"wacast/core/services/session"
+	"wacast/core/services/license"
 	"wacast/core/utils"
 )
 
@@ -35,6 +37,7 @@ type Server struct {
 	autoresponseService *autoresponse.Service
 	db               *database.Database
 	config           *config.Config
+	licenseService   *license.Service
 	port             int
 	host             string
 	startTime        time.Time
@@ -81,6 +84,7 @@ func NewServer(
 		port:             port,
 		host:             host,
 		startTime:        time.Now(),
+		licenseService:   license.NewService(),
 		websocketHandler: handlers.NewWebSocketHandler(sessionService),
 	}
 
@@ -94,6 +98,8 @@ func (s *Server) QRUpdateNotifier() func(deviceID, qrCode string, status int) {
 }
 
 func (s *Server) registerRoutes() {
+	s.engine.Use(s.licenseMiddleware())
+
 	s.engine.GET("/health", s.HealthCheck)
 	s.engine.GET("/health/ready", s.ReadinessCheck)
 	s.engine.GET("/health/live", s.LivenessCheck)
@@ -124,6 +130,14 @@ func (s *Server) registerRoutes() {
 		handlers.RegisterBroadcastRoutes(v1, s.broadcastService, s.config.JWTSecret, s.authService)
 		handlers.RegisterAutoResponseRoutes(v1, s.autoresponseService, s.config.JWTSecret, s.authService)
 
+		// Register Database Config Routes
+		configHandler := handlers.NewConfigHandler(s.db, s.config)
+		configHandler.RegisterRoutes(v1)
+
+		// Register License Routes
+		licenseHandler := handlers.NewLicenseHandler(s.licenseService)
+		licenseHandler.RegisterRoutes(v1)
+
 		info := v1.Group("/info")
 		{
 			info.GET("/status", s.ServerStatus)
@@ -144,6 +158,40 @@ func (s *Server) Start() error {
 	)
 
 	return s.engine.Run(addr)
+}
+
+func (s *Server) licenseMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		// Always allow license, config, health, and static files
+		if strings.Contains(path, "/api/v1/license") || 
+		   strings.Contains(path, "/api/v1/config") ||
+		   strings.Contains(path, "/health") ||
+		   strings.Contains(path, "/uploads") ||
+		   path == "/" {
+			c.Next()
+			return
+		}
+
+		status, err := s.licenseService.GetStatus()
+		if err != nil || !status.IsActive || status.IsExpired {
+			reason := "License required"
+			if status != nil && status.IsExpired {
+				reason = "License expired. Please contact admin for renewal."
+			}
+
+			c.JSON(http.StatusPaymentRequired, gin.H{
+				"success": false,
+				"message": reason,
+				"setup_required": true,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
 }
 
 func corsMiddleware() gin.HandlerFunc {

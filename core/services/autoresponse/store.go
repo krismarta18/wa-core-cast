@@ -1,17 +1,17 @@
 package autoresponse
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"wacast/core/database"
 )
 
 type Store struct {
-	db *sql.DB
+	db *database.Database
 }
 
-func NewStore(db *sql.DB) *Store {
+func NewStore(db *database.Database) *Store {
 	return &Store{db: db}
 }
 

@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { authApi, clearDashboardSession, persistAuthSession, setUnauthorizedHandler } from "@/lib/api";
+import { authApi, clearDashboardSession, licenseApi, persistAuthSession, setLicenseHandler, setUnauthorizedHandler } from "@/lib/api";
 import {
   clearAuthSession,
   getStoredAuthSession,
@@ -20,6 +20,7 @@ import type { AuthSessionResponse } from "@/lib/types";
 type AuthContextValue = {
   session: StoredAuthSession | null;
   hydrated: boolean;
+  isLicensed: boolean;
   completeAuth: (response: AuthSessionResponse, persistent: boolean) => void;
   logout: () => Promise<void>;
 };
@@ -30,11 +31,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [session, setSession] = useState<StoredAuthSession | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [isLicensed, setIsLicensed] = useState(true); // Default to true to prevent flickering
 
   useEffect(() => {
     const syncSession = () => setSession(getStoredAuthSession());
 
+    const checkLicense = async () => {
+      try {
+        const res = await licenseApi.getStatus();
+        const active = res.data.is_active && !res.data.is_expired;
+        setIsLicensed(active);
+
+        const path = window.location.pathname;
+
+        if (!active) {
+          // Force to setup if not licensed
+          if (path !== "/setup") {
+            router.replace("/setup");
+          }
+        } else {
+          // Block setup if already licensed
+          if (path === "/setup") {
+            router.replace("/");
+          }
+        }
+      } catch (error) {
+        console.error("License check failed", error);
+      }
+    };
+
     syncSession();
+    checkLicense();
     setHydrated(true);
 
     const unsubscribe = subscribeAuthSession(syncSession);
@@ -44,9 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     });
 
+    setLicenseHandler(() => {
+      setIsLicensed(false);
+      router.replace("/setup");
+    });
+
     return () => {
       unsubscribe();
       setUnauthorizedHandler(null);
+      setLicenseHandler(null);
     };
   }, [router]);
 
@@ -54,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       session,
       hydrated,
+      isLicensed,
       completeAuth: (response, persistent) => {
         const nextSession = persistAuthSession(response, persistent);
         setSession(nextSession);
@@ -68,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
     }),
-    [hydrated, router, session]
+    [hydrated, isLicensed, router, session]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

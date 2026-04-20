@@ -62,9 +62,14 @@ const authClient = axios.create({
 
 let refreshPromise: Promise<StoredAuthSession | null> | null = null;
 let unauthorizedHandler: (() => void) | null = null;
+let licenseHandler: (() => void) | null = null;
 
 function notifyUnauthorized() {
   unauthorizedHandler?.();
+}
+
+function notifyLicenseRequired() {
+  licenseHandler?.();
 }
 
 function toStoredSession(response: AuthSessionResponse, persistent: boolean): StoredAuthSession {
@@ -82,6 +87,10 @@ function toStoredSession(response: AuthSessionResponse, persistent: boolean): St
 
 export function setUnauthorizedHandler(handler: (() => void) | null) {
   unauthorizedHandler = handler;
+}
+
+export function setLicenseHandler(handler: (() => void) | null) {
+  licenseHandler = handler;
 }
 
 export function persistAuthSession(response: AuthSessionResponse, persistent: boolean) {
@@ -133,6 +142,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
 
+    if (error.response?.status === 402) {
+      notifyLicenseRequired();
+      return Promise.reject(error);
+    }
+
     if (error.response?.status !== 401 || originalRequest?._retry) {
       return Promise.reject(error);
     }
@@ -149,6 +163,45 @@ api.interceptors.response.use(
     return api(originalRequest);
   }
 );
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+export interface DbConfig {
+  Host: string;
+  Port: number;
+  User: string;
+  Password?: string;
+  DBName: string;
+  SSLMode: string;
+}
+
+export const configApi = {
+  getDbStatus: () =>
+    authClient.get<{ success: boolean; status: string; config: any }>("/api/v1/config/db").then((r) => r.data),
+
+  testDbConnection: (body: DbConfig) =>
+    authClient.post<{ success: boolean; message: string }>("/api/v1/config/db/test", body).then((r) => r.data),
+
+  saveDbConnection: (body: DbConfig) =>
+    authClient.post<{ success: boolean; message: string }>("/api/v1/config/db/save", body).then((r) => r.data),
+};
+
+// ─── License ──────────────────────────────────────────────────────────────────
+
+export interface LicenseStatus {
+  hwid: string;
+  expiry_date: string;
+  is_active: boolean;
+  is_expired: boolean;
+}
+
+export const licenseApi = {
+  getStatus: () =>
+    authClient.get<{ success: boolean; data: LicenseStatus }>("/api/v1/license/status").then((r) => r.data),
+
+  activate: (key: string) =>
+    authClient.post<{ success: boolean; message: string }>("/api/v1/license/activate", { key }).then((r) => r.data),
+};
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
