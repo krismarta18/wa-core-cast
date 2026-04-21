@@ -1,70 +1,74 @@
-# Binaries for programs and plugins
+# === WACAST Multi-Module Git Ignore ===
+
+# Dependencies
+**/node_modules/
+**/vendor/
+
+# Binaries & Build Artifacts
 *.exe
 *.exe~
 *.dll
 *.so
 *.so.*
 *.dylib
-/Terminaiton
-# Test binary, build with `go test -c`
 *.test
-
-# Output of the go coverage tool
 *.out
+**/bin/
+**/dist/
+**/build/
+**/wacast.exe
+**/.next/
+**/out/
+**/dashboard_out/
 
-# Go workspace file
-go.work
+# Environment & Credentials (CRITICAL - .env excluded from ignore by user request)
+**/*.lic
+admin.password
+**/auth.json
+**/session.json
 
-# Dependency directories
-vendor/
-
-# Build output
-bin/
-dist/
-build/
-
-# Environment variables
-# .env
-# .env.local
-# .env.*.local
-
-# IDE and Editor files
-# .vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-*.sublime-*
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Logs
-*.log
-logs/
-
-# Database files (if local)
+# Database & Session Data
 *.db
 *.sqlite
 *.sqlite-journal
 *.sqlite-shm
 *.sqlite-wal
+**/session_data/
+**/whatsmeow_db/
+**/whatsmeow.db*
 
-# OS specific
+# Logs
+*.log
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE & Editor Files
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.sublime-*
+*~
+
+# Temporary & Debug
+**/tmp/
+**/temp/
+*.tmp
+**/scratch/
+**/uploads/
+**/debug/
+**/*.tsbuildinfo
+
+# OS & Specific
 .windows
 desktop.ini
+.gitkeep
 
-# Docker
-.dockerignore
-
-# Generated files
-*.pb.go
-*.pb.gw.go
-
-# Hot reload
-tmp/
+# Project Specific
+/Terminaiton/
+/saas/dist/
+/personal/core/wacast.exe
