@@ -405,7 +405,8 @@ export interface BroadcastCampaignResponse {
   completed_at?: string;
   created_at: string;
 }
- 
+
+ 
  
 // --- Auto Response ------------------------------------------------------------
 

@@ -67,6 +67,10 @@ func (s *Service) Activate(key string) error {
 		return err
 	}
 
+	if info.IsExpired {
+		return ErrExpiredLicense
+	}
+
 	if info.HWID != s.currentHWID {
 		return ErrHWIDMismatch
 	}
@@ -88,6 +92,9 @@ func (s *Service) ValidateKey(serialKey string) (*LicenseInfo, error) {
 	}
 
 	// 1. Decode from Base32
+	// Force to uppercase and remove spaces to be more tolerant
+	serialKey = strings.ToUpper(strings.ReplaceAll(serialKey, " ", ""))
+	
 	data, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(serialKey)
 	if err != nil {
 		return nil, ErrInvalidLicense

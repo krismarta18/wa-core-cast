@@ -29,6 +29,7 @@ func (h *LicenseHandler) GetStatus(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": err.Error(),
+			"data":    status,
 		})
 		return
 	}

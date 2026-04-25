@@ -27,6 +27,10 @@ func main() {
 	}
 
 	hwid := strings.ToUpper(strings.TrimSpace(os.Args[1]))
+	if hwid == "" {
+		fmt.Println("Error: HWID cannot be empty")
+		return
+	}
 	
 	duration := 1
 	unit := "y"
@@ -40,14 +44,16 @@ func main() {
 
 	var expiry time.Time
 	unitLabel := ""
+	now := time.Now().UTC()
+	
 	if unit == "s" {
-		expiry = time.Now().Add(time.Duration(duration) * time.Second)
+		expiry = now.Add(time.Duration(duration) * time.Second)
 		unitLabel = "Detik"
 	} else if unit == "d" {
-		expiry = time.Now().AddDate(0, 0, duration)
+		expiry = now.AddDate(0, 0, duration)
 		unitLabel = "Hari"
 	} else {
-		expiry = time.Now().AddDate(duration, 0, 0)
+		expiry = now.AddDate(duration, 0, 0)
 		unitLabel = "Tahun"
 	}
 	

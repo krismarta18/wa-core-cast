@@ -164,6 +164,17 @@ api.interceptors.response.use(
   }
 );
 
+// Apply same interceptors to authClient for license/config routes
+authClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 402) {
+      notifyLicenseRequired();
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 export interface DbConfig {

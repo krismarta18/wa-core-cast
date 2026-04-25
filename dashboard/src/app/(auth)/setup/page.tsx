@@ -46,7 +46,7 @@ export default function SetupPage() {
     try {
       const lic = await licenseApi.getStatus();
       setLicenseStatus(lic.data);
-      if (lic.data.is_active && !lic.data.is_expired) {
+      if (lic.data?.is_active && !lic.data?.is_expired) {
         setStep("database");
       }
     } catch (error) {
@@ -68,6 +68,8 @@ export default function SetupPage() {
       const res = await licenseApi.activate(serialKey);
       if (res.success) {
         toast.success(res.message);
+        // Refresh status to update HWID and active state
+        await checkInitialStatus();
         setStep("database");
       } else {
         toast.error(res.message);
