@@ -35,7 +35,7 @@ func (s *Service) ListAPIKeys(userID uuid.UUID) ([]models.APIKey, error) {
 	var keys []models.APIKey
 	for rows.Next() {
 		var k models.APIKey
-		if err := rows.Scan(&k.ID, &k.UserID, &k.Name, &k.Prefix, &k.LastUsedAt, &k.CreatedAt); err != nil {
+		if err := rows.Scan(&k.ID, &k.UserID, &k.Name, &k.KeyPrefix, &k.LastUsedAt, &k.CreatedAt); err != nil {
 			return nil, err
 		}
 		keys = append(keys, k)

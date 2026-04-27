@@ -101,13 +101,27 @@ func (s *Service) ValidateKey(serialKey string) (*LicenseInfo, error) {
 
 	// 3. Parse fields: HWID|EXPIRY|SIGNATURE
 	parts := strings.Split(string(decrypted), "|")
-	if len(parts) < 3 {
+	if len(parts) != 3 {
 		return nil, ErrInvalidLicense
 	}
 
 	hwid := parts[0]
 	expiryStr := parts[1]
-	// signature := parts[2] // Basic validation for now
+	providedSignature := parts[2]
+
+	// 4. Verify Signature (Strict check)
+	// Signature is SHA256(HWID + "|" + EXPIRY + "|" + SALT)
+	expectedSigData := fmt.Sprintf("%s|%s|%s", hwid, expiryStr, licenseKeySalt)
+	h := sha256.New()
+	h.Write([]byte(expectedSigData))
+	expectedSignature := fmt.Sprintf("%x", h.Sum(nil))
+
+	// Important: The provided signature might have trailing null bytes or padding from CFB
+	// But since we split by "|", the third part contains EVERYTHING after the last "|"
+	// If someone added "QQQQQQ" to the Base32 string, it would change the decrypted signature part.
+	if providedSignature != expectedSignature {
+		return nil, ErrInvalidLicense
+	}
 
 	expiryUnix, err := time.Parse(time.RFC3339, expiryStr)
 	if err != nil {

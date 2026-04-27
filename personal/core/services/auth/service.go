@@ -72,9 +72,7 @@ func NewService(db *database.Database, jwtSecret string, jwtExpiryHours, jwtRefr
 // Register creates or re-uses a user record for phoneNumber and dispatches an OTP.
 // Returns ErrPhoneAlreadyRegistered if the phone is already verified.
 func (s *Service) Register(ctx context.Context, phoneNumber, fullName string) error {
-	db := s.db.GetConnection()
-
-	existing, err := getUserByPhone(ctx, db, phoneNumber)
+	existing, err := getUserByPhone(ctx, s.db, phoneNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("register: query user: %w", err)
 	}
@@ -84,16 +82,16 @@ func (s *Service) Register(ctx context.Context, phoneNumber, fullName string) er
 			return ErrPhoneAlreadyRegistered
 		}
 		// User exists but not yet verified — re-send OTP
-		return s.sendOTP(ctx, db, existing.ID, phoneNumber, models.OTPContextRegister)
+		return s.sendOTP(ctx, s.db, existing.ID, phoneNumber, models.OTPContextRegister)
 	}
 
 	// New user — insert into users table
-	user, err := insertUser(ctx, db, phoneNumber, fullName)
+	user, err := insertUser(ctx, s.db, phoneNumber, fullName)
 	if err != nil {
 		return fmt.Errorf("register: insert user: %w", err)
 	}
 
-	return s.sendOTP(ctx, db, user.ID, phoneNumber, models.OTPContextRegister)
+	return s.sendOTP(ctx, s.db, user.ID, phoneNumber, models.OTPContextRegister)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,9 +100,7 @@ func (s *Service) Register(ctx context.Context, phoneNumber, fullName string) er
 
 // RequestOTP looks up a verified user by phone and dispatches a login OTP.
 func (s *Service) RequestOTP(ctx context.Context, phoneNumber string) error {
-	db := s.db.GetConnection()
-
-	user, err := getUserByPhone(ctx, db, phoneNumber)
+	user, err := getUserByPhone(ctx, s.db, phoneNumber)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return ErrUserNotFound
@@ -116,7 +112,7 @@ func (s *Service) RequestOTP(ctx context.Context, phoneNumber string) error {
 		return ErrUserBanned
 	}
 
-	return s.sendOTP(ctx, db, user.ID, phoneNumber, models.OTPContextLogin)
+	return s.sendOTP(ctx, s.db, user.ID, phoneNumber, models.OTPContextLogin)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -126,9 +122,7 @@ func (s *Service) RequestOTP(ctx context.Context, phoneNumber string) error {
 // VerifyOTP validates the supplied OTP code for phoneNumber.
 // On success it returns a signed JWT and the resolved user.
 func (s *Service) VerifyOTP(ctx context.Context, phoneNumber, otpCode, ipAddress, userAgent string) (*VerifyOTPResult, error) {
-	db := s.db.GetConnection()
-
-	otp, err := getActiveOTP(ctx, db, phoneNumber)
+	otp, err := getActiveOTP(ctx, s.db, phoneNumber)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrOTPNotFound
@@ -137,7 +131,7 @@ func (s *Service) VerifyOTP(ctx context.Context, phoneNumber, otpCode, ipAddress
 	}
 
 	// Increment attempt counter first (before checking, so even reading counts)
-	attempts, err := incrementOTPAttempts(ctx, db, otp.ID)
+	attempts, err := incrementOTPAttempts(ctx, s.db, otp.ID)
 	if err != nil {
 		return nil, fmt.Errorf("verify-otp: increment attempts: %w", err)
 	}
@@ -151,12 +145,12 @@ func (s *Service) VerifyOTP(ctx context.Context, phoneNumber, otpCode, ipAddress
 	}
 
 	// Mark OTP as used
-	if err := markOTPVerified(ctx, db, otp.ID); err != nil {
+	if err := markOTPVerified(ctx, s.db, otp.ID); err != nil {
 		return nil, fmt.Errorf("verify-otp: mark verified: %w", err)
 	}
 
 	// Update user: set is_verified = true, last_login_at = NOW()
-	user, err := markUserVerifiedAndLogin(ctx, db, phoneNumber)
+	user, err := markUserVerifiedAndLogin(ctx, s.db, phoneNumber)
 	if err != nil {
 		return nil, fmt.Errorf("verify-otp: update user: %w", err)
 	}
@@ -166,7 +160,7 @@ func (s *Service) VerifyOTP(ctx context.Context, phoneNumber, otpCode, ipAddress
 		return nil, fmt.Errorf("verify-otp: issue session tokens: %w", err)
 	}
 
-	if err := createUserSession(ctx, db, user.ID, result.AccessToken, result.RefreshToken, ipAddress, userAgent, accessExpiresAt, refreshExpiresAt); err != nil {
+	if err := createUserSession(ctx, s.db, user.ID, result.AccessToken, result.RefreshToken, ipAddress, userAgent, accessExpiresAt, refreshExpiresAt); err != nil {
 		return nil, fmt.Errorf("verify-otp: create session: %w", err)
 	}
 
@@ -200,15 +194,13 @@ func (s *Service) LoginWithPassword(ctx context.Context, password, ipAddress, us
 		return nil, ErrInvalidPassword
 	}
 
-	db := s.db.GetConnection()
-	
 	// Get or create the master admin user (using a fixed phone number for personal mode)
 	adminPhone := "0000000000"
-	user, err := getUserByPhone(ctx, db, adminPhone)
+	user, err := getUserByPhone(ctx, s.db, adminPhone)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// Create it
-			user, err = insertUser(ctx, db, adminPhone, "Admin Access")
+			user, err = insertUser(ctx, s.db, adminPhone, "Admin Access")
 			if err != nil {
 				return nil, fmt.Errorf("login-password: create admin: %w", err)
 			}
@@ -230,7 +222,7 @@ func (s *Service) LoginWithPassword(ctx context.Context, password, ipAddress, us
 	}
 
 	// Update last login
-	user, err = markUserVerifiedAndLogin(ctx, db, user.PhoneNumber)
+	user, err = markUserVerifiedAndLogin(ctx, s.db, user.PhoneNumber)
 	if err != nil {
 		return nil, fmt.Errorf("login-password: update user: %w", err)
 	}
@@ -240,7 +232,7 @@ func (s *Service) LoginWithPassword(ctx context.Context, password, ipAddress, us
 		return nil, fmt.Errorf("login-password: issue session tokens: %w", err)
 	}
 
-	if err := createUserSession(ctx, db, user.ID, result.AccessToken, result.RefreshToken, ipAddress, userAgent, accessExpiresAt, refreshExpiresAt); err != nil {
+	if err := createUserSession(ctx, s.db, user.ID, result.AccessToken, result.RefreshToken, ipAddress, userAgent, accessExpiresAt, refreshExpiresAt); err != nil {
 		return nil, fmt.Errorf("login-password: create session: %w", err)
 	}
 
@@ -249,9 +241,7 @@ func (s *Service) LoginWithPassword(ctx context.Context, password, ipAddress, us
 
 // RefreshSession rotates an existing refresh token and issues a new access token pair.
 func (s *Service) RefreshSession(ctx context.Context, refreshToken, ipAddress, userAgent string) (*VerifyOTPResult, error) {
-	db := s.db.GetConnection()
-
-	session, err := getSessionByRefreshToken(ctx, db, refreshToken)
+	session, err := getSessionByRefreshToken(ctx, s.db, refreshToken)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrRefreshTokenInvalid
@@ -259,7 +249,7 @@ func (s *Service) RefreshSession(ctx context.Context, refreshToken, ipAddress, u
 		return nil, fmt.Errorf("refresh-session: query session: %w", err)
 	}
 
-	user, err := getUserByID(ctx, db, session.UserID)
+	user, err := getUserByID(ctx, s.db, session.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -272,7 +262,7 @@ func (s *Service) RefreshSession(ctx context.Context, refreshToken, ipAddress, u
 		return nil, fmt.Errorf("refresh-session: issue session tokens: %w", err)
 	}
 
-	if err := rotateUserSession(ctx, db, session.ID, result.AccessToken, result.RefreshToken, ipAddress, userAgent, accessExpiresAt, refreshExpiresAt); err != nil {
+	if err := rotateUserSession(ctx, s.db, session.ID, result.AccessToken, result.RefreshToken, ipAddress, userAgent, accessExpiresAt, refreshExpiresAt); err != nil {
 		return nil, fmt.Errorf("refresh-session: rotate session: %w", err)
 	}
 
@@ -296,8 +286,8 @@ func (s *Service) issueSessionTokens(user *models.User) (*VerifyOTPResult, time.
 		return nil, time.Time{}, time.Time{}, err
 	}
 
-	accessExpiresAt := time.Now().Add(time.Duration(s.jwtExpiryHours) * time.Hour)
-	refreshExpiresAt := time.Now().Add(time.Duration(s.jwtRefreshExpiryHours) * time.Hour)
+	accessExpiresAt := time.Now().UTC().Add(time.Duration(s.jwtExpiryHours) * time.Hour)
+	refreshExpiresAt := time.Now().UTC().Add(time.Duration(s.jwtRefreshExpiryHours) * time.Hour)
 
 	return &VerifyOTPResult{
 		AccessToken:      accessToken,
@@ -310,8 +300,7 @@ func (s *Service) issueSessionTokens(user *models.User) (*VerifyOTPResult, time.
 
 // ValidateSession ensures the supplied access token is still active in user_sessions.
 func (s *Service) ValidateSession(ctx context.Context, accessToken string) error {
-	db := s.db.GetConnection()
-	active, err := touchActiveSession(ctx, db, accessToken)
+	active, err := touchActiveSession(ctx, s.db, accessToken)
 	if err != nil {
 		return fmt.Errorf("validate-session: %w", err)
 	}
@@ -323,8 +312,7 @@ func (s *Service) ValidateSession(ctx context.Context, accessToken string) error
 
 // Logout revokes the persisted session associated with the current bearer token.
 func (s *Service) Logout(ctx context.Context, accessToken string) error {
-	db := s.db.GetConnection()
-	revoked, err := revokeSession(ctx, db, accessToken)
+	revoked, err := revokeSession(ctx, s.db, accessToken)
 	if err != nil {
 		return fmt.Errorf("logout: revoke session: %w", err)
 	}
@@ -345,8 +333,7 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, err
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	db := s.db.GetConnection()
-	user, err := getUserByID(ctx, db, uid)
+	user, err := getUserByID(ctx, s.db, uid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -363,9 +350,7 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, req models.U
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	db := s.db.GetConnection()
-	
-	existing, err := getUserByID(ctx, db, uid)
+	existing, err := getUserByID(ctx, s.db, uid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -386,7 +371,7 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, req models.U
 		existing.Timezone = *req.Timezone
 	}
 
-	user, err := updateUserProfile(ctx, db, existing)
+	user, err := updateUserProfile(ctx, s.db, existing)
 	if err != nil {
 		return nil, fmt.Errorf("update-profile: execute update: %w", err)
 	}
@@ -402,8 +387,7 @@ func (s *Service) UpdatePassword(ctx context.Context, userID, oldPassword, newPa
 		return fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	db := s.db.GetConnection()
-	user, err := getUserByID(ctx, db, uid)
+	user, err := getUserByID(ctx, s.db, uid)
 	if err != nil {
 		return fmt.Errorf("update-password: check user: %w", err)
 	}
@@ -440,7 +424,7 @@ func (s *Service) UpdatePassword(ctx context.Context, userID, oldPassword, newPa
 
 // sendOTP invalidates any pending OTPs, generates a new one, stores it, and
 // dispatches it via WhatsApp.
-func (s *Service) sendOTP(ctx context.Context, db *sql.DB, userID uuid.UUID, phoneNumber, otpContext string) error {
+func (s *Service) sendOTP(ctx context.Context, db *database.Database, userID uuid.UUID, phoneNumber, otpContext string) error {
 	// Invalidate all pending OTPs for this phone
 	if err := invalidatePendingOTPs(ctx, db, phoneNumber); err != nil {
 		return fmt.Errorf("sendOTP: invalidate old otps: %w", err)
@@ -452,7 +436,7 @@ func (s *Service) sendOTP(ctx context.Context, db *sql.DB, userID uuid.UUID, pho
 		return fmt.Errorf("sendOTP: generate code: %w", err)
 	}
 
-	expiresAt := time.Now().Add(otpExpiryMinutes * time.Minute)
+	expiresAt := time.Now().UTC().Add(otpExpiryMinutes * time.Minute)
 
 	if err := insertOTP(ctx, db, userID, phoneNumber, otpContext, code, expiresAt); err != nil {
 		return fmt.Errorf("sendOTP: insert otp: %w", err)
@@ -498,17 +482,17 @@ func scanUser(row interface {
 	return u, nil
 }
 
-func getUserByPhone(ctx context.Context, db *sql.DB, phone string) (*models.User, error) {
+func getUserByPhone(ctx context.Context, db *database.Database, phone string) (*models.User, error) {
 	q := `SELECT ` + userSelectCols + ` FROM users WHERE phone_number = $1`
 	return scanUser(db.QueryRowContext(ctx, q, phone))
 }
 
-func getUserByID(ctx context.Context, db *sql.DB, id uuid.UUID) (*models.User, error) {
+func getUserByID(ctx context.Context, db *database.Database, id uuid.UUID) (*models.User, error) {
 	q := `SELECT ` + userSelectCols + ` FROM users WHERE id = $1`
 	return scanUser(db.QueryRowContext(ctx, q, id))
 }
 
-func insertUser(ctx context.Context, db *sql.DB, phoneNumber, fullName string) (*models.User, error) {
+func insertUser(ctx context.Context, db *database.Database, phoneNumber, fullName string) (*models.User, error) {
 	q := `
 		INSERT INTO users (phone_number, full_name)
 		VALUES ($1, $2)
@@ -516,7 +500,7 @@ func insertUser(ctx context.Context, db *sql.DB, phoneNumber, fullName string) (
 	return scanUser(db.QueryRowContext(ctx, q, phoneNumber, fullName))
 }
 
-func markUserVerifiedAndLogin(ctx context.Context, db *sql.DB, phoneNumber string) (*models.User, error) {
+func markUserVerifiedAndLogin(ctx context.Context, db *database.Database, phoneNumber string) (*models.User, error) {
 	q := `
 		UPDATE users
 		SET is_verified = true, last_login_at = NOW(), updated_at = NOW()
@@ -525,7 +509,7 @@ func markUserVerifiedAndLogin(ctx context.Context, db *sql.DB, phoneNumber strin
 	return scanUser(db.QueryRowContext(ctx, q, phoneNumber))
 }
 
-func updateUserProfile(ctx context.Context, db *sql.DB, user *models.User) (*models.User, error) {
+func updateUserProfile(ctx context.Context, db *database.Database, user *models.User) (*models.User, error) {
 	q := `
 		UPDATE users
 		SET full_name = $1, email = $2, company_name = $3, timezone = $4, updated_at = NOW()
@@ -534,7 +518,7 @@ func updateUserProfile(ctx context.Context, db *sql.DB, user *models.User) (*mod
 	return scanUser(db.QueryRowContext(ctx, q, user.FullName, user.Email, user.CompanyName, user.Timezone, user.ID))
 }
 
-func invalidatePendingOTPs(ctx context.Context, db *sql.DB, phoneNumber string) error {
+func invalidatePendingOTPs(ctx context.Context, db *database.Database, phoneNumber string) error {
 	_, err := db.ExecContext(ctx,
 		`UPDATE otp_verifications SET verified_at = NOW()
 		 WHERE phone_number = $1 AND verified_at IS NULL`,
@@ -543,7 +527,7 @@ func invalidatePendingOTPs(ctx context.Context, db *sql.DB, phoneNumber string) 
 	return err
 }
 
-func insertOTP(ctx context.Context, db *sql.DB, userID uuid.UUID, phoneNumber, otpContext, code string, expiresAt time.Time) error {
+func insertOTP(ctx context.Context, db *database.Database, userID uuid.UUID, phoneNumber, otpContext, code string, expiresAt time.Time) error {
 	_, err := db.ExecContext(ctx,
 		`INSERT INTO otp_verifications (user_id, phone_number, context, otp_code, expires_at)
 		 VALUES ($1, $2, $3, $4, $5)`,
@@ -552,7 +536,7 @@ func insertOTP(ctx context.Context, db *sql.DB, userID uuid.UUID, phoneNumber, o
 	return err
 }
 
-func getActiveOTP(ctx context.Context, db *sql.DB, phoneNumber string) (*models.OTPVerification, error) {
+func getActiveOTP(ctx context.Context, db *database.Database, phoneNumber string) (*models.OTPVerification, error) {
 	q := `
 		SELECT id, user_id, phone_number, context, otp_code, attempt_count, expires_at, verified_at, created_at
 		FROM otp_verifications
@@ -573,7 +557,7 @@ func getActiveOTP(ctx context.Context, db *sql.DB, phoneNumber string) (*models.
 	return otp, nil
 }
 
-func incrementOTPAttempts(ctx context.Context, db *sql.DB, otpID uuid.UUID) (int, error) {
+func incrementOTPAttempts(ctx context.Context, db *database.Database, otpID uuid.UUID) (int, error) {
 	var attempts int
 	err := db.QueryRowContext(ctx,
 		`UPDATE otp_verifications SET attempt_count = attempt_count + 1
@@ -583,7 +567,7 @@ func incrementOTPAttempts(ctx context.Context, db *sql.DB, otpID uuid.UUID) (int
 	return attempts, err
 }
 
-func markOTPVerified(ctx context.Context, db *sql.DB, otpID uuid.UUID) error {
+func markOTPVerified(ctx context.Context, db *database.Database, otpID uuid.UUID) error {
 	_, err := db.ExecContext(ctx,
 		`UPDATE otp_verifications SET verified_at = NOW() WHERE id = $1`,
 		otpID,
@@ -591,7 +575,7 @@ func markOTPVerified(ctx context.Context, db *sql.DB, otpID uuid.UUID) error {
 	return err
 }
 
-func createUserSession(ctx context.Context, db *sql.DB, userID uuid.UUID, accessToken, refreshToken, ipAddress, userAgent string, expiresAt, refreshExpiresAt time.Time) error {
+func createUserSession(ctx context.Context, db *database.Database, userID uuid.UUID, accessToken, refreshToken, ipAddress, userAgent string, expiresAt, refreshExpiresAt time.Time) error {
 	_, err := db.ExecContext(ctx,
 		`INSERT INTO user_sessions (user_id, session_token_hash, refresh_token_hash, ip_address, user_agent, expires_at, refresh_expires_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -606,7 +590,7 @@ func createUserSession(ctx context.Context, db *sql.DB, userID uuid.UUID, access
 	return err
 }
 
-func getSessionByRefreshToken(ctx context.Context, db *sql.DB, refreshToken string) (*authSessionRecord, error) {
+func getSessionByRefreshToken(ctx context.Context, db *database.Database, refreshToken string) (*authSessionRecord, error) {
 	record := &authSessionRecord{}
 	err := db.QueryRowContext(ctx,
 		`SELECT id, user_id
@@ -623,7 +607,7 @@ func getSessionByRefreshToken(ctx context.Context, db *sql.DB, refreshToken stri
 	return record, nil
 }
 
-func rotateUserSession(ctx context.Context, db *sql.DB, sessionID uuid.UUID, accessToken, refreshToken, ipAddress, userAgent string, expiresAt, refreshExpiresAt time.Time) error {
+func rotateUserSession(ctx context.Context, db *database.Database, sessionID uuid.UUID, accessToken, refreshToken, ipAddress, userAgent string, expiresAt, refreshExpiresAt time.Time) error {
 	_, err := db.ExecContext(ctx,
 		`UPDATE user_sessions
 		 SET session_token_hash = $1,
@@ -646,7 +630,7 @@ func rotateUserSession(ctx context.Context, db *sql.DB, sessionID uuid.UUID, acc
 	return err
 }
 
-func touchActiveSession(ctx context.Context, db *sql.DB, accessToken string) (bool, error) {
+func touchActiveSession(ctx context.Context, db *database.Database, accessToken string) (bool, error) {
 	result, err := db.ExecContext(ctx,
 		`UPDATE user_sessions
 		 SET last_active_at = NOW()
@@ -667,7 +651,7 @@ func touchActiveSession(ctx context.Context, db *sql.DB, accessToken string) (bo
 	return rowsAffected > 0, nil
 }
 
-func revokeSession(ctx context.Context, db *sql.DB, accessToken string) (bool, error) {
+func revokeSession(ctx context.Context, db *database.Database, accessToken string) (bool, error) {
 	result, err := db.ExecContext(ctx,
 		`UPDATE user_sessions
 		 SET revoked_at = NOW(), last_active_at = NOW()

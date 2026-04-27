@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -67,16 +68,27 @@ type CreateAPIKeyRequest struct {
 	ExpiresAt   *time.Time `json:"expires_at"`
 }
 
-// APIKeyResponse is the response struct (returns raw key only on creation)
+// APIKeyResponse is the response struct
 type APIKeyResponse struct {
 	ID         uuid.UUID  `json:"id"`
 	Name       string     `json:"name"`
+	Key        string     `json:"key,omitempty"`    // for personal compatibility
+	Prefix     string     `json:"prefix,omitempty"` // for personal compatibility
 	KeyPrefix  string     `json:"key_prefix"`
-	RawKey     *string    `json:"key,omitempty"` // only on creation
+	RawKey     *string    `json:"raw_key,omitempty"`
 	IsActive   bool       `json:"is_active"`
 	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
+}
+
+type WebhookSettings struct {
+	UserID        uuid.UUID       `json:"user_id"`
+	URL           string          `json:"url"`
+	Secret        string          `json:"secret"`
+	IsActive      bool            `json:"is_active"`
+	EnabledEvents json.RawMessage `json:"enabled_events"`
+	UpdatedAt     time.Time       `json:"updated_at"`
 }
 
 // ToResponse converts APIKey to response

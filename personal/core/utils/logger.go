@@ -1,13 +1,14 @@
 package utils
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var Logger *zap.Logger
+var LogChannel = make(chan string, 100)
 
-// InitLogger initializes the global logger based on log level
 func InitLogger(logLevel string) error {
 	var atomicLevel zap.AtomicLevel
 
@@ -27,22 +28,16 @@ func InitLogger(logLevel string) error {
 	config := zap.Config{
 		Level:            atomicLevel,
 		Development:      true,
-		Encoding:         "json",
+		Encoding:         "console",
 		EncoderConfig:    zapcore.EncoderConfig{
 			TimeKey:        "timestamp",
 			LevelKey:       "level",
-			NameKey:        "logger",
-			CallerKey:      "caller",
 			MessageKey:     "message",
-			StacktraceKey:  "stacktrace",
-			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
-			EncodeDuration: zapcore.StringDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
 		},
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
+		OutputPaths:      []string{"stdout", "debug_log.txt"},
+		ErrorOutputPaths: []string{"stderr", "debug_log.txt"},
 	}
 
 	var err error
@@ -50,42 +45,47 @@ func InitLogger(logLevel string) error {
 	if err != nil {
 		return err
 	}
-
-	defer Logger.Sync()
 	return nil
 }
 
-// Info logs info level message
+func broadcast(level, msg string) {
+	select {
+	case LogChannel <- fmt.Sprintf("[%s] %s", level, msg):
+	default:
+	}
+}
+
 func Info(message string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Info(message, fields...)
+		broadcast("INFO", message)
 	}
 }
 
-// Debug logs debug level message
 func Debug(message string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Debug(message, fields...)
+		broadcast("DEBUG", message)
 	}
 }
 
-// Warn logs warning level message
 func Warn(message string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Warn(message, fields...)
+		broadcast("WARN", message)
 	}
 }
 
-// Error logs error level message
 func Error(message string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Error(message, fields...)
+		broadcast("ERROR", message)
 	}
 }
 
-// Fatal logs fatal level message and exits
 func Fatal(message string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Fatal(message, fields...)
+		broadcast("FATAL", message)
 	}
 }

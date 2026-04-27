@@ -57,8 +57,15 @@ func main() {
 		unitLabel = "Tahun"
 	}
 	
+	// Create signature: SHA256(HWID + "|" + EXPIRY + "|" + SALT)
+	expiryStr := expiry.Format(time.RFC3339)
+	sigData := fmt.Sprintf("%s|%s|%s", hwid, expiryStr, licenseKeySalt)
+	h := sha256.New()
+	h.Write([]byte(sigData))
+	signature := fmt.Sprintf("%x", h.Sum(nil))
+
 	// Create payload: HWID|EXPIRY|SIGNATURE
-	payload := fmt.Sprintf("%s|%s|SIGNATURE", hwid, expiry.Format(time.RFC3339))
+	payload := fmt.Sprintf("%s|%s|%s", hwid, expiryStr, signature)
 	
 	encrypted, err := encrypt([]byte(payload), licenseKeySalt)
 	if err != nil {

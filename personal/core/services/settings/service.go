@@ -16,8 +16,7 @@ func NewService(db *database.Database) *Service {
 }
 
 func (s *Service) GetSettings(ctx context.Context) (map[string]string, error) {
-	db := s.db.GetConnection()
-	rows, err := db.QueryContext(ctx, "SELECT key, value FROM settings")
+	rows, err := s.db.QueryContext(ctx, "SELECT key, value FROM settings")
 	if err != nil {
 		return nil, fmt.Errorf("get-settings: %w", err)
 	}
@@ -36,7 +35,6 @@ func (s *Service) GetSettings(ctx context.Context) (map[string]string, error) {
 }
 
 func (s *Service) UpdateSetting(ctx context.Context, key, value string) error {
-	db := s.db.GetConnection()
 	query := `
 		INSERT INTO settings (key, value, updated_at) 
 		VALUES ($1, $2, NOW()) 
@@ -44,6 +42,6 @@ func (s *Service) UpdateSetting(ctx context.Context, key, value string) error {
 			value = EXCLUDED.value, 
 			updated_at = EXCLUDED.updated_at
 	`
-	_, err := db.ExecContext(ctx, query, key, value)
+	_, err := s.db.ExecContext(ctx, query, key, value)
 	return err
 }

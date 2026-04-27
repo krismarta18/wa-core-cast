@@ -75,28 +75,28 @@ func (s *Service) CheckoutDummy(ctx context.Context, userID string, planID strin
 	endDate := calculateSubscriptionEnd(now, plan.BillingCycle)
 	renewalDate := endDate
 
-	if _, err = tx.ExecContext(ctx, `
+	if _, err = tx.ExecContext(ctx, s.db.Translate(`
 		UPDATE subscriptions
 		SET status = 'inactive', updated_at = $2
 		WHERE user_id = $1 AND status = 'active'
-	`, uid, now); err != nil {
+	`), uid, now); err != nil {
 		return nil, fmt.Errorf("deactivate active subscriptions: %w", err)
 	}
 
 	subscriptionID := uuid.New()
-	if _, err = tx.ExecContext(ctx, `
+	if _, err = tx.ExecContext(ctx, s.db.Translate(`
 		INSERT INTO subscriptions (
 			id, user_id, plan_id, status, start_date, end_date, renewal_date, auto_renew, max_devices, max_messages_per_day, created_at, updated_at
 		)
 		VALUES ($1, $2, $3, 'active', $4, $5, $6, true, $7, $8, $4, $4)
-	`, subscriptionID, uid, pid, now, endDate, renewalDate, plan.MaxDevices, plan.MaxMessagesPerDay); err != nil {
+	`), subscriptionID, uid, pid, now, endDate, renewalDate, plan.MaxDevices, plan.MaxMessagesPerDay); err != nil {
 		return nil, fmt.Errorf("create subscription: %w", err)
 	}
 
 	InvoiceID := uuid.New()
-	if _, err = tx.ExecContext(ctx, `INSERT INTO invoices(id, user_id, subscription_id,invoice_number, issue_date,due_date,
+	if _, err = tx.ExecContext(ctx, s.db.Translate(`INSERT INTO invoices(id, user_id, subscription_id,invoice_number, issue_date,due_date,
 	paid_at, amount, currency, status, payment_method, created_at) VALUES 
-	($1, $2,$3,$4,$5::date,$5::date,$5::timestamptz,$6,$7,$8,$9,$5::timestamptz)`, InvoiceID, uid, subscriptionID,
+	($1, $2,$3,$4,$5::date,$5::date,$5::timestamptz,$6,$7,$8,$9,$5::timestamptz)`), InvoiceID, uid, subscriptionID,
 		fmt.Sprintf("INV-%s-%s", now.Format("2006-01"), subscriptionID.String()[:8]),
 		now, plan.Price, "Rupiah", "paid", "dummy"); err != nil {
 		return nil, fmt.Errorf("create invoice: %w", err)
@@ -186,7 +186,7 @@ func (s *Service) GetOverview(ctx context.Context, userID string) (*models.Billi
 }
 
 func (s *Service) getUsageHistory(ctx context.Context, userID uuid.UUID, days int) ([]models.BillingUsagePoint, error) {
-	rows, err := s.db.GetConnection().QueryContext(ctx, `
+	rows, err := s.db.QueryContext(ctx, `
 		SELECT DATE(created_at) AS usage_date,
 		       COUNT(*) FILTER (WHERE direction = 'outbound' AND status IN ('sent', 'delivered', 'read')) AS sent_count,
 		       COUNT(*) FILTER (WHERE direction = 'outbound' AND status = 'failed') AS failed_count
@@ -200,7 +200,7 @@ func (s *Service) getUsageHistory(ctx context.Context, userID uuid.UUID, days in
 			return nil, err
 		}
 
-		rows, err = s.db.GetConnection().QueryContext(ctx, `
+		rows, err = s.db.QueryContext(ctx, `
 			SELECT DATE(m.created_at) AS usage_date,
 			       COUNT(*) FILTER (WHERE UPPER(m.direction) IN ('OUT', 'OUTBOUND') AND m.status_message IN (1, 2, 3)) AS sent_count,
 			       COUNT(*) FILTER (WHERE UPPER(m.direction) IN ('OUT', 'OUTBOUND') AND m.status_message = 4) AS failed_count
@@ -249,7 +249,7 @@ func (s *Service) getUsageHistory(ctx context.Context, userID uuid.UUID, days in
 }
 
 func (s *Service) getInvoiceHistory(ctx context.Context, userID uuid.UUID) ([]models.BillingInvoiceSummary, error) {
-	rows, err := s.db.GetConnection().QueryContext(ctx, `
+	rows, err := s.db.QueryContext(ctx, `
 		SELECT s.id,
 		       COALESCE(s.start_date, s.created_at) AS invoice_date,
 		       COALESCE(p.name, 'Unknown Plan') AS plan_name,

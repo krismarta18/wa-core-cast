@@ -91,6 +91,7 @@ type MessageQueueConfig struct {
 
 	// Anti-bot: simulate human typing before sending text messages
 	// Delay is calculated as: len(content) / TypingSpeedCPM * 60 seconds
+	AntiBotEnabled  bool          // If true, apply anti-bot delays
 	SimulateTyping  bool          // If true, add typing delay proportional to message length
 	TypingSpeedCPM  int           // Characters per minute (human avg: 200-400)
 }

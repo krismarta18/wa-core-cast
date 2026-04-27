@@ -59,10 +59,16 @@ type Service struct {
 // NewService creates a new session service
 func NewService(db *database.Database, billingService *billing.Service, encryptionKey string, maxSessions int, timeout int) *Service {
 	// ✅ Initialize shared store container and run migrations once at startup
-	storeContainer := sqlstore.NewWithDB(db.GetConnection(), "postgres", waLog.Noop)
+	driver := db.DriverType()
+	// whatsmeow uses "sqlite3" for sqlite
+	if driver == "sqlite" {
+		driver = "sqlite3"
+	}
+	
+	storeContainer := sqlstore.NewWithDB(db.GetConnection(), driver, waLog.Noop)
 	err := storeContainer.Upgrade(context.Background())
 	if err != nil {
-		utils.Error("Failed to upgrade whatsmeow sqlstore", zap.Error(err))
+		utils.Error(fmt.Sprintf("Failed to upgrade whatsmeow sqlstore: %v", err))
 	}
 
 	// ✅ Set consistent device identification (Basic props to avoid undefined constants)

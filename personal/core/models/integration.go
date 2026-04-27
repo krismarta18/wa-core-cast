@@ -14,6 +14,7 @@ type APIKey struct {
 	Name       string     `json:"name"`
 	KeyHash    string     `json:"-"`
 	Prefix     string     `json:"prefix"` // first few chars to show user
+	KeyPrefix  string     `json:"key_prefix"`
 	LastUsedAt *time.Time `json:"last_used_at"`
 	CreatedAt  time.Time  `json:"created_at"`
 	DeletedAt  *time.Time `json:"-"`
@@ -45,6 +46,7 @@ type APIKeyResponse struct {
 	Name       string     `json:"name"`
 	Key        string     `json:"key,omitempty"` // Only populated on creation
 	Prefix     string     `json:"prefix"`
+	KeyPrefix  string     `json:"key_prefix"`
 	LastUsedAt *time.Time `json:"last_used_at"`
 	CreatedAt  time.Time  `json:"created_at"`
 }

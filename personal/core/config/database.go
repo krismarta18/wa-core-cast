@@ -46,10 +46,10 @@ func LoadDatabaseConfig() *DatabaseConfig {
 	connectionTimeout, _ := strconv.Atoi(getEnv("DB_CONNECTION_TIMEOUT", "5"))
 
 	return &DatabaseConfig{
-		Host:              getEnv("DB_HOST", "localhost"),
+		Host:              getEnv("DB_HOST", ""),
 		Port:              port,
-		User:              getEnv("DB_USER", "postgres"),
-		Password:          getEnv("DB_PASSWORD", "123456"),
+		User:              getEnv("DB_USER", ""),
+		Password:          getEnv("DB_PASSWORD", ""),
 		DBName:            getEnv("DB_NAME", "wacast"),
 		SSLMode:           getEnv("DB_SSL_MODE", "disable"),
 		MaxOpenConns:      maxOpenConns,

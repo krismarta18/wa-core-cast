@@ -1,0 +1,993 @@
+2026-04-27T15:22:27.339+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:22:28.339+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:22:28.340+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:22:28.615+0700	INFO	Control Panel closed. Shutting down system...
+2026-04-27T15:23:58.129+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:23:59.130+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:23:59.130+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:23:59.297+0700	INFO	Control Panel closed. Shutting down system...
+2026-04-27T15:25:35.775+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:25:36.775+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:25:36.775+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:25:37.144+0700	INFO	Control Panel closed. Shutting down system...
+2026-04-27T15:26:04.880+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:26:05.880+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:26:05.880+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:26:05.880+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:26:12.419+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:26:12.420+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:26:12.427+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:26:12.430+0700	INFO	Starting database migrations
+2026-04-27T15:26:12.432+0700	DEBUG	Migrations table initialized
+2026-04-27T15:26:12.433+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:26:12.434+0700	ERROR	Migration FAILED!	{"version": "001", "name": "001_initial_schema", "error": "SQL logic error: near \"'IN'\": syntax error (1)"}
+2026-04-27T15:26:12.434+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"'IN'\": syntax error (1)"}
+2026-04-27T15:26:12.435+0700	ERROR	Failed to upgrade whatsmeow sqlstore	{"error": "foreign keys are not enabled", "driver": "sqlite3"}
+2026-04-27T15:26:12.436+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T15:26:12.436+0700	INFO	Restoring previous sessions...
+2026-04-27T15:26:12.437+0700	ERROR	Failed to get whatsmeow devices from database	{"error": "failed to query sessions: SQL logic error: no such table: whatsmeow_device (1)"}
+2026-04-27T15:26:15.406+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T15:26:27.405+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T15:28:20.990+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:28:21.990+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:28:21.990+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:28:21.991+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:28:26.483+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:28:26.483+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:28:26.507+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:28:26.511+0700	INFO	Starting database migrations
+2026-04-27T15:28:26.512+0700	DEBUG	Migrations table initialized
+2026-04-27T15:28:26.512+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:28:26.513+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "'IN'": syntax error (1)
+2026-04-27T15:28:26.519+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"'IN'\": syntax error (1)"}
+2026-04-27T15:28:26.521+0700	ERROR	Failed to upgrade whatsmeow sqlstore: foreign keys are not enabled
+2026-04-27T15:28:26.524+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T15:28:26.524+0700	INFO	Restoring previous sessions...
+2026-04-27T15:28:26.525+0700	ERROR	Failed to get whatsmeow devices from database	{"error": "failed to query sessions: SQL logic error: no such table: whatsmeow_device (1)"}
+2026-04-27T15:28:30.222+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T15:28:42.220+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T15:30:48.473+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:30:48.478+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T15:30:54.648+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:30:55.648+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:30:55.649+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:30:55.650+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:30:59.097+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:30:59.098+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:30:59.103+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:30:59.103+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:30:59.104+0700	INFO	Starting database migrations
+2026-04-27T15:30:59.104+0700	DEBUG	Migrations table initialized
+2026-04-27T15:30:59.105+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:30:59.258+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T15:30:59.258+0700	INFO	Running migration	{"version": "002", "name": "002_add_indexes"}
+2026-04-27T15:30:59.587+0700	INFO	Migration applied successfully	{"version": "002"}
+2026-04-27T15:30:59.588+0700	INFO	Running migration	{"version": "003", "name": "003_auth_schema_alignment"}
+2026-04-27T15:30:59.588+0700	ERROR	Migration FAILED! Version: 003, Name: 003_auth_schema_alignment, Error: SQL logic error: near "EXTENSION": syntax error (1)
+2026-04-27T15:30:59.589+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 003: SQL logic error: near \"EXTENSION\": syntax error (1)"}
+2026-04-27T15:30:59.619+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T15:30:59.619+0700	INFO	Restoring previous sessions...
+2026-04-27T15:30:59.620+0700	ERROR	Failed to get active devices	{"error": "SQL logic error: no such column: display_name (1)"}
+2026-04-27T15:30:59.620+0700	ERROR	Failed to get backend devices from database	{"error": "SQL logic error: no such column: display_name (1)"}
+2026-04-27T15:31:03.117+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T15:33:07.509+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:33:08.510+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:33:08.510+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:33:08.511+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:33:14.166+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:33:14.167+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:33:14.170+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:33:14.170+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:33:14.173+0700	INFO	Starting database migrations
+2026-04-27T15:33:14.182+0700	DEBUG	Migrations table initialized
+2026-04-27T15:33:14.183+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:33:14.330+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T15:33:14.330+0700	INFO	Running migration	{"version": "002", "name": "002_add_indexes"}
+2026-04-27T15:33:14.628+0700	INFO	Migration applied successfully	{"version": "002"}
+2026-04-27T15:33:14.628+0700	INFO	Running migration	{"version": "003", "name": "003_auth_schema_alignment"}
+2026-04-27T15:33:14.629+0700	ERROR	Migration FAILED! Version: 003, Name: 003_auth_schema_alignment, Error: SQL logic error: no such table: public.users (1)
+2026-04-27T15:33:14.629+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 003: SQL logic error: no such table: public.users (1)"}
+2026-04-27T15:33:14.657+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T15:33:14.657+0700	INFO	Restoring previous sessions...
+2026-04-27T15:33:14.658+0700	ERROR	Failed to get active devices	{"error": "SQL logic error: no such column: display_name (1)"}
+2026-04-27T15:33:14.658+0700	ERROR	Failed to get backend devices from database	{"error": "SQL logic error: no such column: display_name (1)"}
+2026-04-27T15:33:17.765+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T15:33:29.763+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T15:37:02.891+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:37:03.892+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:37:03.892+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:37:03.893+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:37:11.971+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:37:11.977+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:37:12.007+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:37:12.007+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:37:12.021+0700	INFO	Starting database migrations
+2026-04-27T15:37:12.033+0700	DEBUG	Migrations table initialized
+2026-04-27T15:37:12.035+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:37:12.210+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T15:37:12.210+0700	INFO	Running migration	{"version": "002", "name": "002_add_indexes"}
+2026-04-27T15:37:12.578+0700	INFO	Migration applied successfully	{"version": "002"}
+2026-04-27T15:37:12.578+0700	INFO	Running migration	{"version": "003", "name": "003_auth_schema_alignment"}
+2026-04-27T15:37:12.579+0700	ERROR	Migration FAILED! Version: 003, Name: 003_auth_schema_alignment, Error: SQL logic error: near "EXISTS": syntax error (1)
+2026-04-27T15:37:12.579+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 003: SQL logic error: near \"EXISTS\": syntax error (1)"}
+2026-04-27T15:37:12.609+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T15:37:12.610+0700	INFO	Restoring previous sessions...
+2026-04-27T15:37:12.610+0700	ERROR	Failed to get active devices	{"error": "SQL logic error: no such column: display_name (1)"}
+2026-04-27T15:37:12.611+0700	ERROR	Failed to get backend devices from database	{"error": "SQL logic error: no such column: display_name (1)"}
+2026-04-27T15:37:15.956+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T15:37:27.953+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T15:40:17.989+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:40:18.989+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:40:18.990+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:40:18.990+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:40:20.905+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:40:20.907+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:40:20.912+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:40:20.912+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:40:20.913+0700	INFO	Starting database migrations
+2026-04-27T15:40:20.923+0700	DEBUG	Migrations table initialized
+2026-04-27T15:40:20.925+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:40:21.086+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T15:40:21.086+0700	INFO	Running migration	{"version": "002", "name": "002_add_indexes"}
+2026-04-27T15:40:21.473+0700	INFO	Migration applied successfully	{"version": "002"}
+2026-04-27T15:40:21.473+0700	INFO	Running migration	{"version": "003", "name": "003_auth_schema_alignment"}
+2026-04-27T15:40:21.474+0700	ERROR	Migration FAILED! Version: 003, Name: 003_auth_schema_alignment, Error: SQL logic error: near "EXISTS": syntax error (1)
+2026-04-27T15:40:21.474+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 003: SQL logic error: near \"EXISTS\": syntax error (1)"}
+2026-04-27T15:42:41.751+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:42:42.752+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:42:42.752+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:42:42.752+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:42:45.376+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:42:45.380+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:42:45.410+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:42:45.410+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:42:45.413+0700	INFO	Starting database migrations
+2026-04-27T15:42:45.424+0700	DEBUG	Migrations table initialized
+2026-04-27T15:42:45.425+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:42:45.428+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: no such table: billing_plans (1)
+2026-04-27T15:42:45.439+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: no such table: billing_plans (1)"}
+2026-04-27T15:44:42.577+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:44:43.577+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:44:43.577+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:44:43.577+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:44:45.845+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:44:45.846+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:44:45.851+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:44:45.851+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:44:45.853+0700	INFO	Starting database migrations
+2026-04-27T15:44:45.865+0700	DEBUG	Migrations table initialized
+2026-04-27T15:44:45.866+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:44:46.042+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T15:44:46.042+0700	INFO	Running migration	{"version": "002", "name": "002_add_indexes"}
+2026-04-27T15:44:47.419+0700	INFO	Migration applied successfully	{"version": "002"}
+2026-04-27T15:44:47.419+0700	INFO	Running migration	{"version": "003", "name": "003_auth_schema_alignment"}
+2026-04-27T15:44:47.423+0700	ERROR	Migration FAILED! Version: 003, Name: 003_auth_schema_alignment, Error: SQL logic error: near ",": syntax error (1)
+2026-04-27T15:44:47.423+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 003: SQL logic error: near \",\": syntax error (1)"}
+2026-04-27T15:46:57.795+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:46:58.795+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:46:58.795+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:46:58.796+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:47:02.979+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:47:02.980+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:47:02.984+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:47:02.984+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:47:02.985+0700	INFO	Starting database migrations
+2026-04-27T15:47:02.994+0700	DEBUG	Migrations table initialized
+2026-04-27T15:47:02.995+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:47:02.998+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "INCREMENT": syntax error (1)
+2026-04-27T15:47:02.999+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"INCREMENT\": syntax error (1)"}
+2026-04-27T15:50:31.296+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:50:32.296+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:50:32.296+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:50:32.296+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:50:38.804+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:50:38.804+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:50:38.809+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:50:38.809+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:50:38.809+0700	INFO	Starting database migrations
+2026-04-27T15:50:38.820+0700	DEBUG	Migrations table initialized
+2026-04-27T15:50:38.821+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:50:38.826+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "(": syntax error (1)
+2026-04-27T15:50:38.826+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"(\": syntax error (1)"}
+2026-04-27T15:53:05.470+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:53:06.470+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:53:06.471+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:53:06.471+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:53:08.837+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:53:08.838+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:53:08.844+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:53:08.845+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:53:08.848+0700	INFO	Starting database migrations
+2026-04-27T15:53:09.872+0700	DEBUG	Migrations table initialized
+2026-04-27T15:53:09.873+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:53:09.884+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "(": syntax error (1)
+2026-04-27T15:53:09.884+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"(\": syntax error (1)"}
+2026-04-27T15:55:32.369+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:55:33.370+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:55:33.370+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:55:33.370+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:55:36.376+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:55:36.376+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:55:36.382+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:55:36.383+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:55:36.384+0700	INFO	Starting database migrations
+2026-04-27T15:55:36.395+0700	DEBUG	Migrations table initialized
+2026-04-27T15:55:36.397+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:55:36.676+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "(": syntax error (1)
+2026-04-27T15:55:36.677+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"(\": syntax error (1)"}
+2026-04-27T15:57:17.275+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:57:18.275+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:57:18.275+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:57:18.275+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:57:21.499+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:57:21.499+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:57:21.531+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:57:21.531+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:57:21.544+0700	INFO	Starting database migrations
+2026-04-27T15:57:21.559+0700	DEBUG	Migrations table initialized
+2026-04-27T15:57:21.561+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:57:23.066+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: unrecognized token: ":" (1)
+2026-04-27T15:57:23.068+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: unrecognized token: \":\" (1)"}
+2026-04-27T15:58:51.805+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T15:58:52.806+0700	INFO	WACAST Control Panel is active.
+2026-04-27T15:58:52.806+0700	INFO	Closing this window will stop the application.
+2026-04-27T15:58:52.806+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T15:58:55.629+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T15:58:55.629+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T15:58:55.635+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T15:58:55.635+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T15:58:55.639+0700	INFO	Starting database migrations
+2026-04-27T15:58:55.652+0700	DEBUG	Migrations table initialized
+2026-04-27T15:58:55.652+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T15:58:56.261+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "FUNCTION": syntax error (1)
+2026-04-27T15:58:56.262+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"FUNCTION\": syntax error (1)"}
+2026-04-27T16:01:17.785+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:01:18.785+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:01:18.785+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:01:18.785+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:01:21.718+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:01:21.720+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:01:21.724+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:01:21.724+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:01:21.725+0700	INFO	Starting database migrations
+2026-04-27T16:01:21.736+0700	DEBUG	Migrations table initialized
+2026-04-27T16:01:21.736+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:01:23.433+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "SEQUENCE": syntax error (1)
+2026-04-27T16:01:23.433+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"SEQUENCE\": syntax error (1)"}
+2026-04-27T16:03:01.686+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:03:02.686+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:03:02.686+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:03:02.686+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:03:05.071+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:03:05.072+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:03:05.077+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:03:05.077+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:03:05.079+0700	INFO	Starting database migrations
+2026-04-27T16:03:05.090+0700	DEBUG	Migrations table initialized
+2026-04-27T16:03:05.090+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:03:07.708+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near "OWNED": syntax error (1)
+2026-04-27T16:03:07.708+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"OWNED\": syntax error (1)"}
+2026-04-27T16:04:32.785+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:04:33.785+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:04:33.785+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:04:33.785+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:04:36.424+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:04:36.424+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:04:36.428+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:04:36.428+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:04:36.429+0700	INFO	Starting database migrations
+2026-04-27T16:04:36.438+0700	DEBUG	Migrations table initialized
+2026-04-27T16:04:36.439+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:04:39.216+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: near ""pg_catalog"": syntax error (1)
+2026-04-27T16:04:39.216+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: near \"\"pg_catalog\"\": syntax error (1)"}
+2026-04-27T16:07:52.777+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:07:53.778+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:07:53.778+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:07:53.778+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:08:00.871+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:08:00.874+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:08:00.899+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:08:00.899+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:08:00.903+0700	INFO	Starting database migrations
+2026-04-27T16:08:00.913+0700	DEBUG	Migrations table initialized
+2026-04-27T16:08:00.914+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:08:01.558+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: no such column: key_hash.text_ops (1)
+2026-04-27T16:08:01.561+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: no such column: key_hash.text_ops (1)"}
+2026-04-27T16:10:21.910+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:10:22.912+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:10:22.912+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:10:22.912+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:10:26.465+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:10:26.466+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:10:26.496+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:10:26.496+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:10:26.499+0700	INFO	Starting database migrations
+2026-04-27T16:10:26.515+0700	DEBUG	Migrations table initialized
+2026-04-27T16:10:26.515+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:10:31.145+0700	ERROR	Failed to record migration	{"error": "constraint failed: NOT NULL constraint failed: migrations.id (1299)", "version": "001"}
+2026-04-27T16:10:31.147+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to record migration 001: constraint failed: NOT NULL constraint failed: migrations.id (1299)"}
+2026-04-27T16:12:30.653+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:12:31.654+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:12:31.654+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:12:31.654+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:12:34.788+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:12:34.788+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:12:34.826+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:12:34.827+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:12:34.832+0700	INFO	Starting database migrations
+2026-04-27T16:12:34.847+0700	DEBUG	Migrations table initialized
+2026-04-27T16:12:34.847+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:12:35.167+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: table "lookup" has more than one primary key (1)
+2026-04-27T16:12:35.169+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: table \"lookup\" has more than one primary key (1)"}
+2026-04-27T16:13:41.989+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:13:42.989+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:13:42.990+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:13:42.990+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:13:45.111+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:13:45.112+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:13:45.156+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:13:45.156+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:13:45.160+0700	INFO	Starting database migrations
+2026-04-27T16:13:45.180+0700	DEBUG	Migrations table initialized
+2026-04-27T16:13:45.181+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:13:45.559+0700	ERROR	Migration FAILED! Version: 001, Name: 001_initial_schema, Error: SQL logic error: table "lookup" has more than one primary key (1)
+2026-04-27T16:13:45.561+0700	ERROR	DATABASE MIGRATION FAILED	{"error": "failed to apply migration 001: SQL logic error: table \"lookup\" has more than one primary key (1)"}
+2026-04-27T16:25:48.263+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:25:49.263+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:25:49.263+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:25:49.264+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:25:52.922+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:25:52.928+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:25:52.955+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:25:52.956+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:25:52.959+0700	INFO	Starting database migrations
+2026-04-27T16:25:52.970+0700	DEBUG	Migrations table initialized
+2026-04-27T16:25:52.971+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:25:54.383+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T16:25:54.383+0700	INFO	Database migrations completed successfully
+2026-04-27T16:25:54.390+0700	ERROR	Failed to upgrade whatsmeow sqlstore: failed to run upgrade v0->v13: SQL logic error: table whatsmeow_device already exists (1)
+2026-04-27T16:25:54.391+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T16:25:54.391+0700	INFO	Restoring previous sessions...
+2026-04-27T16:25:54.391+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T16:25:58.159+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T16:26:10.157+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T16:28:35.195+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:28:36.195+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:28:36.195+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:28:36.195+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:29:08.813+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:29:09.813+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:29:09.813+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:29:09.813+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:29:12.100+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:29:12.100+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:29:12.108+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:29:12.108+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:29:12.110+0700	INFO	Starting database migrations
+2026-04-27T16:29:12.121+0700	DEBUG	Migrations table initialized
+2026-04-27T16:29:12.122+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:29:15.243+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T16:29:15.243+0700	INFO	Database migrations completed successfully
+2026-04-27T16:29:15.273+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T16:29:15.274+0700	INFO	Restoring previous sessions...
+2026-04-27T16:29:15.274+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T16:29:18.667+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T16:29:30.700+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T16:29:46.138+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/", "query": "", "status": 200, "latency": 327359400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.557+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0c54qw_lhsuy2.css", "query": "", "status": 200, "latency": 2096400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.560+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 2138000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.623+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 1509400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.626+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 11183500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.629+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 7067500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.674+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 4862000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.686+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 2050100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.695+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 4588900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.706+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 2054800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.718+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 4717500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.723+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 1066700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.725+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 509000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.743+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 918200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.754+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:46.965+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 506800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.064+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 6497500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.071+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=19ruh", "status": 200, "latency": 580600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.129+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/setup.txt", "query": "_rsc=19ruh", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.179+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0u5g06urry5g9.js", "query": "", "status": 200, "latency": 1156700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.193+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08e1ga6243is7.js", "query": "", "status": 200, "latency": 892100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.222+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08e1ga6243is7.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.241+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 506700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:29:47.261+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 402, "latency": 1544800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:32:49.689+0700	INFO	Stopping WACAST Core...
+2026-04-27T16:32:49.691+0700	INFO	Session manager stopped
+2026-04-27T16:32:49.692+0700	INFO	Session service shut down
+2026-04-27T16:32:49.703+0700	INFO	Shutting down HTTP server
+2026-04-27T16:32:49.704+0700	INFO	WACAST Core stopped
+2026-04-27T16:32:51.895+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:32:51.898+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:32:51.904+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:32:51.906+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:32:51.914+0700	INFO	Starting database migrations
+2026-04-27T16:32:51.918+0700	DEBUG	Migrations table initialized
+2026-04-27T16:32:51.921+0700	DEBUG	Migration already applied	{"version": "001"}
+2026-04-27T16:32:51.922+0700	INFO	Database migrations completed successfully
+2026-04-27T16:32:51.927+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T16:32:51.927+0700	INFO	Restoring previous sessions...
+2026-04-27T16:32:51.930+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T16:32:54.890+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T16:33:06.890+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T16:33:10.812+0700	INFO	Stopping WACAST Core...
+2026-04-27T16:33:10.812+0700	INFO	Session manager stopped
+2026-04-27T16:33:10.814+0700	INFO	Session service shut down
+2026-04-27T16:33:10.814+0700	INFO	Shutting down HTTP server
+2026-04-27T16:33:10.816+0700	INFO	WACAST Core stopped
+2026-04-27T16:37:06.465+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:37:07.466+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:37:07.466+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:37:07.466+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:37:10.730+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:37:10.731+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:37:10.740+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:37:10.741+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:37:10.742+0700	INFO	Starting database migrations
+2026-04-27T16:37:10.742+0700	DEBUG	Migrations table initialized
+2026-04-27T16:37:10.744+0700	DEBUG	Migration already applied	{"version": "001"}
+2026-04-27T16:37:10.744+0700	INFO	Database migrations completed successfully
+2026-04-27T16:37:10.745+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T16:37:10.746+0700	INFO	Restoring previous sessions...
+2026-04-27T16:37:10.748+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T16:37:15.235+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T16:37:27.233+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T16:37:34.219+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/", "query": "", "status": 200, "latency": 391290300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.526+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 1279200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.527+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 1063000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.527+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 539100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.529+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 800600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.529+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 648200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.530+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 1448800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.530+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 3114200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.531+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 1140000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.531+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 4288300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.533+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 542400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.533+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 777200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.533+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 1319800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.535+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 506600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.584+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 1056700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.634+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.652+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=19ruh", "status": 200, "latency": 510000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.668+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 558100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.705+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.785+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 4513800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.785+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 402, "latency": 618200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.857+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/setup.txt", "query": "_rsc=yz0bd", "status": 200, "latency": 677400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.863+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0sgz8gdx1cp0c.js", "query": "", "status": 200, "latency": 931700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.881+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0sgz8gdx1cp0c.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:37:34.900+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 534700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:39:17.962+0700	INFO	License activated successfully	{"hwid": "85D9E62166DA698E", "expiry": "2026-04-28T13:25:13.000Z"}
+2026-04-27T16:39:17.967+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 200, "latency": 14451700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:39:18.043+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=9gt4u", "status": 200, "latency": 3682200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:14.779+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T16:41:15.780+0700	INFO	WACAST Control Panel is active.
+2026-04-27T16:41:15.782+0700	INFO	Closing this window will stop the application.
+2026-04-27T16:41:15.783+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T16:41:18.366+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T16:41:18.366+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T16:41:18.370+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T16:41:18.370+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T16:41:18.370+0700	INFO	Starting database migrations
+2026-04-27T16:41:18.379+0700	DEBUG	Migrations table initialized
+2026-04-27T16:41:18.379+0700	INFO	Running migration	{"version": "001", "name": "001_initial_schema"}
+2026-04-27T16:41:20.447+0700	INFO	Migration applied successfully	{"version": "001"}
+2026-04-27T16:41:20.447+0700	INFO	Database migrations completed successfully
+2026-04-27T16:41:20.471+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T16:41:20.471+0700	INFO	Restoring previous sessions...
+2026-04-27T16:41:20.472+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T16:41:23.084+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T16:41:35.082+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T16:41:43.591+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login", "query": "", "status": 200, "latency": 332392300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.702+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 1511800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.705+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 512000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.705+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 1180900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.706+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 1713900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.709+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 1000600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.712+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 1622300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.713+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 1741900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.713+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 507800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.712+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.713+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 507800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.713+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 507800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.713+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 2249700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.714+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 548000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.714+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 654400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.798+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 1511500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.798+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 1511500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:43.968+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 402, "latency": 3456700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:41:44.215+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 789900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.246+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login", "query": "", "status": 200, "latency": 506700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.291+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.294+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 506900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.294+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 506900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.294+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 601400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.295+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.295+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.296+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.296+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.297+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.297+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 593100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.299+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 610000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.300+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 580800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.301+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.304+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 1013000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.339+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.339+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.483+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 3781400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.548+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 402, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.631+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/setup.txt", "query": "_rsc=yz0bd", "status": 200, "latency": 1951200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.640+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0sgz8gdx1cp0c.js", "query": "", "status": 200, "latency": 583400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.671+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0sgz8gdx1cp0c.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:03.692+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:16.280+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 8766100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:19.555+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:39.340+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 515400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:40.244+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:42:40.407+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:43:48.493+0700	INFO	License activated successfully	{"hwid": "85D9E62166DA698E", "expiry": "2026-04-28T13:30:22.000Z"}
+2026-04-27T16:43:48.499+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 200, "latency": 12310300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:43:48.516+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=9gt4u", "status": 200, "latency": 996900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.338+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login", "query": "", "status": 200, "latency": 507000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.403+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 999600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.405+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 119800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.405+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 119800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.405+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 627700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.405+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 627700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.406+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.406+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.407+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 526100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.408+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 507600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.408+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.408+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.408+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.408+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.409+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 137700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.430+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.431+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 1673700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.563+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 402, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.691+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.700+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/setup.txt", "query": "_rsc=yz0bd", "status": 200, "latency": 511000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.706+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0sgz8gdx1cp0c.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.746+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0sgz8gdx1cp0c.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:11.754+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 505900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:16.498+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:22.161+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:27.023+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 400, "latency": 975900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:29.106+0700	INFO	License activated successfully	{"hwid": "85D9E62166DA698E", "expiry": "2026-04-28T13:30:22.000Z"}
+2026-04-27T16:44:29.106+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/license/activate", "query": "", "status": 200, "latency": 2308500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:29.112+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=9gt4u", "status": 200, "latency": 506100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T16:44:39.552+0700	INFO	Stopping WACAST Core...
+2026-04-27T16:44:39.554+0700	INFO	Session manager stopped
+2026-04-27T16:44:39.556+0700	INFO	Session service shut down
+2026-04-27T16:44:39.595+0700	INFO	Shutting down HTTP server
+2026-04-27T16:44:39.598+0700	INFO	WACAST Core stopped
+2026-04-27T17:00:25.752+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:25.761+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:00:41.166+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:41.170+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:00:46.504+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:46.509+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:00:49.483+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:49.494+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:00:51.761+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:51.770+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:00:53.838+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:53.846+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:00:56.378+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:00:56.387+0700	ERROR	GUI Server failed to start!	{"error": "listen tcp 127.0.0.1:19991: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+2026-04-27T17:02:33.638+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:02:34.639+0700	INFO	WACAST Control Panel is active.
+2026-04-27T17:02:34.639+0700	INFO	Closing this window will stop the application.
+2026-04-27T17:02:35.155+0700	INFO	Control Panel window closed. Exiting application...
+2026-04-27T17:03:39.420+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:03:40.421+0700	INFO	WACAST Control Panel is active.
+2026-04-27T17:03:40.421+0700	INFO	Closing this window will stop the application.
+2026-04-27T17:03:40.421+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T17:03:47.526+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T17:03:47.527+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T17:03:47.538+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T17:03:47.538+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T17:03:47.538+0700	INFO	Starting database migrations
+2026-04-27T17:03:47.539+0700	DEBUG	Migrations table initialized
+2026-04-27T17:03:47.540+0700	DEBUG	Migration already applied	{"version": "001"}
+2026-04-27T17:03:47.540+0700	INFO	Database migrations completed successfully
+2026-04-27T17:03:47.541+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T17:03:47.541+0700	INFO	Restoring previous sessions...
+2026-04-27T17:03:47.542+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T17:03:50.360+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T17:04:02.359+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T17:04:03.058+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/", "query": "", "status": 200, "latency": 355166400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.366+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 561100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.368+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 1715500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.370+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 2107600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.370+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 1585500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.370+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 2107600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.371+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 3657500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.371+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 4667200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.372+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 833400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.372+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 1344100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.373+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 551800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.373+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 2047100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.374+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 6939800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.384+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.430+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 1536300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.492+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 1049000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.658+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 200, "latency": 7078700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.659+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=19ruh", "status": 200, "latency": 613900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.669+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 2713300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.674+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 509000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:03.709+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:09.258+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/login-password", "method": "POST", "error": "login-password: update user: SQL logic error: no such function: NOW (1)"}
+2026-04-27T17:04:09.261+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 500, "latency": 31138500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:11.748+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 401, "latency": 1751300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:15.080+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/login-password", "method": "POST", "error": "login-password: update user: SQL logic error: no such function: NOW (1)"}
+2026-04-27T17:04:15.081+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 500, "latency": 3071900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:04:21.067+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/login-password", "method": "POST", "error": "login-password: update user: SQL logic error: no such function: NOW (1)"}
+2026-04-27T17:04:21.068+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 500, "latency": 2192400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:05:57.720+0700	INFO	Stopping WACAST Core...
+2026-04-27T17:05:57.727+0700	INFO	Session manager stopped
+2026-04-27T17:05:57.727+0700	INFO	Session service shut down
+2026-04-27T17:05:57.732+0700	INFO	Shutting down HTTP server
+2026-04-27T17:05:57.744+0700	INFO	WACAST Core stopped
+2026-04-27T17:07:11.623+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:07:12.623+0700	INFO	WACAST Control Panel is active.
+2026-04-27T17:07:12.624+0700	INFO	Closing this window will stop the application.
+2026-04-27T17:07:12.624+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T17:07:15.571+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T17:07:15.572+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T17:07:15.616+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T17:07:15.617+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T17:07:15.621+0700	INFO	Starting database migrations
+2026-04-27T17:07:15.622+0700	DEBUG	Migrations table initialized
+2026-04-27T17:07:15.623+0700	DEBUG	Migration already applied	{"version": "001"}
+2026-04-27T17:07:15.624+0700	INFO	Database migrations completed successfully
+2026-04-27T17:07:15.627+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T17:07:15.627+0700	INFO	Restoring previous sessions...
+2026-04-27T17:07:15.630+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T17:07:20.796+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T17:07:32.792+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T17:07:36.797+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/login-password", "method": "POST", "error": "login-password: update user: SQL logic error: no such function: NOW (1)"}
+2026-04-27T17:07:36.801+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 500, "latency": 14902100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.502+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login", "query": "", "status": 200, "latency": 511216500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.862+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 1568200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.863+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 1582400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.868+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 1659000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.870+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 3459100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.870+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 1916200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.872+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 2963600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.872+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 2691300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.872+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 6909200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.874+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 2391700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.882+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 15720800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.882+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 4674700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.882+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 2702300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.880+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 2479700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:40.885+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 5612800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:41.420+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 200, "latency": 2153200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:41.529+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 600300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:41.529+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 1608700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:41.624+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 2210000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:43.317+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/login-password", "method": "POST", "error": "login-password: update user: SQL logic error: no such function: NOW (1)"}
+2026-04-27T17:07:43.318+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 500, "latency": 3114200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:07:46.926+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/login-password", "method": "POST", "error": "login-password: update user: SQL logic error: no such function: NOW (1)"}
+2026-04-27T17:07:46.927+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 500, "latency": 2842700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.226+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/", "query": "", "status": 200, "latency": 3339700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.385+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 1283300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.386+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 508200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.387+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 534800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.389+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 536400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.390+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 1698000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.395+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 4364800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.390+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 623100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.394+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 1161600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.397+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 506100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.397+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 506100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.398+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 580200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.401+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 1240000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.401+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 4438700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.411+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 507100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.412+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 1044800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.548+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 8920300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.561+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 200, "latency": 21416900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.710+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=19ruh", "status": 200, "latency": 508300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.718+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 1607700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:33.747+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:09:37.337+0700	INFO	Stopping WACAST Core...
+2026-04-27T17:09:37.338+0700	INFO	Session manager stopped
+2026-04-27T17:09:37.339+0700	INFO	Session service shut down
+2026-04-27T17:09:37.349+0700	INFO	Shutting down HTTP server
+2026-04-27T17:09:37.357+0700	INFO	WACAST Core stopped
+2026-04-27T17:18:44.449+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:18:45.449+0700	INFO	WACAST Control Panel is active.
+2026-04-27T17:18:45.450+0700	INFO	Closing this window will stop the application.
+2026-04-27T17:18:45.450+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T17:18:48.428+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T17:18:48.429+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T17:18:48.439+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T17:18:48.439+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T17:18:48.440+0700	INFO	Starting database migrations
+2026-04-27T17:18:48.440+0700	DEBUG	Migrations table initialized
+2026-04-27T17:18:48.441+0700	DEBUG	Migration already applied	{"version": "001"}
+2026-04-27T17:18:48.441+0700	INFO	Database migrations completed successfully
+2026-04-27T17:18:48.442+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T17:18:48.442+0700	INFO	Restoring previous sessions...
+2026-04-27T17:18:48.444+0700	INFO	Successfully triggered session restoration	{"total_restored": 0}
+2026-04-27T17:18:50.878+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T17:18:59.733+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 200, "latency": 29890900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.662+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/index.txt", "query": "_rsc=yz0bd", "status": 200, "latency": 350322500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.668+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/index.txt", "query": "_rsc=yz0bd", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.683+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.685+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 640700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.777+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 579100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.781+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 1016200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.918+0700	ERROR	auth handler internal error	{"path": "/api/v1/billing/overview", "method": "GET", "error": "get usage history: SQL logic error: no such column: status (1)"}
+2026-04-27T17:19:00.919+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/billing/overview", "query": "", "status": 500, "latency": 8459800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.924+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/messages/logs", "query": "limit=5&offset=0", "status": 401, "latency": 10854800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.947+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/logs", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.950+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/analytics/usage", "query": "", "status": 200, "latency": 3737800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:00.977+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/scheduled", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.083+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/broadcast", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.091+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/new", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.101+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 8819300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.323+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/refresh", "query": "", "status": 200, "latency": 9012700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.396+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/messages/logs", "query": "limit=5&offset=0", "status": 200, "latency": 3181900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.433+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/scheduled/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 645400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.445+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/broadcast/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.457+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.527+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.677+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/devices/info", "query": "", "status": 200, "latency": 205200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.685+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/devices/qr", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.723+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next._index.txt", "query": "_rsc=nn07o", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.724+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next._head.txt", "query": "_rsc=1pn8p", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.767+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/info/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.773+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.791+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.txt", "query": "_rsc=pwboj", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.842+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/devices/status", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.911+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.messaging.logs.txt", "query": "_rsc=bs4f5", "status": 200, "latency": 506700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.918+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.messaging.txt", "query": "_rsc=ery9w", "status": 200, "latency": 108800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:01.953+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:02.019+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/scheduled/__next._head.txt", "query": "_rsc=1pn8p", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:02.099+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/scheduled/__next.!KGRhc2hib2FyZCk.messaging.scheduled.txt", "query": "_rsc=1kook", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:02.245+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.messaging.logs.__PAGE__.txt", "query": "_rsc=15rmo", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:02.878+0700	INFO	WACAST Core started successfully	{"port": 8080}
+2026-04-27T17:19:08.743+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.845+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 1934900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.846+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 507300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.846+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 1024300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.848+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 1517400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.852+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 2216800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.852+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 956600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.852+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 507700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.853+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/04u2wfk7b70vz.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.852+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 507700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.853+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 1010900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.854+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 5422500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.854+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 1015200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.855+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 1591100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.856+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 7583100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:08.868+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_yx-d_ogjrdm.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.004+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 401, "latency": 1523600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.008+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/billing/overview", "query": "", "status": 401, "latency": 6220600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.015+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/messages/logs", "query": "limit=5&offset=0", "status": 401, "latency": 13416100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.026+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/analytics/usage", "query": "", "status": 200, "latency": 24030800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.100+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 200, "latency": 2123500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.147+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/logs", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.153+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/scheduled", "query": "", "status": 200, "latency": 50600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.153+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/broadcast", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.154+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/messaging/new", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.171+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/refresh", "query": "", "status": 200, "latency": 15751100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.216+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.225+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/scheduled/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 205900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.225+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/broadcast/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.225+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.226+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 1042300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.243+0700	ERROR	auth handler internal error	{"path": "/api/v1/billing/overview", "method": "GET", "error": "get usage history: SQL logic error: no such column: status (1)"}
+2026-04-27T17:19:09.243+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/billing/overview", "query": "", "status": 500, "latency": 1072700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.244+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/messages/logs", "query": "limit=5&offset=0", "status": 200, "latency": 1683700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.265+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 1081200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.287+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/devices/info", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.287+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/devices/qr", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.287+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "HEAD", "path": "/devices/status", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.287+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next._head.txt", "query": "_rsc=1pn8p", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.288+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next._index.txt", "query": "_rsc=nn07o", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.326+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 1060400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.326+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "query": "favicon.0x3dzn~oxb6tn.ico", "status": 200, "latency": 1060400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.453+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/info/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.453+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.455+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status/__next._tree.txt", "query": "_rsc=1r34m", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.455+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.txt", "query": "_rsc=pwboj", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.507+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.messaging.txt", "query": "_rsc=ery9w", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.507+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.messaging.logs.txt", "query": "_rsc=bs4f5", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.508+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/scheduled/__next._head.txt", "query": "_rsc=1pn8p", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.508+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/logs/__next.!KGRhc2hib2FyZCk.messaging.logs.__PAGE__.txt", "query": "_rsc=15rmo", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:09.536+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/scheduled/__next.!KGRhc2hib2FyZCk.messaging.scheduled.txt", "query": "_rsc=1kook", "status": 200, "latency": 164800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:20.986+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status/__next.!KGRhc2hib2FyZCk.devices.txt", "query": "_rsc=a29gq", "status": 200, "latency": 370700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:21.001+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status/__next.!KGRhc2hib2FyZCk.devices.status.txt", "query": "_rsc=13vjz", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:21.037+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status/__next.!KGRhc2hib2FyZCk.devices.status.__PAGE__.txt", "query": "_rsc=1hbgz", "status": 200, "latency": 515400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:21.080+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status/__next._head.txt", "query": "_rsc=1pn8p", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:21.792+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status.txt", "query": "_rsc=ioti2", "status": 200, "latency": 678200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:21.999+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0tnirx276lst7.js", "query": "", "status": 200, "latency": 515000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:22.036+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0tnirx276lst7.js", "query": "", "status": 200, "latency": 1003600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:22.078+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 10483800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:23.126+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr/__next._head.txt", "query": "_rsc=mixkk", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:23.132+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr/__next.!KGRhc2hib2FyZCk.devices.qr.__PAGE__.txt", "query": "_rsc=11jyk", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:23.234+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr/__next.!KGRhc2hib2FyZCk.devices.qr.txt", "query": "_rsc=16q9x", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:23.614+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr.txt", "query": "_rsc=1niuy", "status": 200, "latency": 516200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.023+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0h81s9m7zkv9x.js", "query": "", "status": 200, "latency": 587100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.049+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0h81s9m7zkv9x.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.663+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/info/__next._head.txt", "query": "_rsc=j2o48", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.664+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/info/__next.!KGRhc2hib2FyZCk.devices.info.txt", "query": "_rsc=1g5dk", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.831+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/info.txt", "query": "_rsc=1jal7", "status": 200, "latency": 506200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.893+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/16.6-fr9gqmgo.js", "query": "", "status": 200, "latency": 892900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.917+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/info/__next.!KGRhc2hib2FyZCk.devices.info.__PAGE__.txt", "query": "_rsc=1k41x", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.949+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/16.6-fr9gqmgo.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:24.960+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 10766600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:25.443+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new/__next._head.txt", "query": "_rsc=uqhug", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:25.454+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new/__next.!KGRhc2hib2FyZCk.messaging.new.txt", "query": "_rsc=1kp8u", "status": 200, "latency": 2681800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:25.948+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new.txt", "query": "_rsc=15x6g", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:26.179+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/14oh56fe751na.js", "query": "", "status": 200, "latency": 1257800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:26.234+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/14oh56fe751na.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:26.255+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 10350800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:26.313+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/auto-response/templates", "query": "", "status": 200, "latency": 3857800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:26.341+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/contacts", "query": "", "status": 200, "latency": 3082000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:27.675+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new.txt", "query": "_rsc=cuyyo", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:28.526+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/broadcast.txt", "query": "_rsc=j1xt9", "status": 200, "latency": 597000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:28.668+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v238errvl_zk.js", "query": "", "status": 200, "latency": 1632800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:28.713+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v238errvl_zk.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:28.730+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 10943700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:28.772+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/contact-groups", "query": "", "status": 200, "latency": 1548500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:28.778+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/contacts", "query": "", "status": 200, "latency": 748600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:31.789+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api-integration/keys.txt", "query": "_rsc=14nti", "status": 200, "latency": 1423100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:32.135+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0vdrlf.0javfh.js", "query": "", "status": 200, "latency": 2042900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:32.188+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0vdrlf.0javfh.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:32.268+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/integration/keys", "query": "", "status": 200, "latency": 9280000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:33.955+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api-integration/keys.txt", "query": "_rsc=179ep", "status": 200, "latency": 309000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:34.380+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api-integration/webhooks.txt", "query": "_rsc=e6r9z", "status": 200, "latency": 506500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:34.511+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0urdamfvttu9x.js", "query": "", "status": 200, "latency": 369900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:34.565+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0urdamfvttu9x.js", "query": "", "status": 200, "latency": 330500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:34.689+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/integration/webhook", "query": "", "status": 200, "latency": 8907900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:36.569+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api-integration/docs.txt", "query": "_rsc=1z0o2", "status": 200, "latency": 514700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:36.827+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17osss-8r_bbg.js", "query": "", "status": 200, "latency": 1071300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:36.868+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17osss-8r_bbg.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:38.817+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/auto-response/keywords.txt", "query": "_rsc=1nhco", "status": 200, "latency": 1067900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:39.096+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/auto-response/keywords.txt", "query": "_rsc=eqzzh", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:39.249+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0bp.4p7x5zhxp.js", "query": "", "status": 200, "latency": 758000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:39.280+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0bp.4p7x5zhxp.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:39.686+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/auto-response/keywords", "query": "", "status": 200, "latency": 12018500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:40.538+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/auto-response/templates.txt", "query": "_rsc=ubxt3", "status": 200, "latency": 1001300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:40.763+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/05.31wwrgsabm.js", "query": "", "status": 200, "latency": 1537400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:40.806+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/05.31wwrgsabm.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:41.071+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/auto-response/templates", "query": "", "status": 200, "latency": 8001200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:44.717+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/monitoring/usage.txt", "query": "_rsc=1x46h", "status": 200, "latency": 1182000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:45.061+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0y-jbwb1osy3g.js", "query": "", "status": 200, "latency": 1208400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:45.099+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0y-jbwb1osy3g.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:45.168+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/analytics/usage", "query": "", "status": 200, "latency": 7704800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:45.278+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/monitoring/usage.txt", "query": "_rsc=1m27e", "status": 200, "latency": 542400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:46.171+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/monitoring/failure.txt", "query": "_rsc=5p9yb", "status": 200, "latency": 514500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:46.512+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0j6_9yr0vn28v.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:46.545+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0j6_9yr0vn28v.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:46.802+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/analytics/failures", "query": "", "status": 200, "latency": 10645100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:48.892+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/contacts/phonebook.txt", "query": "_rsc=1eynx", "status": 200, "latency": 638400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:49.031+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0r6jnj3ap-x1y.js", "query": "", "status": 200, "latency": 728500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:49.061+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0r6jnj3ap-x1y.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:49.134+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/contacts", "query": "", "status": 200, "latency": 9658900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:49.966+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/contacts/groups.txt", "query": "_rsc=1ryoc", "status": 200, "latency": 505400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:50.103+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0h21d_2_x_1ik.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:50.136+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0h21d_2_x_1ik.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:50.201+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/contact-groups", "query": "", "status": 200, "latency": 7566900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:50.968+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/contacts/blacklist.txt", "query": "_rsc=1h5x8", "status": 200, "latency": 938800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:51.099+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0kt6febz0x1u1.js", "query": "", "status": 200, "latency": 681300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:51.154+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0kt6febz0x1u1.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:52.240+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/blacklists", "query": "", "status": 200, "latency": 1023533100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:53.098+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/settings/onboarding.txt", "query": "_rsc=pzrde", "status": 200, "latency": 1549000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:53.317+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_kjottw.sgoy.js", "query": "", "status": 200, "latency": 1011500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:53.358+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0_kjottw.sgoy.js", "query": "", "status": 200, "latency": 1236300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:19:57.142+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr.txt", "query": "_rsc=1tw0f", "status": 200, "latency": 447400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:01.119+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/auth/me", "query": "", "status": 200, "latency": 8844400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:01.179+0700	DEBUG	QR code callback registered	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:01.179+0700	DEBUG	Status callback registered	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:01.179+0700	DEBUG	Message handler registered	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:01.180+0700	DEBUG	Device not found by phone	{"phone": "0000000000"}
+2026-04-27T17:20:02.203+0700	DEBUG	Device created	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "phone": "0000000000"}
+2026-04-27T17:20:02.203+0700	INFO	Device record successfully inserted into database	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:02.204+0700	INFO	Session initiated (connecting to WhatsApp Web)	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "phone": "0000000000"}
+2026-04-27T17:20:02.204+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/sessions/initiate", "query": "", "status": 202, "latency": 1027578800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:02.214+0700	INFO	Attempting to connect to WhatsApp Web	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:02.219+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 200, "latency": 7195400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:02.228+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 404, "latency": 1669800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:03.188+0700	INFO	New QR code received from WhatsApp channel	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:06.484+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 200, "latency": 9217800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:06.708+0700	INFO	QR code generated	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "qr_data": "2@lVZ12hc0vlOt5U94kFbhOT44nzQME9hb3mkxfM0tH3jnLn+8/pIkWOs4alxmsyl3VI4CuO7ThU79Hp2BinsAkPaKmNo4bBsSZms=,R4ITWW0Eyx/KAuZxSCIY84L7rOWKVEcc48RCzyeBQTE=,q7grmhY0fANPQJWUIDk1LabS8awEQQ+LTD8BEROy4k8=,gZ1USl8Pif1ul3zWGWsOsdq4Imwg6zDBaPr6vT0fJ5Y=", "png_size_bytes": 1493}
+2026-04-27T17:20:06.708+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 200, "latency": 10866000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:10.863+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 200, "latency": 6839600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:11.002+0700	INFO	QR code generated	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "qr_data": "2@lVZ12hc0vlOt5U94kFbhOT44nzQME9hb3mkxfM0tH3jnLn+8/pIkWOs4alxmsyl3VI4CuO7ThU79Hp2BinsAkPaKmNo4bBsSZms=,R4ITWW0Eyx/KAuZxSCIY84L7rOWKVEcc48RCzyeBQTE=,q7grmhY0fANPQJWUIDk1LabS8awEQQ+LTD8BEROy4k8=,gZ1USl8Pif1ul3zWGWsOsdq4Imwg6zDBaPr6vT0fJ5Y=", "png_size_bytes": 1493}
+2026-04-27T17:20:11.003+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 200, "latency": 7903200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:14.709+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 200, "latency": 6299300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:14.875+0700	INFO	QR code generated	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "qr_data": "2@lVZ12hc0vlOt5U94kFbhOT44nzQME9hb3mkxfM0tH3jnLn+8/pIkWOs4alxmsyl3VI4CuO7ThU79Hp2BinsAkPaKmNo4bBsSZms=,R4ITWW0Eyx/KAuZxSCIY84L7rOWKVEcc48RCzyeBQTE=,q7grmhY0fANPQJWUIDk1LabS8awEQQ+LTD8BEROy4k8=,gZ1USl8Pif1ul3zWGWsOsdq4Imwg6zDBaPr6vT0fJ5Y=", "png_size_bytes": 1493}
+2026-04-27T17:20:14.876+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 200, "latency": 7265500, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:18.530+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 200, "latency": 5833200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:18.544+0700	INFO	QR code generated	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "qr_data": "2@lVZ12hc0vlOt5U94kFbhOT44nzQME9hb3mkxfM0tH3jnLn+8/pIkWOs4alxmsyl3VI4CuO7ThU79Hp2BinsAkPaKmNo4bBsSZms=,R4ITWW0Eyx/KAuZxSCIY84L7rOWKVEcc48RCzyeBQTE=,q7grmhY0fANPQJWUIDk1LabS8awEQQ+LTD8BEROy4k8=,gZ1USl8Pif1ul3zWGWsOsdq4Imwg6zDBaPr6vT0fJ5Y=", "png_size_bytes": 1493}
+2026-04-27T17:20:18.544+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 200, "latency": 8086100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:22.778+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 200, "latency": 15939800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:22.800+0700	INFO	QR code generated	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "qr_data": "2@lVZ12hc0vlOt5U94kFbhOT44nzQME9hb3mkxfM0tH3jnLn+8/pIkWOs4alxmsyl3VI4CuO7ThU79Hp2BinsAkPaKmNo4bBsSZms=,R4ITWW0Eyx/KAuZxSCIY84L7rOWKVEcc48RCzyeBQTE=,q7grmhY0fANPQJWUIDk1LabS8awEQQ+LTD8BEROy4k8=,gZ1USl8Pif1ul3zWGWsOsdq4Imwg6zDBaPr6vT0fJ5Y=", "png_size_bytes": 1493}
+2026-04-27T17:20:22.800+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 200, "latency": 10653800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:23.873+0700	INFO	WhatsApp pairing successful	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:23.873+0700	INFO	QR channel event	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "event": "success"}
+2026-04-27T17:20:27.218+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b", "query": "", "status": 401, "latency": 3200400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.289+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/refresh", "method": "POST", "error": "refresh-session: query session: database is locked (5) (SQLITE_BUSY)"}
+2026-04-27T17:20:27.289+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/refresh", "query": "", "status": 500, "latency": 5600400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.331+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=kpiox", "status": 200, "latency": 548800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.339+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=kpiox", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.409+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 513100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.450+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.482+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions/4edcb217-ec84-4ba7-9c37-ada90b94808b/qr", "query": "", "status": 401, "latency": 1178400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:27.492+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=owqga", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:38.895+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/login-password", "query": "", "status": 200, "latency": 23166600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:38.980+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/index.txt", "query": "_rsc=hhfwr", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.112+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/billing/overview", "query": "", "status": 401, "latency": 2547800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.126+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 20528600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.129+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/messages/logs", "query": "limit=5&offset=0", "status": 200, "latency": 2643100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.157+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/analytics/usage", "query": "", "status": 200, "latency": 3297700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.192+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/refresh", "query": "", "status": 200, "latency": 12895800, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.206+0700	ERROR	auth handler internal error	{"path": "/api/v1/billing/overview", "method": "GET", "error": "get usage history: SQL logic error: no such column: status (1)"}
+2026-04-27T17:20:39.207+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/billing/overview", "query": "", "status": 500, "latency": 1633300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:39.207+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/index.txt", "query": "_rsc=1nvln", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:40.912+0700	INFO	Connected to WhatsApp	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:20:41.222+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status.txt", "query": "_rsc=ioti2", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:41.636+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 14080700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:41.856+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/qr.txt", "query": "_rsc=1niuy", "status": 200, "latency": 643100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:43.111+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/devices/status.txt", "query": "_rsc=1lu6v", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:43.195+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 11742000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:46.976+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/messaging/new.txt", "query": "_rsc=1lfl0", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:47.051+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/sessions", "query": "", "status": 200, "latency": 9963000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:47.101+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/auto-response/templates", "query": "", "status": 200, "latency": 2117400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:20:47.299+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/contacts", "query": "", "status": 200, "latency": 2040400, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:00.005+0700	WARN	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/devices/4edcb217-ec84-4ba7-9c37-ada90b94808b/messages", "query": "", "status": 401, "latency": 7164000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:00.066+0700	ERROR	auth handler internal error	{"path": "/api/v1/auth/refresh", "method": "POST", "error": "refresh-session: query session: database is locked (5) (SQLITE_BUSY)"}
+2026-04-27T17:21:00.067+0700	ERROR	HTTP request	{"client_ip": "127.0.0.1", "method": "POST", "path": "/api/v1/auth/refresh", "query": "", "status": 500, "latency": 5353000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:00.186+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=15eg0", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:00.203+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login.txt", "query": "_rsc=15eg0", "status": 200, "latency": 1003100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.193+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/login", "query": "", "status": 200, "latency": 1500900, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.251+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0ze4gu236oq96.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.251+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08k6.ytz680jc.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.252+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0mstyq17cbf8-.js", "query": "", "status": 200, "latency": 1096000, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.253+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/003jg1gpfknfh.js", "query": "", "status": 200, "latency": 524700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.254+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0pqt~8bl3ukh4.js", "query": "", "status": 200, "latency": 535700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.256+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/turbopack-0.igpsr5wir9n.js", "query": "", "status": 200, "latency": 1148200, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.256+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/17if2pdzkflg..js", "query": "", "status": 200, "latency": 508600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.256+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/13n7qpyn5ow6r.js", "query": "", "status": 200, "latency": 508600, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.259+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0d3shmwh5_nmn.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.265+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/08dp7ipf6l2r-.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.265+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/01fk3~~bpzjd7.js", "query": "", "status": 200, "latency": 507300, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.265+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0v~mjy~gla1k9.js", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.328+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/chunks/0k2qab4d3pj.g.css", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.467+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2", "query": "", "status": 200, "latency": 0, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.511+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/info/config", "query": "", "status": 200, "latency": 1566700, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:21:07.630+0700	DEBUG	HTTP request	{"client_ip": "127.0.0.1", "method": "GET", "path": "/api/v1/license/status", "query": "", "status": 200, "latency": 514100, "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"}
+2026-04-27T17:24:59.801+0700	INFO	Starting GUI server...	{"addr": "127.0.0.1:19991"}
+2026-04-27T17:25:00.802+0700	INFO	WACAST Control Panel is active.
+2026-04-27T17:25:00.802+0700	INFO	Closing this window will stop the application.
+2026-04-27T17:25:00.802+0700	INFO	Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.
+2026-04-27T17:25:02.916+0700	INFO	Starting WACAST Core via Control Panel	{"version": "1.0.0"}
+2026-04-27T17:25:02.922+0700	INFO	DATABASE: Mode Lokal Aktif (SQLite)	{"file": "wacast.db"}
+2026-04-27T17:25:02.966+0700	INFO	DATABASE: Foreign keys enabled for SQLite
+2026-04-27T17:25:02.966+0700	INFO	Database connected successfully	{"host": "", "port": 5432, "database": "wacast"}
+2026-04-27T17:25:02.971+0700	INFO	Starting database migrations
+2026-04-27T17:25:02.975+0700	DEBUG	Migrations table initialized
+2026-04-27T17:25:02.979+0700	DEBUG	Migration already applied	{"version": "001"}
+2026-04-27T17:25:02.979+0700	INFO	Database migrations completed successfully
+2026-04-27T17:25:02.985+0700	INFO	Session manager started	{"auto_reconnect": true, "reconnect_interval": 30000000000}
+2026-04-27T17:25:02.988+0700	INFO	Restoring previous sessions...
+2026-04-27T17:25:02.998+0700	INFO	Successfully triggered session restoration	{"total_restored": 1}
+2026-04-27T17:25:02.998+0700	INFO	Attempting to connect to WhatsApp Web	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:25:05.488+0700	WARN	Lost connection to WhatsApp	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b"}
+2026-04-27T17:25:05.993+0700	WARN	Device unlinked from WhatsApp app	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "reason": "401: logged out from another device"}
+2026-04-27T17:25:06.003+0700	ERROR	Failed to update device status	{"error": "database is locked (5) (SQLITE_BUSY)"}
+2026-04-27T17:25:07.396+0700	INFO	Successfully bound to port, starting HTTP server	{"address": "0.0.0.0:8080"}
+2026-04-27T17:25:11.217+0700	WARN	Device unlinked from WhatsApp app	{"device_id": "4edcb217-ec84-4ba7-9c37-ada90b94808b", "reason": "401: logged out from another device"}

@@ -2,6 +2,7 @@ package appserver
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -42,6 +43,7 @@ type Server struct {
 	host             string
 	startTime        time.Time
 	websocketHandler *handlers.WebSocketHandler
+	httpInstance     *http.Server
 }
 
 func NewServer(
@@ -152,12 +154,52 @@ func (s *Server) registerRoutes() {
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%d", s.host, s.port)
 
+	s.httpInstance = &http.Server{
+		Addr:    addr,
+		Handler: s.engine,
+	}
+
 	utils.Info("Starting HTTP server",
 		zap.String("address", addr),
 		zap.String("environment", s.config.Environment),
 	)
 
-	return s.engine.Run(addr)
+	// Retry logic for Windows port lingering using manual Listen
+	var listener net.Listener
+	var err error
+	for i := 0; i < 15; i++ {
+		listener, err = net.Listen("tcp", addr)
+		if err != nil {
+			utils.Warn("Port 8080 is busy (Windows socket lingering), retrying...", zap.Int("attempt", i+1), zap.Error(err))
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to bind to port %d after multiple attempts: %v", s.port, err)
+	}
+
+	s.httpInstance = &http.Server{
+		Addr:    addr,
+		Handler: s.engine,
+	}
+
+	utils.Info("Successfully bound to port, starting HTTP server", zap.String("address", addr))
+	
+	if err := s.httpInstance.Serve(listener); err != nil && err != http.ErrServerClosed {
+		return err
+	}
+	return nil
+}
+
+func (s *Server) Shutdown() error {
+	utils.Info("Shutting down HTTP server")
+	if s.httpInstance != nil {
+		return s.httpInstance.Close() // Force close to release port immediately
+	}
+	return nil
 }
 
 func (s *Server) licenseMiddleware() gin.HandlerFunc {
@@ -213,11 +255,6 @@ func corsMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-func (s *Server) Shutdown() error {
-	utils.Info("Shutting down HTTP server")
-	return nil
 }
 
 type HealthResponse struct {
