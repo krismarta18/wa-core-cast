@@ -32,6 +32,8 @@ func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		fmt.Printf("Failed to load configuration: %v\n", err)
+		fmt.Println("\nTekan Enter untuk keluar...")
+		fmt.Scanln()
 		os.Exit(1)
 	}
 
@@ -39,6 +41,8 @@ func main() {
 	err = utils.InitLogger(cfg.LogLevel)
 	if err != nil {
 		fmt.Printf("Failed to initialize logger: %v\n", err)
+		fmt.Println("\nTekan Enter untuk keluar...")
+		fmt.Scanln()
 		os.Exit(1)
 	}
 
@@ -163,7 +167,11 @@ func main() {
 	)
 
 	if err := messageService.Start(); err != nil {
-		utils.Fatal("Failed to start message service", zap.Error(err))
+		utils.Error("Failed to start message service", zap.Error(err))
+		fmt.Printf("\nFATAL ERROR: Failed to start message service - %v\n", err)
+		fmt.Println("\nTekan Enter untuk keluar...")
+		fmt.Scanln()
+		os.Exit(1)
 	}
 
 	// Register callbacks to handle incoming messages
@@ -303,7 +311,11 @@ func main() {
 		utils.Info("Received shutdown signal", zap.String("signal", sig.String()))
 	case err := <-serverErrors:
 		if err != nil {
-			utils.Fatal("Server error", zap.Error(err))
+			utils.Error("Server error", zap.Error(err))
+			fmt.Printf("\nFATAL ERROR: Server error - %v\n", err)
+			fmt.Println("\nTekan Enter untuk keluar...")
+			fmt.Scanln()
+			os.Exit(1)
 		}
 	}
 

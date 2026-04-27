@@ -221,45 +221,36 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 	// This ensures we capture all events including QR code
 	client.AddEventHandler(func(evt interface{}) {
 		switch v := evt.(type) {
-		case *events.QR:
-				// ✅ Capture actual QR code from WhatsApp
-				utils.Info("QR code received from WhatsApp",
-					zap.String("device_id", deviceID),
-					zap.Int("qr_count", len(v.Codes)),
-				)
+			case *events.PairSuccess:
+				// ✅ Pairing completed instantly!
+				utils.Info("WhatsApp pairing successful", zap.String("device_id", deviceID))
 				
-				// Store the first QR code (main code)
-				if len(v.Codes) > 0 {
-					qrString := v.Codes[0] // First code is the LinkDevice code
-					
-					s.mu.Lock()
-					s.qrCodes[deviceID] = qrString
-					onQRUpdate := s.onQRUpdate
-					s.mu.Unlock()
-					
-					// Generate PNG image from the real QR code
-					qrImage, err := s.GenerateQRCodeImage(qrString)
-					if err != nil {
-						utils.Error("Failed to generate QR code image",
-							zap.String("device_id", deviceID),
-							zap.Error(err),
-						)
-					} else {
-						s.mu.Lock()
-						s.qrCodeImages[deviceID] = qrImage
-						s.mu.Unlock()
+				s.mu.Lock()
+				if sess, exists := s.sessions[deviceID]; exists {
+					sess.Status = SessionActive
+					sess.LastActivity = time.Now().Unix()
+				}
+				onQRUpdate := s.onQRUpdate
+				s.mu.Unlock()
+				
+				// Update database status asynchronously to avoid blocking event dispatcher
+				go func() {
+					if parsedID, err := uuid.Parse(deviceID); err == nil {
+						_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusConnected)
 						
-						utils.Info("QR code image generated",
-							zap.String("device_id", deviceID),
-							zap.Int("image_size", len(qrImage)),
-							zap.String("qr_string", qrString),
-						)
+						if client.Store != nil && client.Store.ID != nil {
+							actualPhone := client.Store.ID.User
+							updatePhone := &models.UpdateDeviceRequest{
+								PhoneNumber: &actualPhone,
+							}
+							_ = s.db.UpdateDeviceInfo(parsedID, updatePhone)
+						}
 					}
-					
-					// ✅ Notify WebSocket clients about QR code update
-					if onQRUpdate != nil {
-						go onQRUpdate(deviceID, qrString, int(SessionPending))
-					}
+				}()
+				
+				// Force immediate WebSocket notification so UI updates instantly
+				if onQRUpdate != nil {
+					go onQRUpdate(deviceID, "", int(SessionActive))
 				}
 				
 			case *events.Connected:
@@ -274,20 +265,22 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 				}
 				s.mu.Unlock()
 				
-				// Update status in Database
-				if parsedID, err := uuid.Parse(deviceID); err == nil {
-					_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusConnected)
-					
-					// Ensure we save the REAL WhatsApp number to the device's phone_number
-					// This acts as the bridge for multi-session restoration!
-					if client.Store != nil && client.Store.ID != nil {
-						actualPhone := client.Store.ID.User
-						updatePhone := &models.UpdateDeviceRequest{
-							PhoneNumber: &actualPhone,
+				// Update status in Database asynchronously
+				go func() {
+					if parsedID, err := uuid.Parse(deviceID); err == nil {
+						_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusConnected)
+						
+						// Ensure we save the REAL WhatsApp number to the device's phone_number
+						// This acts as the bridge for multi-session restoration!
+						if client.Store != nil && client.Store.ID != nil {
+							actualPhone := client.Store.ID.User
+							updatePhone := &models.UpdateDeviceRequest{
+								PhoneNumber: &actualPhone,
+							}
+							_ = s.db.UpdateDeviceInfo(parsedID, updatePhone)
 						}
-						_ = s.db.UpdateDeviceInfo(parsedID, updatePhone)
 					}
-				}
+				}()
 				
 			case *events.Disconnected:
 				// ❌ Connection lost
@@ -300,10 +293,12 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 				}
 				s.mu.Unlock()
 				
-				// Update status in Database
-				if parsedID, err := uuid.Parse(deviceID); err == nil {
-					_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
-				}
+				// Update status in Database asynchronously
+				go func() {
+					if parsedID, err := uuid.Parse(deviceID); err == nil {
+						_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
+					}
+				}()
 				
 			case *events.ConnectFailure:
 				// ❌ Connection failed
@@ -324,10 +319,12 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 				}
 				s.mu.Unlock()
 				
-				// Update status in Database
-				if parsedID, err := uuid.Parse(deviceID); err == nil {
-					_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
-				}
+				// Update status in Database asynchronously
+				go func() {
+					if parsedID, err := uuid.Parse(deviceID); err == nil {
+						_ = s.db.UpdateDeviceStatus(parsedID, models.DeviceStatusDisconnected)
+					}
+				}()
 
 			case *events.Receipt:
 				// ✅ Message delivery / read receipt
@@ -420,6 +417,46 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 			}
 		})
 		
+	// ✅ Get QR Channel for auto-refreshing QR codes if not logged in
+	var qrChan <-chan whatsmeow.QRChannelItem
+	if client.Store.ID == nil {
+		qrChan, _ = client.GetQRChannel(context.Background())
+	}
+
+	// ✅ Start listening to QR channel for auto-refreshing QR codes (must be before Connect)
+	if qrChan != nil {
+		go func() {
+			for evt := range qrChan {
+				if evt.Event == "code" {
+					qrString := evt.Code
+					utils.Info("New QR code received from WhatsApp channel", zap.String("device_id", deviceID))
+					
+					s.mu.Lock()
+					s.qrCodes[deviceID] = qrString
+					onQRUpdate := s.onQRUpdate
+					s.mu.Unlock()
+					
+					// Generate PNG image from the real QR code
+					qrImage, err := s.GenerateQRCodeImage(qrString)
+					if err != nil {
+						utils.Error("Failed to generate QR code image", zap.String("device_id", deviceID), zap.Error(err))
+					} else {
+						s.mu.Lock()
+						s.qrCodeImages[deviceID] = qrImage
+						s.mu.Unlock()
+					}
+					
+					// Notify WebSocket clients about QR code update
+					if onQRUpdate != nil {
+						go onQRUpdate(deviceID, qrString, int(SessionPending))
+					}
+				} else {
+					utils.Info("QR channel event", zap.String("device_id", deviceID), zap.String("event", evt.Event))
+				}
+			}
+		}()
+	}
+
 	// ✅ Connect to WhatsApp Web
 	utils.Info("Attempting to connect to WhatsApp Web",
 		zap.String("device_id", deviceID),
@@ -437,6 +474,7 @@ func (s *Service) setupEventHandlersAndConnect(deviceID string, client *whatsmeo
 			sess.Status = SessionInactive
 		}
 		s.mu.Unlock()
+		return
 	}
 }
 

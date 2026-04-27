@@ -108,7 +108,7 @@ func NewService(db *database.Database, sessionService *session.Service, analytic
 			)
 			// Record delivery/read analytics
 			if newStatus == 2 || newStatus == 3 {
-				if msg, err := store.GetQueuedMessage(internalID); err == nil {
+				if msg, err := store.GetQueuedMessage(internalID); err == nil && msg != nil {
 					uID, err := sessionService.GetUserID(msg.DeviceID)
 					if err == nil {
 						dID, _ := uuid.Parse(msg.DeviceID)

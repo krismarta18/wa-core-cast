@@ -243,7 +243,12 @@ export default function DashboardPage() {
               {recentMessages.length > 0 ? recentMessages.map((m) => (
                 <li key={m.id} className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-gray-50">
                   <div className="min-w-0 flex-1">
-                    <p className="font-mono text-xs text-gray-400">{m.target_jid.split('@')[0]}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-xs text-gray-400">{m.target_jid.split('@')[0]}</p>
+                      <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-medium">
+                        via {devices.find(d => d.device_id === m.device_id)?.display_name || m.device_id.slice(0, 5)}
+                      </span>
+                    </div>
                     <p className="truncate text-sm text-gray-700">{m.content}</p>
                   </div>
                   <div className="flex flex-shrink-0 flex-col items-end gap-1">

@@ -103,18 +103,26 @@ func NewService(db *database.Database, sessionService *session.Service, analytic
 			return
 		}
 		
-		msg, _ := store.GetQueuedMessage(internalID)
+		msg, err := store.GetQueuedMessage(internalID)
+		if err != nil || msg == nil {
+			return
+		}
+		
 		deviceID, _ := uuid.Parse(msg.DeviceID)
 		userID, _ := sessionService.GetUserID(msg.DeviceID)
 		
-		svc.analyticsService.RecordDelivery(userID, deviceID)
+		if svc.analyticsService != nil {
+			svc.analyticsService.RecordDelivery(userID, deviceID)
+		}
 		
 		// Trigger Webhook
-		svc.integrationService.TriggerWebhook(userID, "message.status_updated", map[string]interface{}{
-			"message_id": internalID,
-			"status":     newStatus,
-			"whatsapp_id": whatsappMsgID,
-		})
+		if svc.integrationService != nil {
+			svc.integrationService.TriggerWebhook(userID, "message.status_updated", map[string]interface{}{
+				"message_id": internalID,
+				"status":     newStatus,
+				"whatsapp_id": whatsappMsgID,
+			})
+		}
 
 		if err := store.UpdateQueuedMessageStatus(internalID, MessageStatus(newStatus), nil); err != nil {
 			utils.Error("Failed to update message status from receipt",
