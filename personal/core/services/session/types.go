@@ -136,6 +136,7 @@ type ServiceInterface interface {
 	
 	// Auto-restore
 	RestorePreviousSessions(ctx context.Context) error
+	ReconnectDevice(ctx context.Context, deviceID string) error
 	
 	// Cleanup
 	Shutdown(ctx context.Context) error

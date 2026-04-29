@@ -29,6 +29,8 @@ type Device struct {
 	BatteryLevel    *int       `json:"battery_level,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
+	IsWarming       bool       `json:"is_warming"`
+	WarmingUntil    *time.Time `json:"warming_until,omitempty"`
 }
 
 // TableName returns the table name
@@ -71,6 +73,8 @@ type DeviceResponse struct {
 	WaVersion      *string    `json:"wa_version,omitempty"`
 	BatteryLevel   *int       `json:"battery_level,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
+	IsWarming      bool       `json:"is_warming"`
+	WarmingUntil   *time.Time `json:"warming_until,omitempty"`
 }
 
 // ToResponse converts Device to DeviceResponse

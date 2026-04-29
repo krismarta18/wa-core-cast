@@ -227,8 +227,28 @@ func (s *Service) Stop() error {
 }
 
 func (s *Service) SendMessage(ctx context.Context, deviceID string, targetJID string, content string, groupID *string, broadcastID *string) (string, error) {
+	return s.sendMessageInternal(ctx, deviceID, targetJID, content, groupID, broadcastID, false)
+}
+
+// SendInternalMessage sends a message bypassing the warming lockdown (used by Warming service)
+func (s *Service) SendInternalMessage(ctx context.Context, deviceID string, targetJID string, content string) (string, error) {
+	return s.sendMessageInternal(ctx, deviceID, targetJID, content, nil, nil, true)
+}
+
+func (s *Service) sendMessageInternal(ctx context.Context, deviceID string, targetJID string, content string, groupID *string, broadcastID *string, bypassLockdown bool) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
+	}
+
+	// Check for warming lockdown if not bypassed
+	if !bypassLockdown {
+		parsedID, _ := uuid.Parse(deviceID)
+		dev, err := s.db.GetDeviceByID(parsedID)
+		if err == nil && dev != nil {
+			if dev.IsWarming && dev.WarmingUntil != nil && time.Now().Before(*dev.WarmingUntil) {
+				return "", fmt.Errorf("nomor sedang dalam mode Warming (Lockdown). Mohon tunggu hingga sesi selesai.")
+			}
+		}
 	}
 
 	messageID := uuid.New().String()
@@ -261,6 +281,15 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, tar
 		return "", fmt.Errorf("session not active for device %s", deviceID)
 	}
 
+	// Check for warming lockdown
+	parsedID, _ := uuid.Parse(deviceID)
+	dev, err := s.db.GetDeviceByID(parsedID)
+	if err == nil && dev != nil {
+		if dev.IsWarming && dev.WarmingUntil != nil && time.Now().Before(*dev.WarmingUntil) {
+			return "", fmt.Errorf("nomor sedang dalam mode Warming (Lockdown). Mohon tunggu hingga sesi selesai.")
+		}
+	}
+
 	messageID := uuid.New().String()
 
 	queuedMsg := &QueuedMessage{
@@ -289,6 +318,15 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID string, tar
 func (s *Service) SendScheduledMessage(ctx context.Context, deviceID string, targetJID string, content string, scheduledFor time.Time, mediaURL *string, contentType string, caption *string, broadcastID *string) (string, error) {
 	if !s.sessionService.IsSessionActive(deviceID) {
 		return "", fmt.Errorf("session not active for device %s", deviceID)
+	}
+
+	// Check for warming lockdown
+	parsedID, _ := uuid.Parse(deviceID)
+	dev, err := s.db.GetDeviceByID(parsedID)
+	if err == nil && dev != nil {
+		if dev.IsWarming && dev.WarmingUntil != nil && time.Now().Before(*dev.WarmingUntil) {
+			return "", fmt.Errorf("nomor sedang dalam mode Warming (Lockdown). Mohon tunggu hingga sesi selesai.")
+		}
 	}
 
 	messageID := uuid.New().String()
@@ -484,6 +522,8 @@ func (s *Service) sendQueuedMessageSync(deviceID string, msg *QueuedMessage) {
 		dID, _ := uuid.Parse(deviceID)
 		_ = s.analyticsService.RecordSent(uID, dID)
 	}
+
+	s.metrics.recordMessageSent()
 }
 
 func (s *Service) handleSendFailure(msg *QueuedMessage, err error) {
@@ -700,6 +740,18 @@ func (sm *ServiceMetrics) recordMessageFailed() {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	sm.TotalFailed++
+	if sm.CurrentPending > 0 {
+		sm.CurrentPending--
+	}
+}
+
+func (sm *ServiceMetrics) recordMessageSent() {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	sm.TotalSent++
+	if sm.CurrentPending > 0 {
+		sm.CurrentPending--
+	}
 }
 
 func (sm *ServiceMetrics) recordStatusUpdate(status MessageStatus) {

@@ -294,6 +294,26 @@ func (h *SessionHandler) StopSession(c *gin.Context) {
 	})
 }
 
+// ReconnectSession tries to reconnect an existing session without QR
+// POST /sessions/:device_id/reconnect
+func (h *SessionHandler) ReconnectSession(c *gin.Context) {
+	deviceID := c.Param("device_id")
+	ctx := c.Request.Context()
+
+	if err := h.sessionService.ReconnectDevice(ctx, deviceID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   err.Error(),
+			"success": false,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Mencoba menyambungkan kembali...",
+	})
+}
+
 // DeleteSession deletes a device and its session
 // DELETE /sessions/:device_id
 func (h *SessionHandler) DeleteSession(c *gin.Context) {
@@ -331,6 +351,7 @@ func RegisterSessionRoutes(router interface {
 		group.GET("/:device_id/qr", handler.GetQRCode)
 		group.POST("/initiate", handler.InitiateSession)
 		group.POST("/:device_id/stop", handler.StopSession)
+		group.POST("/:device_id/reconnect", handler.ReconnectSession)
 		group.DELETE("/:device_id", handler.DeleteSession)
 	}
 }

@@ -183,8 +183,23 @@ func (s *Service) StartSession(ctx context.Context, cfg *SessionConfig) error {
 	go func() {
 		deviceID := cfg.DeviceID
 
-		// ✅ Create new device for this session from the SHARED container
-		deviceStore := s.waStoreContainer.NewDevice()
+		// ✅ Check if there's already a store for this phone to REUSE it
+		// This prevents "force logout" because WhatsApp hates duplicate sessions for the same identity
+		var deviceStore *importStore.Device
+		if cfg.Phone != "" {
+			waDevices, _ := s.waStoreContainer.GetAllDevices(context.Background())
+			for _, d := range waDevices {
+				if d.ID != nil && d.ID.User == cfg.Phone {
+					deviceStore = d
+					utils.Info("Reusing existing device store for initiation", zap.String("phone", cfg.Phone))
+					break
+				}
+			}
+		}
+
+		if deviceStore == nil {
+			deviceStore = s.waStoreContainer.NewDevice()
+		}
 		
 		// ✅ Create whatsmeow client with proper store and logger
 		client := whatsmeow.NewClient(deviceStore, waLog.Noop)
@@ -717,6 +732,73 @@ func (s *Service) GetUserID(deviceID string) (uuid.UUID, error) {
 	return uuid.Parse(session.Config.UserID)
 }
 
+// ReconnectDevice tries to reconnect an existing device without QR scan
+func (s *Service) ReconnectDevice(ctx context.Context, deviceID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// 1. Check if already connected
+	if sess, exists := s.sessions[deviceID]; exists {
+		if sess.Client != nil && sess.Client.IsConnected() {
+			return nil // Already connected
+		}
+	}
+
+	// 2. Fetch backend Device
+	parsedID, err := uuid.Parse(deviceID)
+	if err != nil {
+		return fmt.Errorf("invalid device id: %w", err)
+	}
+	dbDevice, err := s.db.GetDeviceByID(parsedID)
+	if err != nil || dbDevice == nil {
+		return fmt.Errorf("device not found in database")
+	}
+
+	// 3. Fetch Whatsmeow device stores
+	waDevices, err := s.waStoreContainer.GetAllDevices(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get whatsmeow devices: %w", err)
+	}
+
+	// 4. Find match
+	var matchedStore *importStore.Device
+	for _, wDevice := range waDevices {
+		if wDevice.ID != nil && wDevice.ID.User == dbDevice.PhoneNumber {
+			matchedStore = wDevice
+			break
+		}
+	}
+
+	if matchedStore == nil {
+		return fmt.Errorf("no existing session data found for this phone number. please scan QR")
+	}
+
+	// 5. Restore and Connect
+	cfg := &SessionConfig{
+		DeviceID:       dbDevice.ID.String(),
+		UserID:         dbDevice.UserID.String(),
+		Phone:          dbDevice.PhoneNumber,
+		DisplayName:    dbDevice.DisplayName,
+		EncryptionKey:  s.encryptionKey,
+		SessionTimeout: s.sessionTimeout,
+	}
+
+	client := whatsmeow.NewClient(matchedStore, waLog.Noop)
+	session := &WhatsAppSession{
+		ID:               dbDevice.ID.String(),
+		Client:           client,
+		Status:           SessionActive,
+		LastActivity:     time.Now().Unix(),
+		EnableReceiptAck: true,
+		Config:           cfg,
+	}
+
+	s.sessions[deviceID] = session
+	go s.setupEventHandlersAndConnect(deviceID, client)
+
+	return nil
+}
+
 // RestorePreviousSessions restores previous sessions from database
 func (s *Service) RestorePreviousSessions(ctx context.Context) error {
 	s.mu.Lock()
@@ -1108,4 +1190,49 @@ func (s *Service) SendMessageWithMedia(ctx context.Context, deviceID, targetJID,
 // httpGet is a simple HTTP GET helper (abstracted for testability)
 var httpGet = func(url string) (*http.Response, error) {
 	return http.Get(url) //nolint:noctx
+}
+// SetPresence sets the presence status for a session (composing, recording, etc.)
+func (s *Service) SetPresence(deviceID string, status string) error {
+	session := s.GetSession(deviceID)
+	if session == nil {
+		return fmt.Errorf("session not found: %s", deviceID)
+	}
+
+	if session.Client == nil || !session.Client.IsConnected() {
+		return fmt.Errorf("session not connected: %s", deviceID)
+	}
+
+	// This is global presence which is not really supported by WhatsApp as a single call 
+	// (usually it's per chat or "available")
+	return nil
+}
+
+// SetChatPresence sets the presence status for a specific chat
+func (s *Service) SetChatPresence(deviceID string, targetJID string, status string) error {
+	session := s.GetSession(deviceID)
+	if session == nil {
+		return fmt.Errorf("session not found: %s", deviceID)
+	}
+
+	if session.Client == nil || !session.Client.IsConnected() {
+		return fmt.Errorf("session not connected: %s", deviceID)
+	}
+
+	jid, err := types.ParseJID(targetJID)
+	if err != nil {
+		// Try to append @s.whatsapp.net if it's just a number
+		if !strings.Contains(targetJID, "@") {
+			jid, err = types.ParseJID(targetJID + "@s.whatsapp.net")
+		}
+		if err != nil {
+			return fmt.Errorf("invalid JID: %w", err)
+		}
+	}
+
+	presence := types.ChatPresenceComposing
+	if status == "paused" {
+		presence = types.ChatPresencePaused
+	}
+
+	return session.Client.SendChatPresence(context.Background(), jid, presence, types.ChatPresenceMediaText)
 }

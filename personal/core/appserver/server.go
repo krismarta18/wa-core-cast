@@ -25,6 +25,7 @@ import (
 	"wacast/core/services/message"
 	"wacast/core/services/session"
 	"wacast/core/services/settings"
+	"wacast/core/services/warming"
 	"wacast/core/utils"
 )
 
@@ -38,6 +39,7 @@ type Server struct {
 	analyticService  *analytics.Service
 	broadcastService *broadcast.Service
 	autoresponseService *autoresponse.Service
+	warmingService *warming.Service
 	db               *database.Database
 	config           *config.Config
 	licenseService   *license.Service
@@ -59,6 +61,7 @@ func NewServer(
 	analyticService *analytics.Service,
 	broadcastService *broadcast.Service,
 	autoresponseService *autoresponse.Service,
+	warmingService *warming.Service,
 	db *database.Database,
 	cfg *config.Config,
 	host string,
@@ -85,6 +88,7 @@ func NewServer(
 		analyticService:  analyticService,
 		broadcastService: broadcastService,
 		autoresponseService: autoresponseService,
+		warmingService: warmingService,
 		db:               db,
 		config:           cfg,
 		port:             port,
@@ -151,6 +155,15 @@ func (s *Server) registerRoutes() {
 
 		integrationHandler := handlers.NewIntegrationHandler(s.integrationService, s.config.JWTSecret, s.authService)
 		integrationHandler.RegisterRoutes(v1)
+
+		warmingHandler := handlers.NewWarmingHandler(s.warmingService)
+		warmingGroup := v1.Group("/warming")
+		warmingGroup.Use(handlers.JWTAuthMiddleware(s.config.JWTSecret, s.authService))
+		{
+			warmingGroup.POST("/start", warmingHandler.StartWarming)
+			warmingGroup.POST("/stop", warmingHandler.StopWarming)
+			warmingGroup.GET("/status", warmingHandler.GetStatus)
+		}
 	}
 
 	s.engine.GET("/ws/sessions/:device_id/qr", s.websocketHandler.ConnectQR)

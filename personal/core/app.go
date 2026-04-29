@@ -20,6 +20,7 @@ import (
 	"wacast/core/services/session"
 	"wacast/core/utils"
 	"wacast/core/services/integration"
+	"wacast/core/services/warming"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -138,6 +139,7 @@ func (a *App) Start() error {
 	authService := auth.NewService(db, cfg.JWTSecret, cfg.JWTExpiryHours, cfg.JWTRefreshExpiryHours)
 	contactStore := contact.NewStore(db)
 	contactService := contact.NewService(contactStore)
+	warmingService := warming.NewService(db, a.sessionService, a.messageService)
 
 	// 6. Initialize HTTP server
 	a.httpServer = appserver.NewServer(
@@ -149,6 +151,7 @@ func (a *App) Start() error {
 		analyticService,
 		broadcastService,
 		autoresponseService,
+		warmingService,
 		db,
 		cfg,
 		cfg.ServerHost,

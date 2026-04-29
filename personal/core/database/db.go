@@ -79,7 +79,11 @@ func InitDatabase(cfg *config.DatabaseConfig) (*Database, error) {
 
 	// Special handling for SQLite
 	if driver == "sqlite" {
+		db.SetMaxOpenConns(1) // Avoid database is locked errors with concurrent writes
 		_, _ = db.Exec("PRAGMA foreign_keys = ON;")
+		_, _ = db.Exec("PRAGMA journal_mode = WAL;")
+		_, _ = db.Exec("PRAGMA busy_timeout = 5000;") // 5 seconds timeout
+		utils.Info("DATABASE: WAL mode, busy timeout, and MaxOpenConns=1 enabled for SQLite")
 		utils.Info("DATABASE: Foreign keys enabled for SQLite")
 	}
 
@@ -190,8 +194,8 @@ func (d *Database) translateQuery(query string) string {
 		return query
 	}
 
-	// 1. Replace NOW() with strftime in RFC3339 format to match Go
-	translated := strings.ReplaceAll(query, "NOW()", "strftime('%Y-%m-%dT%H:%M:%SZ', 'now')")
+	// 1. Replace NOW() with datetime('now') to match standard SQL datetime format
+	translated := strings.ReplaceAll(query, "NOW()", "datetime('now')")
 	
 	// 2. Replace ILIKE with LIKE (SQLite LIKE is case-insensitive for ASCII)
 	translated = strings.ReplaceAll(translated, "ILIKE", "LIKE")

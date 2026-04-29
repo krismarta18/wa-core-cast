@@ -188,10 +188,10 @@ func (s *Service) GetOverview(ctx context.Context, userID string) (*models.Billi
 func (s *Service) getUsageHistory(ctx context.Context, userID uuid.UUID, days int) ([]models.BillingUsagePoint, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT DATE(created_at) AS usage_date,
-		       COUNT(*) FILTER (WHERE direction = 'outbound' AND status IN ('sent', 'delivered', 'read')) AS sent_count,
-		       COUNT(*) FILTER (WHERE direction = 'outbound' AND status = 'failed') AS failed_count
+		       COUNT(*) FILTER (WHERE direction = 'outbound' AND status_message IN (1, 2, 3)) AS sent_count,
+		       COUNT(*) FILTER (WHERE direction = 'outbound' AND status_message = 4) AS failed_count
 		FROM messages
-		WHERE user_id = $1 AND created_at >= CURRENT_DATE - ($2::int - 1) * INTERVAL '1 day'
+		WHERE user_id = $1 AND created_at >= datetime('now', '-' || ($2 - 1) || ' days')
 		GROUP BY DATE(created_at)
 		ORDER BY usage_date ASC
 	`, userID, days)
@@ -206,7 +206,7 @@ func (s *Service) getUsageHistory(ctx context.Context, userID uuid.UUID, days in
 			       COUNT(*) FILTER (WHERE UPPER(m.direction) IN ('OUT', 'OUTBOUND') AND m.status_message = 4) AS failed_count
 			FROM messages m
 			INNER JOIN devices d ON d.id = m.device_id
-			WHERE d.user_id = $1 AND m.created_at >= CURRENT_DATE - ($2::int - 1) * INTERVAL '1 day'
+			WHERE d.user_id = $1 AND m.created_at >= datetime('now', '-' || ($2 - 1) || ' days')
 			GROUP BY DATE(m.created_at)
 			ORDER BY usage_date ASC
 		`, userID, days)

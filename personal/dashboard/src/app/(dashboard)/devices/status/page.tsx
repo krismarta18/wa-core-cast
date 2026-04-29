@@ -40,12 +40,23 @@ export default function SessionManagementPage() {
 
   const deviceToHandle = devices.find((d) => d.device_id === confirm?.deviceId);
 
-  function handleReconnect(id: string, name: string) {
+  async function handleReconnect(id: string, name: string) {
     setReconnecting(id);
-    toast.info(`Membuka QR untuk ${name || id}...`);
-    setTimeout(() => {
-      router.push("/devices/qr");
-    }, 1000);
+    try {
+      const res = await sessionsApi.reconnect(id);
+      if (res.success) {
+        toast.success(res.message);
+        // Refresh list after a bit
+        setTimeout(fetchDevices, 3000);
+      }
+    } catch (err: any) {
+      toast.info("Sesi lama tidak ditemukan atau kedaluwarsa. Membuka QR...");
+      setTimeout(() => {
+        router.push("/devices/qr");
+      }, 1500);
+    } finally {
+      setReconnecting(null);
+    }
   }
 
   async function executeAction() {

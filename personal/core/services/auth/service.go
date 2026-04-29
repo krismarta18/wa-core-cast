@@ -302,6 +302,7 @@ func (s *Service) issueSessionTokens(user *models.User) (*VerifyOTPResult, time.
 func (s *Service) ValidateSession(ctx context.Context, accessToken string) error {
 	active, err := touchActiveSession(ctx, s.db, accessToken)
 	if err != nil {
+		utils.Error("ValidateSession: touchActiveSession failed", zap.Error(err))
 		return fmt.Errorf("validate-session: %w", err)
 	}
 	if !active {
@@ -503,7 +504,7 @@ func insertUser(ctx context.Context, db *database.Database, phoneNumber, fullNam
 func markUserVerifiedAndLogin(ctx context.Context, db *database.Database, phoneNumber string) (*models.User, error) {
 	q := `
 		UPDATE users
-		SET is_verified = true, last_login_at = NOW(), updated_at = NOW()
+		SET is_verified = true, last_login_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
 		WHERE phone_number = $1
 		RETURNING ` + userSelectCols
 	return scanUser(db.QueryRowContext(ctx, q, phoneNumber))
@@ -512,7 +513,7 @@ func markUserVerifiedAndLogin(ctx context.Context, db *database.Database, phoneN
 func updateUserProfile(ctx context.Context, db *database.Database, user *models.User) (*models.User, error) {
 	q := `
 		UPDATE users
-		SET full_name = $1, email = $2, company_name = $3, timezone = $4, updated_at = NOW()
+		SET full_name = $1, email = $2, company_name = $3, timezone = $4, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $5
 		RETURNING ` + userSelectCols
 	return scanUser(db.QueryRowContext(ctx, q, user.FullName, user.Email, user.CompanyName, user.Timezone, user.ID))
@@ -520,7 +521,7 @@ func updateUserProfile(ctx context.Context, db *database.Database, user *models.
 
 func invalidatePendingOTPs(ctx context.Context, db *database.Database, phoneNumber string) error {
 	_, err := db.ExecContext(ctx,
-		`UPDATE otp_verifications SET verified_at = NOW()
+		`UPDATE otp_verifications SET verified_at = CURRENT_TIMESTAMP
 		 WHERE phone_number = $1 AND verified_at IS NULL`,
 		phoneNumber,
 	)
@@ -542,7 +543,7 @@ func getActiveOTP(ctx context.Context, db *database.Database, phoneNumber string
 		FROM otp_verifications
 		WHERE phone_number = $1
 		  AND verified_at IS NULL
-		  AND expires_at > NOW()
+		  AND expires_at > CURRENT_TIMESTAMP
 		ORDER BY created_at DESC
 		LIMIT 1`
 
@@ -569,7 +570,7 @@ func incrementOTPAttempts(ctx context.Context, db *database.Database, otpID uuid
 
 func markOTPVerified(ctx context.Context, db *database.Database, otpID uuid.UUID) error {
 	_, err := db.ExecContext(ctx,
-		`UPDATE otp_verifications SET verified_at = NOW() WHERE id = $1`,
+		`UPDATE otp_verifications SET verified_at = CURRENT_TIMESTAMP WHERE id = $1`,
 		otpID,
 	)
 	return err
@@ -597,7 +598,7 @@ func getSessionByRefreshToken(ctx context.Context, db *database.Database, refres
 		 FROM user_sessions
 		 WHERE refresh_token_hash = $1
 		   AND revoked_at IS NULL
-		   AND refresh_expires_at > NOW()
+		   AND refresh_expires_at > CURRENT_TIMESTAMP
 		 LIMIT 1`,
 		hashToken(refreshToken),
 	).Scan(&record.ID, &record.UserID)
@@ -614,7 +615,7 @@ func rotateUserSession(ctx context.Context, db *database.Database, sessionID uui
 		     refresh_token_hash = $2,
 		     ip_address = $3,
 		     user_agent = $4,
-		     last_active_at = NOW(),
+		     last_active_at = CURRENT_TIMESTAMP,
 		     expires_at = $5,
 		     refresh_expires_at = $6,
 		     revoked_at = NULL
@@ -633,10 +634,10 @@ func rotateUserSession(ctx context.Context, db *database.Database, sessionID uui
 func touchActiveSession(ctx context.Context, db *database.Database, accessToken string) (bool, error) {
 	result, err := db.ExecContext(ctx,
 		`UPDATE user_sessions
-		 SET last_active_at = NOW()
+		 SET last_active_at = CURRENT_TIMESTAMP
 		 WHERE session_token_hash = $1
 		   AND revoked_at IS NULL
-		   AND expires_at > NOW()`,
+		   AND expires_at > CURRENT_TIMESTAMP`,
 		hashToken(accessToken),
 	)
 	if err != nil {
@@ -654,7 +655,7 @@ func touchActiveSession(ctx context.Context, db *database.Database, accessToken 
 func revokeSession(ctx context.Context, db *database.Database, accessToken string) (bool, error) {
 	result, err := db.ExecContext(ctx,
 		`UPDATE user_sessions
-		 SET revoked_at = NOW(), last_active_at = NOW()
+		 SET revoked_at = CURRENT_TIMESTAMP, last_active_at = CURRENT_TIMESTAMP
 		 WHERE session_token_hash = $1
 		   AND revoked_at IS NULL`,
 		hashToken(accessToken),

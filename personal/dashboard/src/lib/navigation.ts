@@ -24,6 +24,7 @@ import {
   CreditCard,
   Bell,
   Rocket,
+  Flame,
   type LucideIcon,
 } from "lucide-react";
 
@@ -51,6 +52,7 @@ export const navigation: NavGroup[] = [
     items: [
       { label: "Session Management", href: "/devices/status", icon: Wifi },
       { label: "Connect New Device", href: "/devices/qr", icon: QrCode },
+      { label: "Account Warming", href: "/warming", icon: Flame, badge: "Pro" },
       { label: "Multi Device Info", href: "/devices/info", icon: Info },
     ],
   },

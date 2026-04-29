@@ -162,19 +162,26 @@ func (mr *MigrationRunner) RunMigrations() error {
 
 		utils.Info("Running migration", zap.String("version", migration.Version), zap.String("name", migration.Name))
 
-		// Execute migration
+		// Execute migration - Split by semicolon to handle multiple statements
+		// This is necessary because many drivers only execute the first statement in Exec()
 		sql := migration.UpSQL
 		if mr.db.DriverType() == "sqlite" {
 			sql = translateToSQLite(sql)
-			// Log translated SQL for debugging
-			// _ = ioutil.WriteFile("debug_translated_migration.sql", []byte(sql), 0644)
 		}
 
-		_, err := mr.db.GetConnection().Exec(sql)
-		if err != nil {
-			utils.Error(fmt.Sprintf("Migration FAILED! Version: %s, Name: %s, Error: %v", 
-				migration.Version, migration.Name, err))
-			return fmt.Errorf("failed to apply migration %s: %w", migration.Version, err)
+		statements := strings.Split(sql, ";")
+		for _, stmt := range statements {
+			trimmedStmt := strings.TrimSpace(stmt)
+			if trimmedStmt == "" {
+				continue
+			}
+			
+			_, err := mr.db.GetConnection().Exec(trimmedStmt)
+			if err != nil {
+				utils.Error(fmt.Sprintf("Migration Statement FAILED! Version: %s, Name: %s, Error: %v", 
+					migration.Version, migration.Name, err), zap.String("sql", trimmedStmt))
+				return fmt.Errorf("failed to apply migration statement in %s: %w", migration.Version, err)
+			}
 		}
 
 		// Record migration as applied
@@ -310,14 +317,23 @@ func translateToSQLite(sql string) string {
 				fields := strings.Fields(trimmed)
 				if len(fields) >= 3 {
 					currentAlterTable = fields[2]
+					// Remove quotes if present
+					currentAlterTable = strings.Trim(currentAlterTable, "\"")
 					inAlterBlock = true
 				}
 			}
 
 			// If we are in an ALTER block and it's an ADD COLUMN
 			if inAlterBlock && strings.Contains(trimmed, "ADD COLUMN") {
-				p := strings.TrimSuffix(strings.TrimSpace(trimmed), ",")
-				line = fmt.Sprintf("ALTER TABLE %s %s;", currentAlterTable, p)
+				// If the line already contains "ALTER TABLE", just fix the "public." and types
+				if strings.Contains(trimmed, "ALTER TABLE") {
+					line = strings.ReplaceAll(line, "public.", "")
+					// Types will be replaced later by the general logic
+				} else {
+					// It's a multi-line ADD COLUMN, prepend ALTER TABLE
+					p := strings.TrimSuffix(strings.TrimSpace(trimmed), ",")
+					line = fmt.Sprintf("ALTER TABLE \"%s\" %s;", currentAlterTable, p)
+				}
 			}
 
 			// End of ALTER block

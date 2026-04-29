@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -61,13 +62,24 @@ func JWTAuthMiddleware(jwtSecret string, authService *auth.Service) gin.HandlerF
 		}
 
 		if err := authService.ValidateSession(c.Request.Context(), parts[1]); err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error": gin.H{
-					"code":    "SESSION_REVOKED",
-					"message": "Session is no longer active",
-				},
-			})
+			if errors.Is(err, auth.ErrSessionNotFound) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"success": false,
+					"error": gin.H{
+						"code":    "SESSION_REVOKED",
+						"message": "Session is no longer active",
+					},
+				})
+			} else {
+				// Internal error (e.g. database locked). Return 500 so frontend doesn't clear session.
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"error": gin.H{
+						"code":    "INTERNAL_ERROR",
+						"message": "Internal server error during session validation",
+					},
+				})
+			}
 			return
 		}
 

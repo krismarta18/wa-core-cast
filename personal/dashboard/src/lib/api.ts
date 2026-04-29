@@ -117,9 +117,13 @@ async function refreshAccessToken() {
     refreshPromise = authApi
       .refresh({ refresh_token: currentSession.refreshToken })
       .then((response) => persistAuthSession(response, currentSession.persistent))
-      .catch(() => {
-        clearAuthSession();
-        notifyUnauthorized();
+      .catch((error) => {
+        // Only clear session if the refresh token itself is invalid (401)
+        // If it's a 500 or network error, don't log out the user yet
+        if (error.response?.status === 401) {
+          clearAuthSession();
+          notifyUnauthorized();
+        }
         return null;
       })
       .finally(() => {
@@ -273,6 +277,11 @@ export const sessionsApi = {
   stop: (deviceId: string) =>
     api
       .post<{ message: string }>(`/api/v1/sessions/${deviceId}/stop`)
+      .then((r) => r.data),
+
+  reconnect: (deviceId: string) =>
+    api
+      .post<{ success: boolean; message: string }>(`/api/v1/sessions/${deviceId}/reconnect`)
       .then((r) => r.data),
 
   delete: (deviceId: string) =>
@@ -511,4 +520,23 @@ export const settingsApi = {
     api.put<{ success: boolean; message: string }>(`/api/v1/settings/${key}`, { value }).then((r) => r.data),
 };
 
-export default api;
+// --- Warming API ------------------------------------------------------------
+export const warmingApi = {
+  status: () =>
+    api.get<{ success: boolean; data: any }>("/api/v1/warming/status").then((r) => r.data),
+
+  start: (deviceIds: string[], durationMinutes: number) =>
+    api
+      .post<{ success: boolean; message: string }>("/api/v1/warming/start", {
+        device_ids: deviceIds,
+        duration_minutes: durationMinutes,
+      })
+      .then((r) => r.data),
+
+  stop: () =>
+    api
+      .post<{ success: boolean; message: string }>("/api/v1/warming/stop")
+      .then((r) => r.data),
+};
+
+export default api;

@@ -14,14 +14,14 @@ import (
 // CreateDevice creates a new device/session
 func (d *Database) CreateDevice(device *models.Device) error {
 	query := `
-		INSERT INTO devices (id, user_id, unique_name, display_name, phone_number, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO devices (id, user_id, unique_name, display_name, phone_number, status, created_at, updated_at, is_warming)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	now := time.Now()
 	_, err := d.Exec(query,
 		device.ID, device.UserID, device.UniqueName, device.DisplayName,
-		device.PhoneNumber, device.Status, now, now,
+		device.PhoneNumber, device.Status, now, now, device.IsWarming,
 	)
 
 	if err != nil {
@@ -38,7 +38,7 @@ func (d *Database) GetDeviceByID(deviceID uuid.UUID) (*models.Device, error) {
 	query := `
 		SELECT id, user_id, unique_name, display_name, phone_number, status,
 		       last_seen_at, connected_since, platform, wa_version, battery_level,
-		       created_at, updated_at
+		       created_at, updated_at, is_warming, warming_until
 		FROM devices
 		WHERE id = $1
 	`
@@ -48,7 +48,7 @@ func (d *Database) GetDeviceByID(deviceID uuid.UUID) (*models.Device, error) {
 		&device.ID, &device.UserID, &device.UniqueName, &device.DisplayName,
 		&device.PhoneNumber, &device.Status, &device.LastSeenAt, &device.ConnectedSince,
 		&device.Platform, &device.WaVersion, &device.BatteryLevel,
-		&device.CreatedAt, &device.UpdatedAt,
+		&device.CreatedAt, &device.UpdatedAt, &device.IsWarming, &device.WarmingUntil,
 	)
 
 	if err != nil {
@@ -64,7 +64,7 @@ func (d *Database) GetDevicesByUserID(userID uuid.UUID) ([]models.Device, error)
 	query := `
 		SELECT id, user_id, unique_name, display_name, phone_number, status,
 		       last_seen_at, connected_since, platform, wa_version, battery_level,
-		       created_at, updated_at
+		       created_at, updated_at, is_warming, warming_until
 		FROM devices
 		WHERE user_id = $1 AND status != 'banned'
 		ORDER BY created_at DESC
@@ -84,7 +84,7 @@ func (d *Database) GetDevicesByUserID(userID uuid.UUID) ([]models.Device, error)
 			&device.ID, &device.UserID, &device.UniqueName, &device.DisplayName,
 			&device.PhoneNumber, &device.Status, &device.LastSeenAt, &device.ConnectedSince,
 			&device.Platform, &device.WaVersion, &device.BatteryLevel,
-			&device.CreatedAt, &device.UpdatedAt,
+			&device.CreatedAt, &device.UpdatedAt, &device.IsWarming, &device.WarmingUntil,
 		)
 		if err != nil {
 			utils.Error("Failed to scan device", zap.Error(err))
@@ -101,7 +101,7 @@ func (d *Database) GetActiveDevices() ([]models.Device, error) {
 	query := `
 		SELECT id, user_id, unique_name, display_name, phone_number, status,
 		       last_seen_at, connected_since, platform, wa_version, battery_level,
-		       created_at, updated_at
+		       created_at, updated_at, is_warming, warming_until
 		FROM devices
 		WHERE status = 'connected'
 		ORDER BY last_seen_at DESC
@@ -121,7 +121,7 @@ func (d *Database) GetActiveDevices() ([]models.Device, error) {
 			&device.ID, &device.UserID, &device.UniqueName, &device.DisplayName,
 			&device.PhoneNumber, &device.Status, &device.LastSeenAt, &device.ConnectedSince,
 			&device.Platform, &device.WaVersion, &device.BatteryLevel,
-			&device.CreatedAt, &device.UpdatedAt,
+			&device.CreatedAt, &device.UpdatedAt, &device.IsWarming, &device.WarmingUntil,
 		)
 		if err != nil {
 			utils.Error("Failed to scan device", zap.Error(err))
@@ -253,3 +253,15 @@ func (d *Database) UpdateDeviceLastSeen(deviceID uuid.UUID) error {
 	return nil
 }
 
+// UpdateDeviceWarmingStatus updates device warming status and lockdown time
+func (d *Database) UpdateDeviceWarmingStatus(deviceID uuid.UUID, isWarming bool, until *time.Time) error {
+	query := `UPDATE devices SET is_warming = $1, warming_until = $2, updated_at = $3 WHERE id = $4`
+
+	_, err := d.Exec(query, isWarming, until, time.Now(), deviceID)
+	if err != nil {
+		utils.Error("Failed to update device warming status", zap.Error(err))
+		return err
+	}
+
+	return nil
+}

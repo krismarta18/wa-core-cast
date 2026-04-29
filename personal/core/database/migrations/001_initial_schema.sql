@@ -677,7 +677,8 @@ CREATE TABLE "public"."settings" (
   "key" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
   "value" text COLLATE "pg_catalog"."default" NOT NULL,
   "description" text COLLATE "pg_catalog"."default",
-  "updated_at" timestamptz(6) DEFAULT now()
+  "updated_at" timestamptz(6) DEFAULT now(),
+  PRIMARY KEY ("key")
 )
 ;
 
