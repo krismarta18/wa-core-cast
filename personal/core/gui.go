@@ -20,7 +20,7 @@ import (
 	"github.com/getlantern/systray"
 )
 
-//go:embed icon/favicon.png icon/tray_16.png
+//go:embed icon/favicon_256.png icon/tray_16.png
 var iconFS embed.FS
 
 // Valid Windows ICO file (Base64) - 16x16
@@ -74,7 +74,7 @@ func (cp *ControlPanel) onReady() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", cp.handleUI)
 	mux.HandleFunc("/favicon.png", func(w http.ResponseWriter, r *http.Request) {
-		data, err := iconFS.ReadFile("icon/favicon.png")
+		data, err := iconFS.ReadFile("icon/favicon_256.png")
 		if err != nil {
 			http.Error(w, "Icon not found", http.StatusNotFound)
 			return
@@ -146,7 +146,7 @@ func (cp *ControlPanel) OpenUI() {
 
 		if !useFallback {
 			// Run browser directly with unique profile to allow tracking and force-close
-			userDataDir := os.Getenv("TEMP") + "\\wacast_gui_profile"
+			userDataDir := utils.GetDataPath("gui_profile")
 			cp.guiCmd = exec.Command(edgePath, "--app="+url, "--window-size=380,640", "--user-data-dir="+userDataDir, "--no-first-run")
 			_ = cp.guiCmd.Start()
 			return

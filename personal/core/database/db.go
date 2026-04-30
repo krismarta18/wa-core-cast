@@ -51,7 +51,7 @@ func InitDatabase(cfg *config.DatabaseConfig) (*Database, error) {
 	if cfg.Host == "" {
 		// Use SQLite as default for personal/local mode
 		driver = "sqlite"
-		dsn = "wacast.db"
+		dsn = utils.GetDataPath("wacast.db")
 		utils.Info("DATABASE: Mode Lokal Aktif (SQLite)", zap.String("file", dsn))
 	} else {
 		utils.Info("DATABASE: Mencoba koneksi PostgreSQL", zap.String("host", cfg.Host))
@@ -103,7 +103,7 @@ func (d *Database) UpdateConnection(cfg *config.DatabaseConfig) error {
 
 	if cfg.Host == "" {
 		driver = "sqlite"
-		dsn = "wacast.db"
+		dsn = utils.GetDataPath("wacast.db")
 	}
 
 	utils.Info("Updating database connection", zap.String("driver", driver), zap.String("dsn", dsn))

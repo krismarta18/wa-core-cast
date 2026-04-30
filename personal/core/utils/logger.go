@@ -36,8 +36,8 @@ func InitLogger(logLevel string) error {
 			EncodeLevel:    zapcore.CapitalLevelEncoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 		},
-		OutputPaths:      []string{"stdout", "debug_log.txt"},
-		ErrorOutputPaths: []string{"stderr", "debug_log.txt"},
+		OutputPaths:      []string{"stdout", GetDataPath("debug_log.txt")},
+		ErrorOutputPaths: []string{"stderr", GetDataPath("debug_log.txt")},
 	}
 
 	var err error

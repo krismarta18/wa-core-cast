@@ -20,7 +20,9 @@ import (
 	"wacast/core/utils"
 )
 
-const uploadDir = "./uploads"
+func getUploadDir() string {
+	return utils.GetDataPath("uploads")
+}
 
 // MessageHandler handles message-related endpoints
 type MessageHandler struct {
@@ -232,13 +234,13 @@ func (h *MessageHandler) UploadMedia(c *gin.Context) {
 
 // saveUploadedFile persists the multipart file to the uploads directory and returns its public URL.
 func saveUploadedFile(file io.Reader, originalName string) (string, error) {
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+	if err := os.MkdirAll(getUploadDir(), 0755); err != nil {
 		return "", fmt.Errorf("failed to create upload dir: %w", err)
 	}
 
 	ext := strings.ToLower(filepath.Ext(originalName))
 	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-	dstPath := filepath.Join(uploadDir, filename)
+	dstPath := filepath.Join(getUploadDir(), filename)
 
 	dst, err := os.Create(dstPath)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"wacast/core/utils"
 )
 
 // DatabaseConfig holds all database related configuration
@@ -62,7 +63,7 @@ func LoadDatabaseConfig() *DatabaseConfig {
 
 // SaveDatabaseConfigToEnv persists database settings to the .env file
 func SaveDatabaseConfigToEnv(cfg *DatabaseConfig) error {
-	envFile := ".env"
+	envFile := utils.GetDataPath(".env")
 	input, err := os.ReadFile(envFile)
 	if err != nil {
 		if os.IsNotExist(err) {

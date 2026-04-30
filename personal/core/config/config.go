@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"wacast/core/utils"
 )
 
 // Config holds all application configuration
@@ -38,8 +39,9 @@ type Config struct {
 
 // LoadConfig loads all configuration from environment variables
 func LoadConfig() (*Config, error) {
-	// Load .env file if exists
-	_ = godotenv.Load()
+	// Load .env file if exists from data directory
+	envPath := utils.GetDataPath(".env")
+	_ = godotenv.Load(envPath)
 
 	serverPort, _ := strconv.Atoi(getEnv("SERVER_PORT", "8080"))
 	sessionTimeout, _ := strconv.Atoi(getEnv("WHATSAPP_SESSION_TIMEOUT", "300"))

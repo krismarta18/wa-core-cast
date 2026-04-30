@@ -24,8 +24,11 @@ var (
 // Secret constants for encryption. Change these for production!
 const (
 	licenseKeySalt = "WBC_WACAST_SECURE_SALT_2026"
-	licenseFile    = ".wacast.lic"
 )
+
+func (s *Service) getLicensePath() string {
+	return utils.GetDataPath(".wacast.lic")
+}
 
 type LicenseInfo struct {
 	HWID       string    `json:"hwid"`
@@ -47,7 +50,7 @@ func NewService() *Service {
 
 // GetStatus checks the current license status on the machine
 func (s *Service) GetStatus() (*LicenseInfo, error) {
-	key, err := os.ReadFile(licenseFile)
+	key, err := os.ReadFile(s.getLicensePath())
 	if err != nil {
 		return &LicenseInfo{HWID: s.currentHWID, IsActive: false}, nil
 	}
@@ -71,7 +74,7 @@ func (s *Service) Activate(key string) error {
 		return ErrHWIDMismatch
 	}
 
-	err = os.WriteFile(licenseFile, []byte(strings.TrimSpace(key)), 0600)
+	err = os.WriteFile(s.getLicensePath(), []byte(strings.TrimSpace(key)), 0600)
 	if err != nil {
 		return fmt.Errorf("failed to save license file: %w", err)
 	}
