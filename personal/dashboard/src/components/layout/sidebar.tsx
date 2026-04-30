@@ -15,8 +15,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600">
-          <MessageSquareMore className="h-4 w-4 text-white" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+          <img src="/icon.png" alt="Logo" className="h-full w-full object-contain p-0.5" />
         </div>
         <span className="text-lg font-bold text-gray-900">{appConfig.app_name || "WACAST"}</span>
       </div>

@@ -73,8 +73,8 @@ export default function RegisterPage() {
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-green-600 to-green-800 px-12 text-white">
         <div className="max-w-sm text-center">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-              <MessageSquareMore className="h-8 w-8 text-white" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur p-2">
+              <img src="/icon.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
           </div>
           <h1 className="text-3xl font-bold">{appConfig.app_name || "WACAST"}</h1>
@@ -105,9 +105,9 @@ export default function RegisterPage() {
       {/* Right form panel */}
       <div className="flex w-full flex-col items-center justify-center bg-gray-50 px-6 py-12 lg:w-1/2">
         {/* Mobile logo */}
-        <div className="mb-8 flex items-center gap-2 lg:hidden">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-600">
-            <MessageSquareMore className="h-5 w-5 text-white" />
+        <div className="mb-8 flex items-center gap-3 lg:hidden">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm border border-gray-100 p-1.5">
+            <img src="/icon.png" alt="Logo" className="h-full w-full object-contain" />
           </div>
           <span className="text-xl font-bold text-gray-900">{appConfig.app_name || "WACAST"}</span>
         </div>

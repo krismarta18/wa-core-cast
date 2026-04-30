@@ -14,7 +14,11 @@ import (
 	"wacast/core/config"
 	"wacast/core/database"
 	"wacast/core/utils"
+	"embed"
 )
+
+//go:embed icon/favicon.png
+var iconFS embed.FS
 
 // Minimalist Blue "W" Icon (32x32 PNG Base64) - Kept for reference or future use
 const trayIconBase64 = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAADG0lEQVR4nO2Xv2sbVxTHP+fdnS0pUp2Sxk0pZAsGAt0MtYfSh9AsHTrX/oB0y9Chf0C6du9m6NChY+0f0K106BToYujWEEpD6ZCQptYf9Z0OnS2rS9I797pD8pAs2ZZkJ8W29AsH7vE+730+vO97T8QYw7O2uW7yYhV4BvA68AzgDeAx4FfgY+CDZdnffz98HkS6i6vAc8BrwAunYv9vWfYPvwvgecDzLh7A8yB46HkXz+vAsy6e14HnXbz/9p548TzYxT908X/86XF7X9z03i6ee66Lp6fN7+X7/6UvXj676+LpcXtf3Mvd630ZunhuuXh6XU9f97R5en947rmf/2Nf/FfX9fS06Uv7+b467nU9u66np82ve9o8fXC0+PzX88S79oDAtp19X8f/9X48p81/O0+8v7S3m7tX9fS0+T0v7ul/7In70p8en7S9p80XezWvO6+nv9Xz9X7N6+nPj9ve0+ax87qXz964Wz1tXp94Xf16+rvz7InXndfP98S9Wp/m9R/O09e99t78p67r6elr85fHbe9p85dzf9uA6vXNf6vn9fS0ef6UePe996+nr+vpa/OXp70T97QeHLe9p81fzn/5370A+H/8E/A/A9zH8GvA4/Fv5tL93x8T8H7AnwB+Bn6L8a/AvxHjZ8A/Y/wD8PcY/wT89Y8A/hHjn4B/ZPrX8v5/f0zA7zH+Bfgn4K+Zfne57v8B/9v0p8t1/w/4r6Y/Xa77H8Z/Nf3p5br/Dfy76U+X6/4Z+P9m+tPlev8Y/x/0+vSPl/N9v6u8R/6mXp/+fXW5679WfX+5679m9f3V6T8u5/sPqvfI39XfV6f/Wp098nfV95e7/tuq769O/305339f9R75p67vL3f991XfX53+93K+/1H1HvnXre8vd/3PtT797+V8/1PVe+TfVfX95a7/ver7q9P/Xc73P68vPZ7m5Xp62vzf6vXpX1TviXvS+m6Z9/X0tfm36vXpX1fviXva+v5y3f9Svd+X6unpe9r6vnLdf1f19O/r6evr6+vpe/p6evr6enr6evr6evr6evr6evr6+voX/S80I7N7VqO21AAAAABJRU5ErkJggg=="
@@ -35,6 +39,15 @@ func (cp *ControlPanel) Run() {
 	// Start HTTP server for GUI in background
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", cp.handleUI)
+	mux.HandleFunc("/favicon.png", func(w http.ResponseWriter, r *http.Request) {
+		data, err := iconFS.ReadFile("icon/favicon.png")
+		if err != nil {
+			http.Error(w, "Icon not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "image/png")
+		w.Write(data)
+	})
 	mux.HandleFunc("/api/status", cp.handleStatus)
 	mux.HandleFunc("/api/start", cp.handleStart)
 	mux.HandleFunc("/api/stop", cp.handleStop)
@@ -145,6 +158,7 @@ func (cp *ControlPanel) handleUI(w http.ResponseWriter, r *http.Request) {
 	<html>
 	<head>
 		<title>WACAST Control Panel</title>
+		<link rel="icon" type="image/png" href="/favicon.png">
 		<style>
 			:root {
 				--bg: #0f111a;
