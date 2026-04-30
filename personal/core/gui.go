@@ -15,17 +15,21 @@ import (
 	"wacast/core/database"
 	"wacast/core/utils"
 	"embed"
+	"encoding/base64"
+
+	"github.com/getlantern/systray"
 )
 
-//go:embed icon/favicon.png
+//go:embed icon/favicon.png icon/tray_16.png
 var iconFS embed.FS
 
-// Minimalist Blue "W" Icon (32x32 PNG Base64) - Kept for reference or future use
-const trayIconBase64 = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAADG0lEQVR4nO2Xv2sbVxTHP+fdnS0pUp2Sxk0pZAsGAt0MtYfSh9AsHTrX/oB0y9Chf0C6du9m6NChY+0f0K106BToYujWEEpD6ZCQptYf9Z0OnS2rS9I797pD8pAs2ZZkJ8W29AsH7vE+730+vO97T8QYw7O2uW7yYhV4BvA68AzgDeAx4FfgY+CDZdnffz98HkS6i6vAc8BrwAunYv9vWfYPvwvgecDzLh7A8yB46HkXz+vAsy6e14HnXbz/9p548TzYxT908X/86XF7X9z03i6ee66Lp6fN7+X7/6UvXj676+LpcXtf3Mvd630ZunhuuXh6XU9f97R5en947rmf/2Nf/FfX9fS06Uv7+b467nU9u66np82ve9o8fXC0+PzX88S79oDAtp19X8f/9X48p81/O0+8v7S3m7tX9fS0+T0v7ul/7In70p8en7S9p80XezWvO6+nv9Xz9X7N6+nPj9ve0+ax87qXz964Wz1tXp94Xf16+rvz7InXndfP98S9Wp/m9R/O09e99t78p67r6elr85fHbe9p85dzf9uA6vXNf6vn9fS0ef6UePe996+nr+vpa/OXp70T97QeHLe9p81fzn/5370A+H/8E/A/A9zH8GvA4/Fv5tL93x8T8H7AnwB+Bn6L8a/AvxHjZ8A/Y/wD8PcY/wT89Y8A/hHjn4B/ZPrX8v5/f0zA7zH+Bfgn4K+Zfne57v8B/9v0p8t1/w/4r6Y/Xa77H8Z/Nf3p5br/Dfy76U+X6/4Z+P9m+tPlev8Y/x/0+vSPl/N9v6u8R/6mXp/+fXW5679WfX+5679m9f3V6T8u5/sPqvfI39XfV6f/Wp098nfV95e7/tuq769O/305339f9R75p67vL3f991XfX53+93K+/1H1HvnXre8vd/3PtT797+V8/1PVe+TfVfX95a7/ver7q9P/Xc73P68vPZ7m5Xp62vzf6vXpX1TviXvS+m6Z9/X0tfm36vXpX1fviXva+v5y3f9Svd+X6unpe9r6vnLdf1f19O/r6evr6+vpe/p6evr6enr6evr6evr6evr6evr6+voX/S80I7N7VqO21AAAAABJRU5ErkJggg=="
+// Valid Windows ICO file (Base64) - 16x16
+const trayIcoBase64 = "AAABAAEAEBAAAAEAIADeAgAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgCAAAAkJFoNgAAAqVJREFUeJw0kktvG1UUx8+9d16ecZxm4sgU13amVRtIQwUiSGWHKlCWUFjBmiVb2PULwBfgC7BgjcSy4iEQIAFVaW2SoMRO/IwfOPbYnrmPc9BEQvov/ovfle4552cBA3sv9N7d5td9YEAIYIg0kSEymBVFlBjsL/QPPWzNmPXStbVHr/NqnjReBYRhoEkrjQpJIUkkSZgabC/U14eWe1DhN/IoMzpP3oPia/cKkcV4Zzb6tvlLc9ENhfNqpfT9cTMJXX5vS3gPI37dJ4UFyH0SvefY8vH0xyfxM8+GD248aE/61cCqOG7ecZvDS5hLixBQIUo8eGF/INsrSgLMHc+a59POILj48NZbT9rfaaNvrge/AouROJmMthXf8cs/XfzxfvjOXX5TLaVayafDhqRESEcwVGkaMA6GLNKEEoUSoPVgNnrc+tnjrq9dh9uj5XiexlyBTCQimFSTIZ79J8XlIlnO0wL6Xx19k5PuF3uffX730xKGtGLPu53+eJYkahanYECI+yXY8PRKbYuiEKbx78lv3T9bvbPO5MJ3Cx+98rA+7C1Wsn7amSw1TFOLFEJiuILoWrlChdu16l/Tv+dJHG3WQh5u8OD+1sustPuo/iUhI01WdpfEOCl/dtTo9weLdHlns1oTZT+2K5Wt0M/vvXjr6UmjALmJisEQEx/vQrTuErrMZDMx4HNrx4tGw9Eb0a7NhCvs1rB3eNk7vexDe25BYiA1uTzUIstI4kBVvBNOy6Wg+ObO/vPzf9ZzebCd+qQLhsAgY29X2H7JQQxsbTFCRWuiELnRIlkyAotZBs04np+O+0ppOhwzKHrsYJuFHst2jKAJTCYsIwK8kpcITVZovKLfuwwAYNNjtzdgzQGCjEbKQvB/rl7GKZxlLv0XAAD//yfxpzyhE0lhAAAAAElFTkSuQmCC"
 
 type ControlPanel struct {
 	app          *App
 	launcherPort int
+	guiCmd       *exec.Cmd
 }
 
 func NewControlPanel() *ControlPanel {
@@ -36,6 +40,36 @@ func NewControlPanel() *ControlPanel {
 }
 
 func (cp *ControlPanel) Run() {
+	systray.Run(cp.onReady, cp.onExit)
+}
+
+func (cp *ControlPanel) onReady() {
+	// Set Tray Icon using proper ICO data
+	iconData, _ := base64.StdEncoding.DecodeString(trayIcoBase64)
+	systray.SetIcon(iconData)
+	systray.SetTitle("WACAST")
+	systray.SetTooltip("WACAST WhatsApp Gateway")
+
+	// Menu items
+	mOpenDash := systray.AddMenuItem("Open Dashboard", "Open the main web dashboard")
+	mOpenCtrl := systray.AddMenuItem("Open Control Panel", "Open this control window")
+	systray.AddSeparator()
+	mQuit := systray.AddMenuItem("Exit WACAST", "Shut down everything")
+
+	// Handle menu clicks
+	go func() {
+		for {
+			select {
+			case <-mOpenDash.ClickedCh:
+				cp.openDashboard()
+			case <-mOpenCtrl.ClickedCh:
+				cp.OpenUI()
+			case <-mQuit.ClickedCh:
+				cp.handleExit(nil, nil)
+			}
+		}
+	}()
+
 	// Start HTTP server for GUI in background
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", cp.handleUI)
@@ -73,24 +107,20 @@ func (cp *ControlPanel) Run() {
 	}()
 
 	// Wait a bit for server to bind
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	utils.Info("WACAST Control Panel is active.")
-	utils.Info("Closing this window will stop the application.")
-
-	// Launch UI
+	
+	// Launch UI initially
 	go cp.OpenUI()
-	
-	// Block here so the app stays alive until /api/exit or Ctrl+C
-	utils.Info("Control Panel is running. Use the 'Exit' button in the UI or Ctrl+C to stop.")
-	
-	// Keep the main thread alive
-	select {}
+}
+
+func (cp *ControlPanel) onExit() {
+	// Clean up here if needed
 }
 
 func (cp *ControlPanel) OpenUI() {
 	url := fmt.Sprintf("http://127.0.0.1:%d", cp.launcherPort)
-	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
 		edgePath := "msedge"
 		// Try to find the actual path if not in PATH
@@ -115,13 +145,15 @@ func (cp *ControlPanel) OpenUI() {
 		}
 
 		if !useFallback {
-			cmd = exec.Command("cmd", "/c", "start", "", edgePath, "--app="+url, "--window-size=380,640")
-			_ = cmd.Run()
+			// Run browser directly with unique profile to allow tracking and force-close
+			userDataDir := os.Getenv("TEMP") + "\\wacast_gui_profile"
+			cp.guiCmd = exec.Command(edgePath, "--app="+url, "--window-size=380,640", "--user-data-dir="+userDataDir, "--no-first-run")
+			_ = cp.guiCmd.Start()
 			return
 		}
 	} else {
-		cmd = exec.Command("google-chrome", "--app="+url, "--window-size=380,640")
-		_ = cmd.Run()
+		cp.guiCmd = exec.Command("google-chrome", "--app="+url, "--window-size=380,640")
+		_ = cp.guiCmd.Start()
 		return
 	}
 	
@@ -255,7 +287,11 @@ func (cp *ControlPanel) handleUI(w http.ResponseWriter, r *http.Request) {
 			<div class="control-row">
 				<button id="btn-start" class="btn btn-start" onclick="startServer()">START</button>
 				<button id="btn-stop" class="btn btn-stop" onclick="stopServer()" disabled>STOP</button>
-				<button class="btn btn-web" onclick="openDashboard()">WEB UI</button>
+				<button class="btn btn-web" onclick="openDashboard()">DASHBOARD</button>
+			</div>
+			
+			<div style="margin-bottom: 16px;">
+				<button class="btn btn-stop" style="width:100%; background: #450a0a; border: 1px solid #991b1b;" onclick="exitApp()">EXIT APPLICATION</button>
 			</div>
 			
 			<div id="update-bar" style="display:none; background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--accent); font-size: 11px;">
@@ -287,7 +323,6 @@ func (cp *ControlPanel) handleUI(w http.ResponseWriter, r *http.Request) {
 					<button class="btn btn-start" style="flex:1" onclick="saveDB()">SAVE</button>
 				</div>
 			</div>
-			<button class="btn btn-stop" style="width:100%" onclick="exitApp()">EXIT APPLICATION</button>
 		</div>
 
 		<script>
@@ -339,7 +374,12 @@ func (cp *ControlPanel) handleUI(w http.ResponseWriter, r *http.Request) {
 				alert(r.message);
 			}
 			function openDashboard() { fetch('/api/open-dashboard'); }
-			function exitApp() { if(confirm('Exit Application?')) fetch('/api/exit'); }
+			async function exitApp() { 
+				if(confirm('Exit Application?')) {
+					await fetch('/api/exit'); 
+					window.close();
+				}
+			}
 			
 			async function checkUpdate() {
 				log('Checking for updates...');
@@ -421,7 +461,20 @@ func (cp *ControlPanel) handleStop(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cp *ControlPanel) handleExit(w http.ResponseWriter, r *http.Request) {
+	// 1. Force kill any browser window with WACAST title
+	if runtime.GOOS == "windows" {
+		// Attempt to kill by window title which is very effective for browser apps
+		_ = exec.Command("taskkill", "/F", "/FI", "WINDOWTITLE eq WACAST Control Panel*", "/T").Run()
+	}
+
+	// 2. Kill the direct GUI process if still alive
+	if cp.guiCmd != nil && cp.guiCmd.Process != nil {
+		_ = cp.guiCmd.Process.Kill()
+	}
+
+	// 3. Stop the core app
 	cp.app.Stop()
+
 	if w != nil {
 		fmt.Fprint(w, `{"success": true}`)
 	}

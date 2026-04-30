@@ -27,7 +27,7 @@ Move-Item -Path $sourceDir -Destination "core/appserver/"
 # 3. Build Go Application
 Write-Host "[STEP 3] Building Go Core (main.exe)..." -ForegroundColor Cyan
 Push-Location core
-go build -o main.exe .
+go build -ldflags="-H windowsgui" -o main.exe .
 Pop-Location
 
 # 4. Prepare Production Folder
